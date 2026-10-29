@@ -13,7 +13,7 @@ const COLORS = ["cobalt", "bubblegum", "butter"];
 
 const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
 
-export default function BriefBuilder({ initialTopic = "" }) {
+export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const router = useRouter();
   const state = useStore();
   const [topic, setTopic] = useState("");
@@ -26,9 +26,20 @@ export default function BriefBuilder({ initialTopic = "" }) {
   const [dek, setDek] = useState("");
   const [color, setColor] = useState("cobalt");
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Bring back a draft (e.g. after signing in to publish), or start from a trending topic.
   useEffect(() => {
+    if (editing) {
+      setTopic(editing.topic || "");
+      setMode(editing.mode || "clips");
+      setResult({ topic: editing.topic, mode: editing.mode || "clips", items: editing.items || [] });
+      setPicked((editing.items || []).map((x) => x.episodeId));
+      setTitle(editing.title || "");
+      setDek(editing.dek || "");
+      setColor(editing.color || "cobalt");
+      return;
+    }
     try {
       const d = JSON.parse(sessionStorage.getItem(DRAFT) || "null");
       if (initialTopic && (!d || d.topic !== initialTopic)) {
@@ -55,11 +66,18 @@ export default function BriefBuilder({ initialTopic = "" }) {
     if (forceMode) setMode(forceMode);
     setLoading(true);
     setError("");
-    setResult(null);
+    const keep = editing && result ? result.items.filter((x) => picked.includes(x.episodeId)) : [];
+    if (!editing) setResult(null);
     try {
       const res = await fetch(`/api/briefs/draft?${new URLSearchParams({ topic: t, mode: m })}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      if (editing) {
+        // Keep what's already in the brief, and add the new finds below it.
+        const have = new Set(keep.map((x) => String(x.episodeId)));
+        setResult({ ...data, items: [...keep, ...data.items.filter((x) => !have.has(String(x.episodeId)))] });
+        return;
+      }
       setResult(data);
       const withClips = data.items.filter((x) => x.clips?.length);
       const first = (m === "clips" && withClips.length ? withClips : data.items).slice(0, m === "clips" ? 5 : 4);
@@ -72,7 +90,36 @@ export default function BriefBuilder({ initialTopic = "" }) {
     }
   }
 
-  const chosen = useMemo(() => (result ? result.items.filter((x) => picked.includes(x.episodeId)) : []), [result, picked]);
+  // The brief plays in the order you picked (and can reorder).
+  const chosen = useMemo(() => {
+    if (!result) return [];
+    const byId = new Map(result.items.map((x) => [String(x.episodeId), x]));
+    return picked.map((id) => byId.get(String(id))).filter(Boolean);
+  }, [result, picked]);
+
+  function move(id, dir) {
+    setPicked((p) => {
+      const i = p.indexOf(id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= p.length) return p;
+      const next = [...p];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
+  async function remove() {
+    if (!confirmDelete) return setConfirmDelete(true);
+    setSaving(true);
+    const { error: err } = await supabase().from("briefs").delete().eq("id", editing.id);
+    if (err) {
+      setSaving(false);
+      setError("Couldn't delete. Try again.");
+      return;
+    }
+    router.push("/briefs");
+    router.refresh();
+  }
   const total = briefSeconds(chosen, result?.mode);
   const clipCount = result?.mode === "clips" ? result.items.filter((x) => x.clips?.length).length : 0;
 
@@ -101,19 +148,17 @@ export default function BriefBuilder({ initialTopic = "" }) {
       transcript: x.transcript,
       clips: result.mode === "clips" ? x.clips : null,
     }));
-    const { data, error: err } = await supabase()
-      .from("briefs")
-      .insert({
-        title: title.trim().slice(0, 80) || titleCase(result.topic),
-        dek: dek.trim() || null,
-        topic: result.topic,
-        color,
-        mode: result.mode,
-        items,
-        total_seconds: Math.round(briefSeconds(items, result.mode)),
-      })
-      .select("id")
-      .single();
+    const row = {
+      title: title.trim().slice(0, 80) || titleCase(result.topic),
+      dek: dek.trim() || null,
+      topic: result.topic,
+      color,
+      mode: result.mode,
+      items,
+      total_seconds: Math.round(briefSeconds(items, result.mode)),
+    };
+    const q = editing ? supabase().from("briefs").update(row).eq("id", editing.id) : supabase().from("briefs").insert(row);
+    const { data, error: err } = await q.select("id").single();
     if (err) {
       setSaving(false);
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
@@ -123,15 +168,16 @@ export default function BriefBuilder({ initialTopic = "" }) {
       sessionStorage.removeItem(DRAFT);
     } catch {}
     router.push(`/briefs/b/${data.id}`);
+    router.refresh();
   }
 
   return (
     <>
-      <Link href="/briefs" className="back">
-        ← Briefs
+      <Link href={editing ? `/briefs/b/${editing.id}` : "/briefs"} className="back">
+        ← {editing ? "Back to brief" : "Briefs"}
       </Link>
       <h1 className="display h-lg" style={{ margin: "18px 0 8px" }}>
-        New brief
+        {editing ? "Edit brief" : "New brief"}
       </h1>
       <p className="muted" style={{ fontSize: 19 }}>
         Pick a topic. We'll find episodes about it, and if you want, just the parts where it comes up.
@@ -215,6 +261,20 @@ export default function BriefBuilder({ initialTopic = "" }) {
           <p className="mono">
             {chosen.length} episodes · {result.mode === "clips" ? clock(total) : minutes(total)} total
           </p>
+          <ol className="order">
+            {chosen.map((x, i) => (
+              <li key={x.episodeId} className="order__row">
+                <span className="mono order__n">{i + 1}</span>
+                <Art src={x.image} title={x.show} size={40} radius={9} />
+                <span className="min0 grow order__title">{x.episode}</span>
+                <span className="order__btns">
+                  <button type="button" onClick={() => move(x.episodeId, -1)} disabled={i === 0} aria-label="Move up">↑</button>
+                  <button type="button" onClick={() => move(x.episodeId, 1)} disabled={i === chosen.length - 1} aria-label="Move down">↓</button>
+                  <button type="button" onClick={() => toggle(x.episodeId)} aria-label="Remove from brief">✕</button>
+                </span>
+              </li>
+            ))}
+          </ol>
           <input className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} />
           <textarea
             className="input textarea"
@@ -238,8 +298,13 @@ export default function BriefBuilder({ initialTopic = "" }) {
             ))}
           </div>
           <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 10 }} onClick={publish} disabled={saving || !state?.accounts}>
-            {saving ? "Publishing…" : state?.user ? "Publish brief" : "Sign in to publish"}
+            {saving ? (editing ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : editing ? "Save changes" : "Publish brief"}
           </button>
+          {editing && (
+            <button type="button" className={`btn ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving} style={{ alignSelf: "center" }}>
+              {confirmDelete ? "Tap again to delete for good" : "Delete this brief"}
+            </button>
+          )}
           {state && !state.accounts && <p className="muted small">Publishing needs profiles switched on (Supabase keys in Vercel).</p>}
         </section>
       )}

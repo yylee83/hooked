@@ -2,6 +2,7 @@ import Link from "next/link";
 import Art from "./Art";
 import { ClipChip, PlayButton, PlayCut } from "./Player";
 import { QueueAll } from "./Social";
+import BriefOwner from "./BriefOwner";
 import { briefQueue, briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes } from "@/lib/format";
 
@@ -51,6 +52,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
       )}
       <p className="mono brief__meta">{meta}</p>
       {brief.author && <p className="brief__by">Made by @{brief.author}</p>}
+      {brief.authorId && <BriefOwner authorId={brief.authorId} briefId={brief.id} />}
 
       {segs.length > 0 && (
         <div className="cut">

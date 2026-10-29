@@ -15,7 +15,7 @@ export default async function UserBriefPage({ params }) {
   if (!b) notFound();
   return (
     <BriefView
-      brief={{ title: b.title, dek: b.dek, color: b.color, mode: b.mode, topic: b.topic, author: b.author?.handle }}
+      brief={{ title: b.title, dek: b.dek, color: b.color, mode: b.mode, topic: b.topic, author: b.author?.handle, authorId: b.author_id, id: b.id }}
       items={b.items || []}
     />
   );
