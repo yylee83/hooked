@@ -5,11 +5,34 @@ import Stars from "./Stars";
 import Wrapped from "./Wrapped";
 import PasswordForm from "./PasswordForm";
 import { ShareButton } from "./Share";
+import LogThread from "./LogThread";
+import { NotificationBell } from "./Notifications";
+import { supabase as sb } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, removeFromList, saveProfile, signOut, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import { minutes, plural } from "@/lib/format";
 import { site } from "@/lib/site";
+
+// Weekly email: a Sunday roundup of what friends logged and sent you.
+function DigestToggle({ state }) {
+  const [on, setOn] = useState(state.profile?.email_digest !== false);
+  const [busy, setBusy] = useState(false);
+  async function flip() {
+    setBusy(true);
+    const next = !on;
+    setOn(next);
+    const { error } = await sb().from("profiles").update({ email_digest: next }).eq("id", state.user.id);
+    if (error) setOn(!next);
+    setBusy(false);
+  }
+  return (
+    <label className="digest">
+      <input type="checkbox" checked={on} onChange={flip} disabled={busy} />
+      <span>Weekly email: what friends logged and sent you</span>
+    </label>
+  );
+}
 
 // Sign-in prompt, first-time handle setup, or profile controls.
 function ProfilePanel({ state }) {
@@ -68,6 +91,7 @@ function ProfilePanel({ state }) {
           Sign out
         </button>
       </div>
+      <DigestToggle state={state} />
       {pwOpen && (
         <div className="card" style={{ marginTop: 16 }}>
           <p className="label" style={{ marginTop: 0 }}>Set a password</p>
@@ -172,6 +196,7 @@ export default function MyLog() {
 
   return (
     <>
+      <div className="me__bell"><NotificationBell /></div>
       <header className="me">
         <div className="avatar avatar--lg">{state.user ? initialsOf(state.profile) : site.me.initials}</div>
         <div className="min0">
@@ -273,19 +298,22 @@ export default function MyLog() {
                 <li key={l.id} className="log__row log__row--share">
                   <span className="mono log__day">{new Date(l.loggedAt).getDate()}</span>
                   <Art src={l.image} title={l.feedTitle} size={56} radius={12} episodeId={l.id} />
-                  <Link href={`/log/${l.id}`} className="min0">
-                    <p className="title-sm">{l.title}</p>
-                    <p className="muted small row gap-xs center wrap">
-                      {l.feedTitle}
-                      {l.rating > 0 && (
-                        <>
-                          <span>·</span>
-                          <Stars value={l.rating} size={15} />
-                        </>
-                      )}
-                    </p>
-                    {l.hook && <p className="log__hook">“{l.hook}”</p>}
-                  </Link>
+                  <div className="min0">
+                    <Link href={`/log/${l.id}`} style={{ display: "block" }}>
+                      <p className="title-sm">{l.title}</p>
+                      <p className="muted small row gap-xs center wrap">
+                        {l.feedTitle}
+                        {l.rating > 0 && (
+                          <>
+                            <span>·</span>
+                            <Stars value={l.rating} size={15} />
+                          </>
+                        )}
+                      </p>
+                      {l.hook && <p className="log__hook">“{l.hook}”</p>}
+                    </Link>
+                    {state.user && <LogThread logUserId={state.user.id} episodeId={l.id} />}
+                  </div>
                   <div className="log__side">
                     <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
                     <ShareButton compact episode={{ id: l.id, title: l.title, feedId: l.feedId, feedTitle: l.feedTitle, image: l.image, audio: l.audio, duration: l.duration }} />

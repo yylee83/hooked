@@ -8,6 +8,8 @@ Find what hooks you. A social podcast log, built with Next.js and the Podcast In
 - **Find friends** (`/people`): search by name or @handle, follow, invite.
 - **Profiles** (`/u/handle`): anyone's public log and the shows they're hooked on. Wrapped stays private.
 - **Sharing**: send an episode to friends in-app, or share a no-login link (`/episode/ID?from=handle`) with your review and a custom preview image.
+- **Conversations**: reactions (same, ooh, adding it, hard disagree) and replies on any log, including on shared links.
+- **Notifications**: a bell for follows, sends, replies and reactions, plus an opt-in weekly email (`/api/cron/digest`, Sundays).
 - **Briefs**: a topic, the best episodes from several shows, and each show's angle.
 - **Search**: live search of about 4 million podcasts.
 - **Show pages**: details plus the latest episodes, with Play and Log it.
@@ -29,7 +31,7 @@ Clips only work for shows that publish timed transcripts; other episodes play in
 ## Database
 
 Run `supabase/setup.sql` once in Supabase → SQL Editor (dropdown set to your database, not Logs). It's safe to run again.
-Already set up before friends existed? Run `supabase/update-friends.sql` instead.
+Already set up earlier? Run `supabase/update-friends.sql`, then `supabase/update-conversations.sql`.
 
 ## Keys
 
@@ -40,6 +42,15 @@ PODCASTINDEX_API_KEY
 PODCASTINDEX_API_SECRET
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+For the weekly email, also add (server-only, never public):
+
+```
+SUPABASE_SERVICE_ROLE_KEY
+RESEND_API_KEY
+DIGEST_FROM        e.g. Hooked on <hello@yourdomain.com>
+CRON_SECRET        any long random string
 ```
 
 The Podcast Index keys stay on the server. The Supabase URL and anon key are meant to be public; the database's security rules protect the data.

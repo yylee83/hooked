@@ -6,6 +6,7 @@ import Art from "./Art";
 import Stars from "./Stars";
 import { addToList, dismissRecommendation, follow, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
+import LogThread from "./LogThread";
 import { site } from "@/lib/site";
 
 const HOUR = 3600 * 1000;
@@ -306,6 +307,7 @@ export function FriendsFeed() {
                     )}
                   </p>
                   {l.hook && <p className="log__hook">“{l.hook}”</p>}
+                  <LogThread logUserId={l.user_id} episodeId={l.episode_id} />
                 </div>
               </li>
             ))}

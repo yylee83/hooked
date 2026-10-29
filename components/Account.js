@@ -5,6 +5,7 @@ import Art from "./Art";
 import Stars from "./Stars";
 import { initialsOf, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
+import LogThread from "./LogThread";
 
 // Top-right avatar: your initials when signed in, a sign-in prompt when not.
 export function AvatarLink() {
@@ -31,7 +32,7 @@ export function FreshLogs() {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("episode_id, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+      .select("user_id, episode_id, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
       .limit(8)
@@ -65,6 +66,7 @@ export function FreshLogs() {
                 )}
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
+              <LogThread logUserId={l.user_id} episodeId={l.episode_id} />
             </div>
           </li>
         ))}
@@ -81,7 +83,7 @@ export function EpisodeLogs({ episodeId }) {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+      .select("user_id, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
       .eq("episode_id", episodeId)
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
@@ -111,6 +113,7 @@ export function EpisodeLogs({ episodeId }) {
                 {l.rating > 0 && <Stars value={Number(l.rating)} size={14} />}
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
+              <LogThread logUserId={l.user_id} episodeId={episodeId} />
             </div>
           </li>
         ))}

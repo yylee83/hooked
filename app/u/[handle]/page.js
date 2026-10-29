@@ -4,6 +4,7 @@ import Art from "@/components/Art";
 import Stars from "@/components/Stars";
 import { Avatar, FollowButton } from "@/components/Friends";
 import { ShareButton } from "@/components/Share";
+import LogThread from "@/components/LogThread";
 import { getProfilePage } from "@/lib/supabase/public";
 import { minutes, plural } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -117,6 +118,7 @@ export default async function ProfilePage({ params }) {
                       )}
                     </p>
                     {l.hook && <p className="log__hook">“{l.hook}”</p>}
+                    <LogThread logUserId={profile.id} episodeId={l.episode_id} />
                   </div>
                   <div className="log__side">
                     <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>

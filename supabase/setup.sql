@@ -160,3 +160,140 @@ drop policy if exists "recs delete own" on public.recommendations;
 create policy "recs read own" on public.recommendations for select using (auth.uid() = from_id or auth.uid() = to_id);
 create policy "recs send" on public.recommendations for insert with check (auth.uid() = from_id);
 create policy "recs delete own" on public.recommendations for delete using (auth.uid() = from_id or auth.uid() = to_id);
+
+-- ---------- Conversations (also in update-conversations.sql) ----------
+
+-- Weekly email digest: on unless someone turns it off.
+alter table public.profiles add column if not exists email_digest boolean not null default true;
+
+-- Replies on someone's log of an episode.
+create table if not exists public.comments (
+  id uuid primary key default gen_random_uuid(),
+  log_user_id uuid not null references public.profiles (id) on delete cascade,
+  episode_id bigint not null,
+  author_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  body text not null check (char_length(body) between 1 and 500),
+  created_at timestamptz not null default now(),
+  foreign key (log_user_id, episode_id) references public.logs (user_id, episode_id) on delete cascade
+);
+create index if not exists comments_log on public.comments (log_user_id, episode_id, created_at);
+
+-- Quick reactions on someone's log: same, ooh, adding it, hard disagree.
+create table if not exists public.reactions (
+  log_user_id uuid not null references public.profiles (id) on delete cascade,
+  episode_id bigint not null,
+  user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  kind text not null check (kind in ('same', 'ooh', 'adding', 'disagree')),
+  created_at timestamptz not null default now(),
+  primary key (log_user_id, episode_id, user_id, kind),
+  foreign key (log_user_id, episode_id) references public.logs (user_id, episode_id) on delete cascade
+);
+
+-- Your notifications. Only the database itself creates these (see the triggers below).
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  actor_id uuid references public.profiles (id) on delete cascade,
+  type text not null check (type in ('follow', 'rec', 'comment', 'reply', 'reaction')),
+  episode_id bigint,
+  log_user_id uuid references public.profiles (id) on delete cascade,
+  title text,
+  body text,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists notifications_user on public.notifications (user_id, created_at desc);
+
+alter table public.comments enable row level security;
+alter table public.reactions enable row level security;
+alter table public.notifications enable row level security;
+
+-- Replies are public, like logs. You post as yourself; you can delete your own, or any reply on your log.
+drop policy if exists "comments read" on public.comments;
+drop policy if exists "comments post own" on public.comments;
+drop policy if exists "comments delete" on public.comments;
+create policy "comments read" on public.comments for select using (true);
+create policy "comments post own" on public.comments for insert with check (auth.uid() = author_id);
+create policy "comments delete" on public.comments for delete using (auth.uid() = author_id or auth.uid() = log_user_id);
+
+drop policy if exists "reactions read" on public.reactions;
+drop policy if exists "reactions add own" on public.reactions;
+drop policy if exists "reactions remove own" on public.reactions;
+create policy "reactions read" on public.reactions for select using (true);
+create policy "reactions add own" on public.reactions for insert with check (auth.uid() = user_id);
+create policy "reactions remove own" on public.reactions for delete using (auth.uid() = user_id);
+
+-- Only you can see, mark read, or clear your notifications.
+drop policy if exists "notifications read own" on public.notifications;
+drop policy if exists "notifications mark own" on public.notifications;
+drop policy if exists "notifications clear own" on public.notifications;
+create policy "notifications read own" on public.notifications for select using (auth.uid() = user_id);
+create policy "notifications mark own" on public.notifications for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "notifications clear own" on public.notifications for delete using (auth.uid() = user_id);
+
+-- ---------- triggers that create notifications ----------
+
+create or replace function public.notify_follow() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into notifications (user_id, actor_id, type) values (new.followee_id, new.follower_id, 'follow');
+  return new;
+end;
+$$;
+drop trigger if exists on_follow on public.follows;
+create trigger on_follow after insert on public.follows for each row execute function public.notify_follow();
+
+create or replace function public.notify_rec() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into notifications (user_id, actor_id, type, episode_id, title, body)
+  values (new.to_id, new.from_id, 'rec', new.episode_id, new.title, left(coalesce(new.note, new.hook), 140));
+  return new;
+end;
+$$;
+drop trigger if exists on_rec on public.recommendations;
+create trigger on_rec after insert on public.recommendations for each row execute function public.notify_rec();
+
+create or replace function public.notify_comment() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  ep_title text;
+begin
+  select title into ep_title from logs where user_id = new.log_user_id and episode_id = new.episode_id;
+  -- Tell the person whose log it is.
+  if new.author_id <> new.log_user_id then
+    insert into notifications (user_id, actor_id, type, episode_id, log_user_id, title, body)
+    values (new.log_user_id, new.author_id, 'comment', new.episode_id, new.log_user_id, ep_title, left(new.body, 140));
+  end if;
+  -- Tell everyone else already in the conversation.
+  insert into notifications (user_id, actor_id, type, episode_id, log_user_id, title, body)
+  select distinct c.author_id, new.author_id, 'reply', new.episode_id, new.log_user_id, ep_title, left(new.body, 140)
+  from comments c
+  where c.log_user_id = new.log_user_id and c.episode_id = new.episode_id
+    and c.author_id <> new.author_id and c.author_id <> new.log_user_id;
+  return new;
+end;
+$$;
+drop trigger if exists on_comment on public.comments;
+create trigger on_comment after insert on public.comments for each row execute function public.notify_comment();
+
+create or replace function public.notify_reaction() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  ep_title text;
+begin
+  if new.user_id = new.log_user_id then
+    return new;
+  end if;
+  select title into ep_title from logs where user_id = new.log_user_id and episode_id = new.episode_id;
+  -- One unread reaction notice per person per log, so toggling doesn't spam.
+  delete from notifications
+  where user_id = new.log_user_id and actor_id = new.user_id and type = 'reaction'
+    and episode_id = new.episode_id and read_at is null;
+  insert into notifications (user_id, actor_id, type, episode_id, log_user_id, title, body)
+  values (new.log_user_id, new.user_id, 'reaction', new.episode_id, new.log_user_id, ep_title, new.kind);
+  return new;
+end;
+$$;
+drop trigger if exists on_reaction on public.reactions;
+create trigger on_reaction after insert on public.reactions for each row execute function public.notify_reaction();

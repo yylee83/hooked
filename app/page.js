@@ -4,6 +4,7 @@ import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
+import { NotificationBell } from "@/components/Notifications";
 import { artOf, safe, trendingShows } from "@/lib/podcastindex";
 
 // Refresh trending shows every 15 minutes.
@@ -15,7 +16,7 @@ export default async function FriendsPage() {
   return (
     <>
       <header className="topbar">
-        <Wordmark size={42} />
+        <Wordmark size={34} />
         <div className="row gap center">
           <Link href="/people" className="find-friends" aria-label="Find friends">
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
@@ -24,6 +25,7 @@ export default async function FriendsPage() {
               <path d="M19 8v6M16 11h6" />
             </svg>
           </Link>
+          <NotificationBell />
           <AvatarLink />
         </div>
       </header>

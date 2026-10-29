@@ -456,3 +456,43 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .shared-by__take { margin-top: 12px; padding-top: 12px; border-top: 2px dashed rgba(21,19,29,.2); }
 .shared-by__hook { margin-top: 8px; font-size: 19px; }
 .join-nudge { margin-top: 26px; background: var(--butter); }
+
+/* ---------- v10: threads ---------- */
+.thread { margin-top: 10px; }
+.thread__bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.thread__bar .react { font-size: 13px; padding: 3px 11px; border-width: 2px; }
+.thread__bar .react:disabled { cursor: default; opacity: 1; }
+.thread__toggle { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 13px; color: var(--muted); padding: 4px 6px; margin-left: 2px; }
+.thread__toggle:hover { color: var(--cobalt); }
+.thread__note { margin-top: 6px; }
+.thread__body { margin-top: 10px; padding-left: 12px; border-left: 3px solid var(--butter); }
+.thread__list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.comment__meta { font-size: 13px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.comment__who { font-weight: 800; }
+.comment__op { font-family: var(--mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; background: var(--cobalt); color: var(--white); border-radius: 999px; padding: 1px 7px; }
+.comment__del { margin-left: auto; font-size: 12px; color: var(--muted); text-decoration: underline; }
+.comment__body { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.thread__form { display: flex; gap: 8px; align-items: center; }
+.thread__form .input { padding: 9px 14px; font-size: 15px; border-width: 2.5px; border-radius: 14px; }
+.shared-by .thread { margin-top: 14px; padding-top: 12px; border-top: 2px dashed rgba(21,19,29,.2); }
+
+/* ---------- v10: notifications ---------- */
+.bell { position: relative; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: var(--line); background: var(--white); color: var(--ink); }
+.bell:hover { background: var(--butter); }
+.bell__n { position: absolute; top: -6px; right: -6px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; background: var(--bubblegum); border: 2.5px solid var(--ink); font-family: var(--mono); font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+.me__bell { display: flex; justify-content: flex-end; margin-bottom: -40px; }
+.notes { display: flex; flex-direction: column; }
+.note { display: flex; gap: 12px; align-items: flex-start; padding: 14px 10px; border-top: 2px solid rgba(21,19,29,.12); border-radius: 14px; }
+.note.is-new { background: rgba(255, 225, 77, .35); }
+.note .avatar { flex: none; }
+.note__text { display: block; font-size: 16px; line-height: 1.35; }
+.note__quote { display: block; font-size: 15px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+.note__time { display: block; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.note__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cobalt); flex: none; margin-top: 8px; }
+.digest { display: flex; gap: 10px; align-items: center; margin-top: 14px; font-weight: 600; font-size: 15px; cursor: pointer; }
+.digest input { width: 20px; height: 20px; accent-color: var(--cobalt); }
+.topbar { gap: 10px; align-items: center; }
+.topbar > .row { gap: 8px; flex: none; }
+.topbar .find-friends, .topbar .bell, .topbar .avatar { width: 44px; height: 44px; }
+.topbar .avatar { font-size: 16px; }
+@media (max-width: 380px) { .topbar .wordmark { --wm: 28px !important; } }

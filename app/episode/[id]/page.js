@@ -6,6 +6,7 @@ import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
 import { ShareButton } from "@/components/Share";
 import { JoinNudge } from "@/components/JoinNudge";
+import LogThread from "@/components/LogThread";
 import Stars from "@/components/Stars";
 import { Avatar } from "@/components/Friends";
 import { episodeCard, getEpisode, getShow, safe, artOf } from "@/lib/podcastindex";
@@ -94,6 +95,7 @@ export default async function EpisodePage({ params, searchParams }) {
               {shared.log.hook && <p className="shared-by__hook">“{shared.log.hook}”</p>}
             </div>
           )}
+          {shared.log && <LogThread logUserId={shared.profile.id} episodeId={card.id} defaultOpen id="thread" />}
         </section>
       )}
 
