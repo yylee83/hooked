@@ -24,7 +24,7 @@ export default function TastePicker({ shows }) {
   async function finish() {
     setBusy(true);
     await saveInterests(topics);
-    router.push("/#for-you");
+    router.push("/");
   }
 
   return (
