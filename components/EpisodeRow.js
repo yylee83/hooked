@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Art from "./Art";
 import { PlayButton } from "./Player";
+import { QueueButton } from "./Social";
 import { minutes, shortDate } from "@/lib/format";
 
 // One episode in a list: art, show, title, date and length, Play and Log it.
@@ -25,6 +26,7 @@ export default function EpisodeRow({ ep, showArt = true, desc }) {
             <Link href={`/log/${ep.id}`} className="btn btn--sm btn--cobalt">
               Log it
             </Link>
+            <QueueButton episode={ep} />
           </div>
         </div>
       </div>

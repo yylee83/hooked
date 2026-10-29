@@ -1,15 +1,13 @@
 "use client";
 import Link from "next/link";
 import Art from "./Art";
-import Stars from "./Stars";
 import Wrapped from "./Wrapped";
 import PasswordForm from "./PasswordForm";
-import { ShareButton } from "./Share";
-import LogThread from "./LogThread";
 import { NotificationBell } from "./Notifications";
 import { supabase as sb } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { hookedShows, initialsOf, removeFromList, saveProfile, signOut, useStore } from "@/lib/store";
+import { hookedShows, initialsOf, saveProfile, signOut, useStore } from "@/lib/store";
+import { Diary, ShowsView, UpNextView } from "./LogViews";
 import { supabase } from "@/lib/supabase/client";
 import { minutes, plural } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -171,32 +169,59 @@ function MyBriefs({ userId }) {
   );
 }
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const TABS = [
+  ["diary", "Diary"],
+  ["shows", "Shows"],
+  ["upnext", "Up next"],
+  ["stats", "Wrapped"],
+];
 
-function groupByMonth(logs) {
-  const groups = [];
-  for (const l of logs) {
-    const d = new Date(l.loggedAt);
-    const label = d.getFullYear() === new Date().getFullYear() ? MONTHS[d.getMonth()] : `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-    const last = groups[groups.length - 1];
-    if (last?.label === label) last.items.push(l);
-    else groups.push({ label, items: [l] });
-  }
-  return groups;
+function useTab() {
+  const [tab, setTab] = useState("diary");
+  useEffect(() => {
+    const h = window.location.hash.slice(1);
+    if (TABS.some(([k]) => k === h)) setTab(h);
+  }, []);
+  return [
+    tab,
+    (k) => {
+      setTab(k);
+      try {
+        window.history.replaceState(null, "", `#${k}`);
+      } catch {}
+    },
+  ];
 }
 
 export default function MyLog() {
   const state = useStore();
+  const [tab, setTab] = useTab();
+  const [settings, setSettings] = useState(false);
   if (!state) return <div className="loading" aria-label="Loading" />;
 
   const shows = hookedShows(state);
   const logs = state.logs;
   const np = state.nowPlaying;
   const nowPlayingLogged = np && logs.some((l) => l.id === np.id);
+  const showCount = new Set(logs.map((l) => l.feedId || l.feedTitle)).size;
+  const hookedPct = logs.length ? Math.round((logs.filter((l) => l.hooked).length / logs.length) * 100) : 0;
+  const hours = Math.round(logs.reduce((a, l) => a + (l.duration || 0), 0) / 3600);
+  const queue = state.list.length;
+  const needsSetup = !state.user || !state.profile?.handle;
 
   return (
     <>
-      <div className="me__bell"><NotificationBell /></div>
+      <div className="me__bell">
+        {state.user && state.profile?.handle && (
+          <button className={`icon-btn ${settings ? "is-on" : ""}`} onClick={() => setSettings(!settings)} aria-label="Settings" aria-expanded={settings}>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
+            </svg>
+          </button>
+        )}
+        <NotificationBell />
+      </div>
       <header className="me">
         <div className="avatar avatar--lg">{state.user ? initialsOf(state.profile) : site.me.initials}</div>
         <div className="min0">
@@ -207,14 +232,20 @@ export default function MyLog() {
               <span className="muted small"> · {plural(state.following?.length || 0, "friend")} followed</span>
             </p>
           )}
-          <p className="mono me__stats">
-            {plural(logs.length, "episode")} · Hooked on {plural(shows.length, "show")}
-          </p>
         </div>
       </header>
 
+      {logs.length > 0 && (
+        <div className="me-stats">
+          <span><b>{logs.length}</b> episodes</span>
+          <span><b>{showCount}</b> shows</span>
+          <span><b>{hookedPct}%</b> hooked</span>
+          {hours > 0 && <span><b>{hours}</b> hrs</span>}
+        </div>
+      )}
+
       {state.error && <div className="notice"><p>{state.error}</p></div>}
-      <ProfilePanel state={state} />
+      {(needsSetup || settings) && <ProfilePanel state={state} />}
       {state.user && <MyBriefs userId={state.user.id} />}
 
       {shows.length > 0 && (
@@ -227,7 +258,14 @@ export default function MyLog() {
               </Link>
             ))}
           </div>
-          <p className="muted">{shows.slice(0, 4).map((s) => s.title).join(" · ")}</p>
+          <p className="muted">
+            {shows.slice(0, 4).map((s) => s.title).join(" · ")}
+            {shows.length > 4 && (
+              <button className="link-btn small" style={{ marginLeft: 8 }} onClick={() => setTab("shows")}>
+                +{shows.length - 4} more
+              </button>
+            )}
+          </p>
         </section>
       )}
 
@@ -252,79 +290,32 @@ export default function MyLog() {
         </section>
       )}
 
-      {state.list.length > 0 && (
-        <section>
-          <h2 className="label">On my list</h2>
-          <ul className="list">
-            {state.list.map((i) => (
-              <li key={i.episodeId || i.title} className="list__row">
-                <Art src={i.image} title={i.feedTitle} size={48} radius={10} episodeId={i.episodeId} feedId={i.feedId} />
-                <div className="min0 grow">
-                  {i.episodeId ? (
-                    <Link href={`/episode/${i.episodeId}`} className="title-sm">
-                      {i.title}
-                    </Link>
-                  ) : (
-                    <p className="title-sm">{i.title}</p>
-                  )}
-                  <p className="muted small">
-                    {i.feedTitle}
-                    {i.from ? ` · from ${i.from}` : ""}
-                  </p>
-                </div>
-                <button className="link-btn small" onClick={() => removeFromList(i)} aria-label="Remove from list">
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <div className="tabs me-tabs" role="tablist">
+        {TABS.map(([k, label]) => (
+          <button key={k} className={`tab ${tab === k ? "is-on" : ""}`} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}>
+            {label}
+            {k === "upnext" && queue > 0 && <span className="tab__n">{queue}</span>}
+          </button>
+        ))}
+      </div>
 
-      {logs.length === 0 ? (
-        <section className="empty card">
+      {tab === "upnext" ? (
+        <UpNextView state={state} />
+      ) : logs.length === 0 && !(tab === "shows" && shows.length) ? (
+        <section className="empty card" style={{ marginTop: 16 }}>
           <p className="display h-md">Nothing logged yet.</p>
           <p className="muted">Find an episode, hit play, then tell us: hooked, or not?</p>
           <Link className="btn btn--cobalt btn--shadow-sm" href="/search">
             Find something
           </Link>
         </section>
+      ) : tab === "shows" ? (
+        <ShowsView logs={logs} hooked={state.shows} />
+      ) : tab === "stats" ? (
+        <Wrapped logs={logs} />
       ) : (
-        groupByMonth(logs).map((g) => (
-          <section key={g.label}>
-            <h2 className="label">{g.label}</h2>
-            <ul className="log">
-              {g.items.map((l) => (
-                <li key={l.id} className="log__row log__row--share">
-                  <span className="mono log__day">{new Date(l.loggedAt).getDate()}</span>
-                  <Art src={l.image} title={l.feedTitle} size={56} radius={12} episodeId={l.id} />
-                  <div className="min0">
-                    <Link href={`/log/${l.id}`} style={{ display: "block" }}>
-                      <p className="title-sm">{l.title}</p>
-                      <p className="muted small row gap-xs center wrap">
-                        {l.feedTitle}
-                        {l.rating > 0 && (
-                          <>
-                            <span>·</span>
-                            <Stars value={l.rating} size={15} />
-                          </>
-                        )}
-                      </p>
-                      {l.hook && <p className="log__hook">“{l.hook}”</p>}
-                    </Link>
-                    {state.user && <LogThread logUserId={state.user.id} episodeId={l.id} />}
-                  </div>
-                  <div className="log__side">
-                    <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
-                    <ShareButton compact episode={{ id: l.id, title: l.title, feedId: l.feedId, feedTitle: l.feedTitle, image: l.image, audio: l.audio, duration: l.duration }} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
+        <Diary logs={logs} />
       )}
-      <Wrapped logs={logs} />
     </>
   );
 }

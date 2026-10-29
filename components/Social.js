@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { addToList, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
 
-// "On my list" / "Not for me" on a friend's recommendation.
+// "+ Up next" / "Not for me" on a friend's recommendation.
 export function RecActions({ item }) {
   const state = useStore();
   const [dismissed, setDismissed] = useState(false);
@@ -15,7 +15,7 @@ export function RecActions({ item }) {
         className={`btn btn--shadow-sm ${saved ? "btn--butter" : "btn--cobalt"}`}
         onClick={() => (saved ? removeFromList(item) : addToList(item))}
       >
-        {saved ? "✓ On my list" : "On my list"}
+        {saved ? "✓ Up next" : "+ Up next"}
       </button>
       {!saved && (
         <button className="btn" onClick={() => setDismissed(true)}>
@@ -80,6 +80,30 @@ export function HookShowButton({ show }) {
   );
 }
 
+// "+ Up next" on any episode: saves it to your queue (it plays after whatever's on).
+export function QueueButton({ episode, from }) {
+  const state = useStore();
+  const item = {
+    episodeId: episode.id,
+    title: episode.title,
+    feedId: episode.feedId,
+    feedTitle: episode.feedTitle,
+    image: episode.image || episode.feedImage,
+    ...(from ? { from } : {}),
+  };
+  const on = !!state?.list.some((i) => String(i.episodeId) === String(episode.id));
+  return (
+    <button
+      className={`btn btn--sm ${on ? "btn--butter" : ""}`}
+      onClick={() => (on ? removeFromList(item) : addToList(item))}
+      aria-pressed={on}
+      title={on ? "Remove from Up next" : "Add to Up next"}
+    >
+      {on ? "✓ Up next" : "+ Up next"}
+    </button>
+  );
+}
+
 // "Queue all 4" at the bottom of a brief.
 export function QueueAll({ items, tone }) {
   const [done, setDone] = useState(false);
@@ -91,7 +115,7 @@ export function QueueAll({ items, tone }) {
         setDone(true);
       }}
     >
-      {done ? "Queued. See My log." : `Queue all ${items.length}`}
+      {done ? "Added to Up next. See My log." : `Add all ${items.length} to Up next`}
     </button>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Art from "./Art";
 import { ClipChip, PlayButton, PlayCut } from "./Player";
-import { QueueAll } from "./Social";
+import { QueueAll, QueueButton } from "./Social";
 import BriefOwner from "./BriefOwner";
 import { briefQueue, briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes } from "@/lib/format";
@@ -138,6 +138,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
                 <Link href={`/log/${it.episodeId}`} className="btn btn--sm btn--cobalt">
                   Log it
                 </Link>
+                <QueueButton episode={ep} from={`${brief.title} brief`} />
               </div>
             )}
           </article>

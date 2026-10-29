@@ -297,3 +297,7 @@ end;
 $$;
 drop trigger if exists on_reaction on public.reactions;
 create trigger on_reaction after insert on public.reactions for each row execute function public.notify_reaction();
+
+-- Taste picker topics + a faster lookup for show ratings.
+alter table public.profiles add column if not exists interests jsonb not null default '[]'::jsonb;
+create index if not exists logs_feed on public.logs (feed_id);

@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
-import { setNowPlaying } from "@/lib/store";
+import { getState, removeFromList, setNowPlaying, upNext } from "@/lib/store";
 
 const PlayerContext = createContext(null);
 
@@ -78,6 +78,38 @@ export function PlayerProvider({ children }) {
     [playQueue]
   );
 
+  // Play something saved to Up next (those don't store the audio link, so look it up first).
+  const playItem = useCallback(
+    async (item) => {
+      if (!item?.episodeId) return false;
+      try {
+        const res = await fetch(`/api/episode?id=${item.episodeId}`);
+        if (!res.ok) return false;
+        const ep = await res.json();
+        if (!ep.audio) return false;
+        playQueue([{ ep, start: 0, end: null }]);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [playQueue]
+  );
+
+  // When an episode from Up next finishes: take it off the list and start the next one.
+  const advanceUpNext = useCallback(
+    async (finished) => {
+      const list = upNext(getState());
+      const done = list.find((i) => String(i.episodeId) === String(finished?.id));
+      if (!done) return;
+      removeFromList(done);
+      for (const item of list.filter((i) => i !== done)) {
+        if (await playItem(item)) return;
+      }
+    },
+    [playItem]
+  );
+
   // Close the player: stop, unload, hide.
   const close = useCallback(() => {
     const el = audio.current;
@@ -116,7 +148,10 @@ export function PlayerProvider({ children }) {
     const next = () => {
       const { i, segs } = q.current;
       if (i + 1 < segs.length) startSeg(i + 1);
-      else el.pause();
+      else {
+        el.pause();
+        if (!q.current.meta) advanceUpNext(segs[i]?.ep);
+      }
     };
     const onTime = () => {
       const s = seg();
@@ -146,7 +181,7 @@ export function PlayerProvider({ children }) {
       el.removeEventListener("pause", off);
       el.removeEventListener("ended", next);
     };
-  }, [startSeg]);
+  }, [startSeg, advanceUpNext]);
 
   // Jump to a point, as a fraction of the episode (or of the whole cut).
   function seekTo(f) {
@@ -224,7 +259,7 @@ export function PlayerProvider({ children }) {
   const shownElapsed = drag !== null ? drag * times.length : times.elapsed;
 
   return (
-    <PlayerContext.Provider value={{ play, playQueue, toggle, close, current: s?.ep || null, playing, queueMeta: meta }}>
+    <PlayerContext.Provider value={{ play, playQueue, playItem, toggle, close, current: s?.ep || null, playing, queueMeta: meta }}>
       {children}
       <audio ref={audio} preload="none" />
       {!hidden && (

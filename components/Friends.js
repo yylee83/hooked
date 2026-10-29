@@ -353,7 +353,7 @@ function RecCard({ r, onDismiss }) {
       {(r.note || r.hook) && <p className="rec__hook">“{r.note || r.hook}”</p>}
       <div className="row gap">
         <button className={`btn btn--shadow-sm ${saved ? "btn--butter" : "btn--cobalt"}`} onClick={() => !saved && addToList(item)}>
-          {saved ? "✓ On my list" : "On my list"}
+          {saved ? "✓ Up next" : "+ Up next"}
         </button>
         <button
           className="btn"

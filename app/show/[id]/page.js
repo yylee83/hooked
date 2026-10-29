@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
-import { HookShowButton } from "@/components/Social";
+import { HookShowButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, getShow, plainText, safe } from "@/lib/podcastindex";
 import { minutes, plural, shortDate } from "@/lib/format";
+import ShowRatings from "@/components/ShowRatings";
+import { showStats } from "@/lib/supabase/public";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -22,7 +24,7 @@ export default async function ShowPage({ params }) {
   if (!show.data) notFound();
   const s = show.data;
 
-  const eps = await safe(getEpisodes(s.id, 30));
+  const [eps, community] = await Promise.all([safe(getEpisodes(s.id, 30)), showStats(s.id)]);
   const episodes = (eps.data || []).map((e) => ({ raw: e, card: episodeCard(e, s) }));
   const categories = Object.values(s.categories || {}).slice(0, 2);
 
@@ -44,6 +46,7 @@ export default async function ShowPage({ params }) {
       </p>
       {s.description && <p className="show__desc">{plainText(s.description)}</p>}
 
+      <ShowRatings feedId={s.id} community={community} />
       <HookShowButton show={{ feedId: s.id, title: s.title, image: artOf(s) }} />
 
       <h2 className="section-title">Latest episodes</h2>
@@ -62,6 +65,7 @@ export default async function ShowPage({ params }) {
               <Link href={`/log/${card.id}`} className="btn btn--sm btn--cobalt">
                 Log it
               </Link>
+              <QueueButton episode={card} />
             </div>
           </li>
         ))}

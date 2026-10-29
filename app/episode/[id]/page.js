@@ -5,6 +5,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
 import { ShareButton } from "@/components/Share";
+import { QueueButton } from "@/components/Social";
 import { JoinNudge } from "@/components/JoinNudge";
 import LogThread from "@/components/LogThread";
 import Stars from "@/components/Stars";
@@ -117,6 +118,7 @@ export default async function EpisodePage({ params, searchParams }) {
         <Link href={`/log/${card.id}`} className="btn btn--sm btn--cobalt btn--shadow-sm">
           Log it
         </Link>
+        <QueueButton episode={card} />
         <ShareButton episode={card} />
       </div>
 
