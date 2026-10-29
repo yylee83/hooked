@@ -506,3 +506,20 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .order__btns button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); background: var(--white); font-weight: 800; font-size: 14px; }
 .order__btns button:disabled { opacity: .3; }
 .brief__owner { display: flex; gap: 10px; margin: -10px 0 22px; }
+
+/* ---------- v12: brief cards with covers, edit button ---------- */
+.brief-tile--fan { position: relative; margin-top: 34px; padding-right: 150px; }
+.brief-tile--sm.brief-tile--fan { padding-right: 128px; }
+.fan { position: absolute; top: -26px; right: 18px; width: 132px; height: 132px; pointer-events: none; }
+.fan__cover { position: absolute; width: 104px; height: 104px; object-fit: cover; border: 3px solid var(--ink); border-radius: 18px; background: var(--butter); }
+.fan__cover--0 { top: 0; right: 12px; transform: rotate(6deg); box-shadow: 5px 5px 0 var(--ink); z-index: 3; }
+.fan__cover--1 { top: 14px; right: 44px; transform: rotate(-8deg); z-index: 2; }
+.fan__cover--2 { top: 30px; right: 0; transform: rotate(16deg); z-index: 1; }
+.brief-tile--sm .fan { width: 112px; height: 112px; top: -22px; }
+.brief-tile--sm .fan__cover { width: 86px; height: 86px; border-radius: 15px; }
+.brief-tile--fan:hover .fan__cover--0 { transform: rotate(2deg) translateY(-4px); transition: transform .15s ease; }
+@media (max-width: 420px) {
+  .brief-tile--fan, .brief-tile--sm.brief-tile--fan { padding-right: 24px; padding-top: 90px; }
+  .fan { top: -24px; right: 14px; }
+}
+.brief__owner .btn { background: var(--butter); color: var(--ink); }
