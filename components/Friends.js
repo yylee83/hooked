@@ -209,7 +209,7 @@ export function FriendsFeed() {
       followIds.length
         ? db
             .from("logs")
-            .select("*, who:profiles!inner(id, handle, display_name)")
+            .select("*, who:profiles!logs_user_id_fkey!inner(id, handle, display_name)")
             .in("user_id", followIds)
             .order("logged_at", { ascending: false })
             .limit(30)

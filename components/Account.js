@@ -32,7 +32,7 @@ export function FreshLogs() {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("user_id, episode_id, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+      .select("user_id, episode_id, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
       .limit(8)
@@ -77,13 +77,15 @@ export function FreshLogs() {
 
 // What people on Hooked said about one episode.
 export function EpisodeLogs({ episodeId }) {
-  const [logs, setLogs] = useState(null);
+  const state = useStore();
+  const me = state?.user?.id;
+  let [logs, setLogs] = useState(null);
   useEffect(() => {
     const db = supabase();
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("user_id, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+      .select("user_id, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
       .eq("episode_id", episodeId)
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
@@ -92,9 +94,11 @@ export function EpisodeLogs({ episodeId }) {
     return () => {
       live = false;
     };
-  }, [episodeId]);
+  }, [episodeId, me]);
   if (!logs?.length) return null;
   const hooked = logs.filter((l) => l.hooked).length;
+  // Your own review first.
+  if (me) logs = [...logs.filter((l) => l.user_id === me), ...logs.filter((l) => l.user_id !== me)];
   return (
     <section>
       <h2 className="label">What listeners think</h2>
@@ -106,13 +110,18 @@ export function EpisodeLogs({ episodeId }) {
           <li key={l.who.handle} className="fresh">
             <div className="min0 grow">
               <p className="small row gap-xs center wrap">
-                <b>@{l.who.handle}</b>
+                <b>{l.user_id === me ? "You" : `@${l.who.handle}`}</b>
                 <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`} style={{ fontSize: 11, padding: "2px 8px" }}>
                   {l.hooked ? "Hooked" : "Not hooked"}
                 </span>
                 {l.rating > 0 && <Stars value={Number(l.rating)} size={14} />}
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
+              {l.user_id === me && (
+                <Link href={`/log/${episodeId}`} className="link-btn small">
+                  Edit your review
+                </Link>
+              )}
               <LogThread logUserId={l.user_id} episodeId={episodeId} />
             </div>
           </li>

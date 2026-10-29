@@ -53,7 +53,7 @@ export async function GET(request) {
     const { data: friendLogs } = ids.length
       ? await db
           .from("logs")
-          .select("episode_id, title, feed_title, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+          .select("episode_id, title, feed_title, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
           .in("user_id", ids)
           .gte("logged_at", since)
           .order("logged_at", { ascending: false })
