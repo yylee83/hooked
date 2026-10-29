@@ -523,3 +523,17 @@ body:has(.mini) .app { padding-bottom: 300px; }
   .fan { top: -24px; right: 14px; }
 }
 .brief__owner .btn { background: var(--butter); color: var(--ink); }
+/* smaller cover fan */
+.brief-tile--fan { padding-right: 116px; }
+.brief-tile--sm.brief-tile--fan { padding-right: 100px; }
+.fan { top: -18px; right: 16px; width: 96px; height: 96px; }
+.fan__cover { width: 72px; height: 72px; border-width: 2.5px; border-radius: 13px; }
+.fan__cover--0 { right: 8px; box-shadow: 3px 3px 0 var(--ink); }
+.fan__cover--1 { top: 10px; right: 30px; }
+.fan__cover--2 { top: 20px; right: 0; }
+.brief-tile--sm .fan { width: 84px; height: 84px; top: -16px; }
+.brief-tile--sm .fan__cover { width: 62px; height: 62px; border-radius: 12px; }
+@media (max-width: 420px) {
+  .brief-tile--fan, .brief-tile--sm.brief-tile--fan { padding-right: 24px; padding-top: 64px; }
+  .fan { top: -18px; right: 12px; }
+}
