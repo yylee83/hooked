@@ -2,17 +2,17 @@
 -- In Supabase: open your project → SQL Editor → New query → paste ALL of this → Run.
 -- It's safe to run more than once.
 
--- Profiles: one per person. Created automatically when someone signs up.
+-- Profiles: one per person. The site creates it the first time someone signs in.
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  handle text unique check (handle ~ '^[a-z0-9._]{2,24}$'),
+  handle text unique check (char_length(handle) between 2 and 24),
   display_name text,
   created_at timestamptz not null default now()
 );
 
 -- Logs: every episode someone logs (hooked or not, rating, "what's the hook?").
 create table if not exists public.logs (
-  id bigint generated always as identity primary key,
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
   episode_id bigint not null,
   title text not null,
@@ -23,9 +23,9 @@ create table if not exists public.logs (
   audio text,
   duration int,
   hooked boolean not null,
-  rating numeric(2, 1) check (rating between 0 and 5),
+  rating real check (rating between 0 and 5),
   hook text check (char_length(hook) <= 280),
-  sent_to text[] not null default '{}',
+  sent_to jsonb not null default '[]',
   logged_at timestamptz not null default now(),
   unique (user_id, episode_id)
 );
@@ -70,18 +70,6 @@ create table if not exists public.briefs (
 );
 create index if not exists briefs_recent on public.briefs (created_at desc);
 
--- Make a profile row whenever someone signs up.
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles (id) values (new.id) on conflict do nothing;
-  return new;
-end;
-$$;
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created after insert on auth.users
-  for each row execute function public.handle_new_user();
-
 -- Security: everyone can read profiles, logs, hooked shows and briefs;
 -- people can only change their own. Lists are private.
 alter table public.profiles enable row level security;
@@ -92,7 +80,9 @@ alter table public.briefs enable row level security;
 
 drop policy if exists "profiles read" on public.profiles;
 drop policy if exists "profiles update own" on public.profiles;
+drop policy if exists "profiles insert own" on public.profiles;
 create policy "profiles read" on public.profiles for select using (true);
+create policy "profiles insert own" on public.profiles for insert with check (auth.uid() = id);
 create policy "profiles update own" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 
 drop policy if exists "logs read" on public.logs;
@@ -112,3 +102,6 @@ drop policy if exists "briefs read" on public.briefs;
 drop policy if exists "briefs write own" on public.briefs;
 create policy "briefs read" on public.briefs for select using (true);
 create policy "briefs write own" on public.briefs for all using (auth.uid() = author_id) with check (auth.uid() = author_id);
+
+-- Give everyone who already signed up a profile row (fixes "Save does nothing").
+insert into public.profiles (id) select id from auth.users on conflict (id) do nothing;

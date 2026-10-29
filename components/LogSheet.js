@@ -63,6 +63,8 @@ export default function LogSheet({ episode, preset }) {
   async function save() {
     if (hooked === undefined) {
       setNudge(true);
+      setError("Pick “I'm hooked” or “I'm not hooked” at the top first.");
+      document.getElementById("hooked-choice")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setSaving(true);
@@ -72,7 +74,7 @@ export default function LogSheet({ episode, preset }) {
       router.push("/me");
     } catch (e) {
       setSaving(false);
-      setError("Couldn't save that log. Try again in a moment.");
+      setError(`Couldn't save that log (${e?.message || "unknown error"}). Try again in a moment.`);
     }
   }
 
@@ -95,11 +97,11 @@ export default function LogSheet({ episode, preset }) {
       </div>
 
       <h3 className="display h-md">Are you hooked?</h3>
-      <div className="choice">
-        <button className={`btn btn--display ${hooked === true ? "btn--cobalt is-on" : ""}`} onClick={() => (setHooked(true), setNudge(false))}>
+      <div className="choice" id="hooked-choice">
+        <button className={`btn btn--display ${hooked === true ? "btn--cobalt is-on" : ""}`} onClick={() => (setHooked(true), setNudge(false), setError(""))}>
           I'm hooked
         </button>
-        <button className={`btn btn--display ${hooked === false ? "btn--ink is-on" : ""}`} onClick={() => (setHooked(false), setNudge(false))}>
+        <button className={`btn btn--display ${hooked === false ? "btn--ink is-on" : ""}`} onClick={() => (setHooked(false), setNudge(false), setError(""))}>
           I'm not hooked
         </button>
       </div>

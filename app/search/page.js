@@ -4,6 +4,8 @@ import EpisodeRow from "@/components/EpisodeRow";
 import KeysNotice from "@/components/KeysNotice";
 import { artOf, episodeCard, safe, searchEpisodes, searchShows, trendingShows } from "@/lib/podcastindex";
 import { plural } from "@/lib/format";
+import TrendingBar from "@/components/TrendingBar";
+import { trendingTopics } from "@/lib/trends";
 
 export const metadata = { title: "Search" };
 
@@ -37,9 +39,11 @@ export default async function SearchPage({ searchParams }) {
   const type = sp.type === "shows" || sp.type === "episodes" ? sp.type : "all";
   const max = Math.min(200, Math.max(PAGE, parseInt(sp.max) || PAGE));
 
+  const topicsPromise = trendingTopics(12);
   let error = null;
   let episodes = [];
   let shows = [];
+  let topics = [];
 
   if (query) {
     const [e, s] = await Promise.all([
@@ -55,6 +59,7 @@ export default async function SearchPage({ searchParams }) {
     shows = t.data || [];
   }
 
+  topics = await topicsPromise;
   const moreEpisodes = type === "episodes" && episodes.length > max;
   const moreShows = type === "shows" && shows.length > max;
   if (type === "episodes") episodes = episodes.slice(0, max);
@@ -83,6 +88,8 @@ export default async function SearchPage({ searchParams }) {
         </button>
       </form>
 
+      <TrendingBar topics={topics} inSearch />
+
       {query && (
         <div className="tabs" role="tablist">
           {[
@@ -101,7 +108,7 @@ export default async function SearchPage({ searchParams }) {
 
       {!error && !query && (
         <>
-          <h2 className="label">Trending right now</h2>
+          <h2 className="label">Popular shows</h2>
           <ul>
             {shows.map((s) => (
               <ShowRow key={s.id} s={s} />

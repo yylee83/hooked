@@ -7,12 +7,14 @@ import { RecActions, Reactions } from "@/components/Social";
 import { artOf, findEpisode, findShow, safe, trendingShows } from "@/lib/podcastindex";
 import { listeningNow, recommendations } from "@/lib/demo";
 import { AvatarLink, FreshLogs } from "@/components/Account";
+import TrendingBar from "@/components/TrendingBar";
+import { trendingTopics } from "@/lib/trends";
 
 // Refresh trending and friend data every 15 minutes.
 export const revalidate = 900;
 
 export default async function FriendsPage() {
-  const trending = await safe(trendingShows(9));
+  const [trending, topics] = await Promise.all([safe(trendingShows(9)), trendingTopics(12)]);
 
   const friends = await Promise.all(
     listeningNow.map(async (f) => {
@@ -35,6 +37,8 @@ export default async function FriendsPage() {
         <Wordmark size={48} />
         <AvatarLink />
       </header>
+
+      <TrendingBar topics={topics} />
 
       <KeysNotice error={trending.error} />
 

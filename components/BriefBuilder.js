@@ -13,7 +13,7 @@ const COLORS = ["cobalt", "bubblegum", "butter"];
 
 const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
 
-export default function BriefBuilder() {
+export default function BriefBuilder({ initialTopic = "" }) {
   const router = useRouter();
   const state = useStore();
   const [topic, setTopic] = useState("");
@@ -27,10 +27,15 @@ export default function BriefBuilder() {
   const [color, setColor] = useState("cobalt");
   const [saving, setSaving] = useState(false);
 
-  // Bring back a draft (e.g. after signing in to publish).
+  // Bring back a draft (e.g. after signing in to publish), or start from a trending topic.
   useEffect(() => {
     try {
       const d = JSON.parse(sessionStorage.getItem(DRAFT) || "null");
+      if (initialTopic && (!d || d.topic !== initialTopic)) {
+        setTopic(initialTopic);
+        find(null, null, initialTopic);
+        return;
+      }
       if (d) {
         setTopic(d.topic);
         setMode(d.mode);
@@ -41,24 +46,25 @@ export default function BriefBuilder() {
         setColor(d.color);
       }
     } catch {}
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function find(e, forceMode) {
+  async function find(e, forceMode, forceTopic) {
     e?.preventDefault();
     const m = forceMode || mode;
+    const t = (forceTopic || topic).trim();
     if (forceMode) setMode(forceMode);
     setLoading(true);
     setError("");
     setResult(null);
     try {
-      const res = await fetch(`/api/briefs/draft?${new URLSearchParams({ topic: topic.trim(), mode: m })}`);
+      const res = await fetch(`/api/briefs/draft?${new URLSearchParams({ topic: t, mode: m })}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       setResult(data);
       const withClips = data.items.filter((x) => x.clips?.length);
       const first = (m === "clips" && withClips.length ? withClips : data.items).slice(0, m === "clips" ? 5 : 4);
       setPicked(first.map((x) => x.episodeId));
-      if (!title) setTitle(titleCase(topic.trim()));
+      if (!title) setTitle(titleCase(t));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -110,7 +116,7 @@ export default function BriefBuilder() {
       .single();
     if (err) {
       setSaving(false);
-      setError(state.profile?.handle ? "Couldn't publish. Try again." : "Pick a handle on My log first, then publish.");
+      setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
     try {
