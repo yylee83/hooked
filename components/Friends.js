@@ -180,7 +180,7 @@ export function PeopleFinder() {
   );
 }
 
-// The Friends tab, built from the people you follow.
+// The friends section of the Home tab, built from the people you follow.
 export function FriendsFeed() {
   const state = useStore();
   const [data, setData] = useState(null);
