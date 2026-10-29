@@ -2,10 +2,11 @@ import Link from "next/link";
 import Art from "@/components/Art";
 import EpisodeRow from "@/components/EpisodeRow";
 import KeysNotice from "@/components/KeysNotice";
-import { artOf, episodeCard, safe, searchEpisodes, searchShows, trendingShows } from "@/lib/podcastindex";
+import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/podcastindex";
 import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import { trendingTopics } from "@/lib/trends";
+import { popularOnHooked } from "@/lib/charts";
 
 export const metadata = { title: "Search" };
 
@@ -44,6 +45,7 @@ export default async function SearchPage({ searchParams }) {
   let episodes = [];
   let shows = [];
   let topics = [];
+  let popular = [];
 
   if (query) {
     const [e, s] = await Promise.all([
@@ -54,9 +56,7 @@ export default async function SearchPage({ searchParams }) {
     episodes = (e.data || []).map((x) => episodeCard(x));
     shows = s.data || [];
   } else {
-    const t = await safe(trendingShows(15));
-    error = t.error;
-    shows = t.data || [];
+    popular = await popularOnHooked(30, 15);
   }
 
   topics = await topicsPromise;
@@ -106,14 +106,41 @@ export default async function SearchPage({ searchParams }) {
 
       <KeysNotice error={error} />
 
-      {!error && !query && (
+      {!query && (
         <>
-          <h2 className="label">Popular shows</h2>
-          <ul>
-            {shows.map((s) => (
-              <ShowRow key={s.id} s={s} />
-            ))}
-          </ul>
+          <h2 className="label">Popular on Hooked on</h2>
+          <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
+            The shows people here logged most in the last 30 days.
+          </p>
+          {popular.length === 0 ? (
+            <p className="muted">
+              Nothing logged yet this month. <Link href="/" className="more-link">Log an episode</Link> to start the list.
+            </p>
+          ) : (
+            <ol className="pop-list">
+              {popular.map((s, i) => (
+                <li key={s.feedId}>
+                  <Link href={`/show/${s.feedId}`} className="results__row">
+                    <span className="pop-list__rank display">{i + 1}</span>
+                    <Art src={s.image} title={s.title} size={60} radius={14} />
+                    <div className="min0">
+                      <p className="title-sm">{s.title}</p>
+                      <p className="mono small muted">
+                        {[
+                          plural(s.listeners, "listener"),
+                          s.logs > s.listeners ? plural(s.logs, "log") : null,
+                          `${s.hookedPct}% hooked`,
+                          s.avg ? `★ ${s.avg.toFixed(1)}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
         </>
       )}
 

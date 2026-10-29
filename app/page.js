@@ -5,13 +5,13 @@ import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
 import { NotificationBell } from "@/components/Notifications";
-import { artOf, safe, trendingShows } from "@/lib/podcastindex";
+import { topCharts } from "@/lib/charts";
 
-// Refresh trending shows every 15 minutes.
-export const revalidate = 900;
+// Refresh the chart every hour (Apple updates it daily).
+export const revalidate = 3600;
 
 export default async function FriendsPage() {
-  const trending = await safe(trendingShows(9));
+  const chart = await topCharts(9);
 
   return (
     <>
@@ -30,19 +30,27 @@ export default async function FriendsPage() {
         </div>
       </header>
 
-      <KeysNotice error={trending.error} />
+      <KeysNotice />
 
       <FriendsFeed />
 
       <FreshLogs />
 
-      {trending.data?.length > 0 && (
+      {chart.length > 0 && (
         <>
-          <h2 className="section-title">Trending right now</h2>
+          <div className="row center" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+            <h2 className="section-title">Trending right now</h2>
+          </div>
+          <p className="mono small muted chart-src">Top shows on Apple Podcasts in the US · updated daily</p>
           <div className="trend">
-            {trending.data.map((s, i) => (
-              <Link key={s.id} href={`/show/${s.id}`} className="trend__item">
-                <Art src={artOf(s)} title={s.title} size="100%" radius={18} tilt={[-1.5, 1, -0.5][i % 3]} className="art--fluid" />
+            {chart.map((s, i) => (
+              <Link
+                key={s.itunesId}
+                href={s.feedId ? `/show/${s.feedId}` : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
+                className="trend__item"
+              >
+                <span className="trend__rank display">{s.rank}</span>
+                <Art src={s.image} title={s.title} size="100%" radius={18} tilt={[-1.5, 1, -0.5][i % 3]} className="art--fluid" />
                 <p>{s.title}</p>
               </Link>
             ))}
