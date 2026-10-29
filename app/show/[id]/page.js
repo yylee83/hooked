@@ -15,8 +15,9 @@ export async function generateMetadata({ params }) {
   return { title: data?.title || "Show" };
 }
 
-export default async function ShowPage({ params }) {
+export default async function ShowPage({ params, searchParams }) {
   const { id } = await params;
+  const { note } = (await searchParams) || {};
   if (!/^\d+$/.test(id)) notFound();
 
   const show = await safe(getShow(id));
@@ -33,6 +34,11 @@ export default async function ShowPage({ params }) {
       <Link href="/search" className="back">
         ← Back
       </Link>
+      {note && (
+        <div className="notice" style={{ marginTop: 12 }}>
+          <p>{String(note).slice(0, 160)}</p>
+        </div>
+      )}
 
       <div className="show__hero">
         <Art src={artOf(s)} title={s.title} size={150} tilt={-2.5} radius={24} className="art--shadow" />

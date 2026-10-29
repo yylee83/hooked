@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import PasteLink from "./PasteLink";
 
 const tabs = [
   { href: "/", label: "Home" },
@@ -26,6 +27,7 @@ function PlusSheet({ onClose }) {
           <span className="display">Log a review</span>
           <span>Find an episode, say if you're hooked, rate it, give the hook.</span>
         </Link>
+        <PasteLink onDone={onClose} />
         <Link href="/briefs/new" className="plus-option tone-bubblegum" onClick={onClose}>
           <span className="display">Make a brief</span>
           <span>Pick a topic. We'll pull the best episodes, or just the parts that mention it.</span>

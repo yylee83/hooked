@@ -9,6 +9,8 @@ import TopEpisodes from "@/components/TopEpisodes";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
+import { isPodcastLink, resolveLink } from "@/lib/links";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Search" };
 
@@ -42,6 +44,15 @@ export default async function SearchPage({ searchParams }) {
   const type = sp.type === "shows" || sp.type === "episodes" ? sp.type : "all";
   const max = Math.min(200, Math.max(PAGE, parseInt(sp.max) || PAGE));
 
+  // Pasted an Apple Podcasts or Spotify link? Go straight to logging it.
+  let linkError = null;
+  if (query && isPodcastLink(query)) {
+    const r = await resolveLink(query);
+    if (r.episodeId) redirect(`/log/${r.episodeId}`);
+    if (r.feedId) redirect(`/show/${r.feedId}${r.note ? `?note=${encodeURIComponent(r.note)}` : ""}`);
+    linkError = r;
+  }
+
   const topicsPromise = trendingTopics(12);
   let error = null;
   let episodes = [];
@@ -50,7 +61,9 @@ export default async function SearchPage({ searchParams }) {
   let popular = [];
   let chartEps = { episodes: [], next: null };
 
-  if (query) {
+  if (linkError) {
+    // fall through to the message below
+  } else if (query) {
     const [e, s] = await Promise.all([
       type === "shows" ? { data: [] } : safe(searchEpisodes(query, type === "episodes" ? max + 1 : 6)),
       type === "episodes" ? { data: [] } : safe(searchShows(query, type === "shows" ? max + 1 : 6)),
@@ -81,7 +94,7 @@ export default async function SearchPage({ searchParams }) {
           type="search"
           name="q"
           defaultValue={query}
-          placeholder="People, shows, topics…"
+          placeholder="People, shows, topics, or paste a link"
           aria-label="Search podcasts"
           autoFocus={!query}
         />
@@ -108,6 +121,19 @@ export default async function SearchPage({ searchParams }) {
       )}
 
       <KeysNotice error={error} />
+
+      {linkError && (
+        <div className="notice">
+          <p>
+            {linkError.error}{" "}
+            {linkError.query && (
+              <Link href={href(linkError.query, "episodes")} className="more-link">
+                Search for “{linkError.query}” →
+              </Link>
+            )}
+          </p>
+        </div>
+      )}
 
       {!query && (
         <>
@@ -159,7 +185,7 @@ export default async function SearchPage({ searchParams }) {
         </section>
       )}
 
-      {!error && query && type !== "shows" && (
+      {!error && !linkError && query && type !== "shows" && (
         <section>
           <div className="row center" style={{ justifyContent: "space-between" }}>
             <h2 className="label">Episodes</h2>
@@ -186,7 +212,7 @@ export default async function SearchPage({ searchParams }) {
         </section>
       )}
 
-      {!error && query && type !== "episodes" && (
+      {!error && !linkError && query && type !== "episodes" && (
         <section>
           <div className="row center" style={{ justifyContent: "space-between" }}>
             <h2 className="label">Shows</h2>

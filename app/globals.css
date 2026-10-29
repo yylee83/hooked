@@ -635,3 +635,10 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .diary__hook-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .diary__hook--btn.is-open .diary__hook-text { display: block; -webkit-line-clamp: unset; }
 .diary__more { display: inline-block; margin-top: 2px; font-size: 13px; font-weight: 700; color: var(--cobalt); text-decoration: underline; text-underline-offset: 2px; }
+/* ---------- Paste a link ---------- */
+.paste { margin: 4px 0 10px; }
+.paste__label { display: block; margin-bottom: 6px; color: var(--muted); }
+.paste__row { display: flex; gap: 8px; }
+.paste__row .input { flex: 1; min-width: 0; font-size: 15px; padding-top: 10px; padding-bottom: 10px; }
+.paste__row .btn { flex: none; }
+.paste__msg { margin-top: 8px; font-size: 14px; font-weight: 600; }
