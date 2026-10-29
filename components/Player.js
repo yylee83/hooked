@@ -16,6 +16,10 @@ export function PlayerProvider({ children }) {
   const [, force] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [times, setTimes] = useState({ elapsed: 0, length: 0 });
+  const [rate, setRate] = useState(1);
+  const rateRef = useRef(1);
+  const [drag, setDrag] = useState(null); // fraction while dragging the knob
   const path = usePathname() || "";
 
   const seg = () => q.current.segs[q.current.i];
@@ -32,14 +36,17 @@ export function PlayerProvider({ children }) {
     if (src.current !== s.ep.audio) {
       src.current = s.ep.audio;
       el.src = s.ep.audio;
+      el.defaultPlaybackRate = rateRef.current;
       const seekWhenReady = () => {
         if (at > 0) el.currentTime = at;
+        el.playbackRate = rateRef.current;
         el.play().catch(() => {});
       };
       el.addEventListener("loadedmetadata", seekWhenReady, { once: true });
       el.load();
     } else {
       el.currentTime = at;
+      el.playbackRate = rateRef.current;
       el.play().catch(() => {});
     }
     setNowPlaying({ ...s.ep });
@@ -76,6 +83,17 @@ export function PlayerProvider({ children }) {
     if (el) el.paused ? el.play().catch(() => {}) : el.pause();
   };
 
+  // Remember your playback speed between visits.
+  useEffect(() => {
+    try {
+      const saved = parseFloat(localStorage.getItem("hooked:rate"));
+      if (RATES.includes(saved)) {
+        rateRef.current = saved;
+        setRate(saved);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     const el = audio.current;
     if (!el) return;
@@ -92,9 +110,12 @@ export function PlayerProvider({ children }) {
       if (q.current.meta) {
         const before = q.current.segs.slice(0, q.current.i).reduce((sum, x) => sum + segLen(x), 0);
         const t = total();
-        setProgress(t ? Math.min(1, (before + el.currentTime - s.start) / t) : 0);
+        const elapsed = Math.max(0, before + el.currentTime - s.start);
+        setProgress(t ? Math.min(1, elapsed / t) : 0);
+        setTimes({ elapsed, length: t });
       } else {
         setProgress(end ? el.currentTime / end : 0);
+        setTimes({ elapsed: el.currentTime, length: end || 0 });
       }
     };
     const on = () => setPlaying(true);
@@ -111,10 +132,10 @@ export function PlayerProvider({ children }) {
     };
   }, [startSeg]);
 
-  function seek(e) {
+  // Jump to a point, as a fraction of the episode (or of the whole cut).
+  function seekTo(f) {
     const el = audio.current;
-    const r = e.currentTarget.getBoundingClientRect();
-    const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    f = Math.max(0, Math.min(1, f));
     if (q.current.meta) {
       let target = f * total();
       for (let i = 0; i < q.current.segs.length; i++) {
@@ -127,9 +148,64 @@ export function PlayerProvider({ children }) {
     }
   }
 
+  // Back 15 / forward 30 seconds.
+  function skip(seconds) {
+    const el = audio.current;
+    if (!el) return;
+    if (q.current.meta) {
+      const t = total();
+      if (t) seekTo((times.elapsed + seconds) / t);
+    } else if (el.duration) {
+      el.currentTime = Math.max(0, Math.min(el.duration - 0.5, el.currentTime + seconds));
+    }
+  }
+
+  function cycleRate() {
+    const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    rateRef.current = next;
+    setRate(next);
+    try {
+      localStorage.setItem("hooked:rate", String(next));
+    } catch {}
+    const el = audio.current;
+    if (el) {
+      el.defaultPlaybackRate = next;
+      el.playbackRate = next;
+    }
+  }
+
+  // Drag the playhead knob (mouse or finger), or tap anywhere on the bar.
+  const fracAt = (e, bar) => {
+    const r = bar.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  };
+  const onDown = (e) => {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setDrag(fracAt(e, e.currentTarget));
+  };
+  const onMove = (e) => {
+    if (drag !== null) setDrag(fracAt(e, e.currentTarget));
+  };
+  const onUp = (e) => {
+    if (drag === null) return;
+    const f = fracAt(e, e.currentTarget);
+    setDrag(null);
+    seekTo(f);
+  };
+  const onKey = (e) => {
+    const step = { ArrowLeft: -5, ArrowRight: 5, PageDown: -15, PageUp: 30 }[e.key];
+    if (step) {
+      e.preventDefault();
+      skip(step);
+    } else if (e.key === "Home") seekTo(0);
+    else if (e.key === "End") seekTo(0.999);
+  };
+
   const s = seg();
   const meta = q.current.meta;
   const hidden = !s || path.startsWith("/log/");
+  const shown = drag ?? progress;
+  const shownElapsed = drag !== null ? drag * times.length : times.elapsed;
 
   return (
     <PlayerContext.Provider value={{ play, playQueue, toggle, current: s?.ep || null, playing, queueMeta: meta }}>
@@ -138,33 +214,101 @@ export function PlayerProvider({ children }) {
       {!hidden && (
         <div className="mini">
           <div className="mini__inner">
-            <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} episodeId={s.ep.id} />
-            <div className="mini__text">
-              {meta && (
-                <p className="mini__meta mono">
-                  {meta.title} · clip {q.current.i + 1} of {q.current.segs.length}
-                </p>
-              )}
-              <Link href={`/episode/${s.ep.id}`} className="mini__title">
-                {s.ep.title}
-              </Link>
-              <div className="playhead playhead--live" onClick={seek} role="slider" aria-label="Seek" aria-valuenow={Math.round(progress * 100)}>
-                <span className="playhead__fill" style={{ width: `${progress * 100}%` }} />
-                <span className="playhead__knob" style={{ left: `${progress * 100}%` }} />
+            <div className="mini__top">
+              <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} episodeId={s.ep.id} />
+              <div className="mini__text">
+                {meta && (
+                  <p className="mini__meta mono">
+                    {meta.title} · clip {q.current.i + 1} of {q.current.segs.length}
+                  </p>
+                )}
+                <Link href={`/episode/${s.ep.id}`} className="mini__title">
+                  {s.ep.title}
+                </Link>
+                <p className="mini__show">{s.ep.feedTitle}</p>
               </div>
             </div>
-            {meta && q.current.i + 1 < q.current.segs.length && (
-              <button className="mini__skip" onClick={() => startSeg(q.current.i + 1)} aria-label="Next clip">
-                <NextIcon />
+
+            <div className="mini__scrub">
+              <span className="mini__time mono">{clockTime(shownElapsed)}</span>
+              <div
+                className={`playhead playhead--live ${drag !== null ? "is-dragging" : ""}`}
+                onPointerDown={onDown}
+                onPointerMove={onMove}
+                onPointerUp={onUp}
+                onPointerCancel={() => setDrag(null)}
+                onKeyDown={onKey}
+                tabIndex={0}
+                role="slider"
+                aria-label="Playback position"
+                aria-valuemin={0}
+                aria-valuemax={Math.round(times.length)}
+                aria-valuenow={Math.round(shownElapsed)}
+                aria-valuetext={`${clockTime(shownElapsed)} of ${clockTime(times.length)}`}
+              >
+                <span className="playhead__fill" style={{ width: `${shown * 100}%` }} />
+                <span className="playhead__knob" style={{ left: `${shown * 100}%` }} />
+              </div>
+              <span className="mini__time mono">-{clockTime(Math.max(0, times.length - shownElapsed))}</span>
+            </div>
+
+            <div className="mini__controls">
+              <button className="mini__rate mono" onClick={cycleRate} aria-label={`Playback speed ${rate}x. Tap to change.`}>
+                {rate}×
               </button>
-            )}
-            <button className="mini__btn" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
-              {playing ? <PauseIcon /> : <PlayIcon />}
-            </button>
+              <button className="mini__jump" onClick={() => skip(-15)} aria-label="Back 15 seconds">
+                <JumpIcon back />
+              </button>
+              <button className="mini__btn" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
+                {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
+              </button>
+              <button className="mini__jump" onClick={() => skip(30)} aria-label="Forward 30 seconds">
+                <JumpIcon />
+              </button>
+              {meta && q.current.i + 1 < q.current.segs.length ? (
+                <button className="mini__skip" onClick={() => startSeg(q.current.i + 1)} aria-label="Next clip">
+                  <NextIcon />
+                </button>
+              ) : (
+                <span className="mini__spacer" aria-hidden="true" />
+              )}
+            </div>
           </div>
         </div>
       )}
     </PlayerContext.Provider>
+  );
+}
+
+const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75];
+
+function clockTime(sec = 0) {
+  const t = Math.max(0, Math.floor(sec || 0));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const r = String(t % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${r}` : `${m}:${r}`;
+}
+
+// Circular arrow with the number of seconds inside: back 15 or forward 30.
+function JumpIcon({ back = false }) {
+  return (
+    <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+      {back ? (
+        <>
+          <path d="M8.5 9.5A10 10 0 1 1 6 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+          <path d="M8.8 4.5v5.6h5.6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      ) : (
+        <>
+          <path d="M23.5 9.5A10 10 0 1 0 26 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+          <path d="M23.2 4.5v5.6h-5.6" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      )}
+      <text x="16" y="20.2" textAnchor="middle" fontSize="9.5" fontWeight="800" fontFamily="system-ui, sans-serif" fill="currentColor">
+        {back ? "15" : "30"}
+      </text>
+    </svg>
   );
 }
 

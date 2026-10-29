@@ -391,3 +391,27 @@ li:last-child > .pick { border-bottom: var(--line); }
 .pw .input { padding-right: 76px; }
 .pw__toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 14px; color: var(--cobalt); padding: 6px 8px; }
 .auth-alt { margin-top: 18px; text-align: center; }
+
+/* ---------- v8: full player ---------- */
+body:has(.mini) .app { padding-bottom: 300px; }
+.mini__inner { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 14px 10px; }
+.mini__top { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.mini__top .mini__text { flex: 1; min-width: 0; }
+.mini__title { margin-bottom: 0; }
+.mini__show { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini__scrub { display: flex; align-items: center; gap: 10px; }
+.mini__time { font-size: 11px; color: var(--muted); min-width: 40px; }
+.mini__time:last-child { text-align: right; }
+.mini__scrub .playhead--live { flex: 1; height: 12px; touch-action: none; cursor: pointer; }
+.mini__scrub .playhead--live .playhead__knob { width: 24px; height: 24px; transition: transform .12s ease; cursor: grab; }
+.mini__scrub .playhead--live:hover .playhead__knob,
+.mini__scrub .playhead--live:focus-visible .playhead__knob { transform: translate(-50%, -50%) scale(1.15); }
+.mini__scrub .playhead--live.is-dragging .playhead__knob { transform: translate(-50%, -50%) scale(1.3); cursor: grabbing; box-shadow: 2px 2px 0 var(--ink); }
+.mini__scrub .playhead--live:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 6px; }
+.mini__controls { display: grid; grid-template-columns: 1fr auto auto auto 1fr; align-items: center; justify-items: center; gap: 14px; }
+.mini__controls .mini__btn { width: 52px; height: 52px; }
+.mini__jump { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--ink); }
+.mini__jump:active { transform: scale(0.92); }
+.mini__rate { justify-self: start; font-size: 14px; font-weight: 700; border: 2.5px solid var(--ink); border-radius: 999px; padding: 5px 11px; background: var(--butter); min-width: 58px; }
+.mini__controls .mini__skip { justify-self: end; }
+.mini__spacer { justify-self: end; width: 38px; }
