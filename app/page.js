@@ -4,6 +4,7 @@ import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
+import UpNextHome from "@/components/UpNextHome";
 import { NotificationBell } from "@/components/Notifications";
 import { topCharts } from "@/lib/charts";
 
@@ -31,6 +32,8 @@ export default async function FriendsPage() {
       </header>
 
       <KeysNotice />
+
+      <UpNextHome />
 
       <FriendsFeed />
 
