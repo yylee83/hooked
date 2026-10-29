@@ -5,6 +5,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/podcastindex";
 import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
+import TopEpisodes from "@/components/TopEpisodes";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
 
@@ -46,7 +47,7 @@ export default async function SearchPage({ searchParams }) {
   let shows = [];
   let topics = [];
   let popular = [];
-  let chartEps = { episodes: [], more: false, count: 10 };
+  let chartEps = { episodes: [], next: null };
 
   if (query) {
     const [e, s] = await Promise.all([
@@ -57,10 +58,7 @@ export default async function SearchPage({ searchParams }) {
     episodes = (e.data || []).map((x) => episodeCard(x));
     shows = s.data || [];
   } else {
-    const epCount = Math.min(50, Math.max(10, parseInt(sp.eps) || 10));
-    const [pop, top] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(epCount)]);
-    popular = pop;
-    chartEps = { ...top, count: epCount };
+    [popular, chartEps] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10)]);
   }
 
   topics = await topicsPromise;
@@ -154,16 +152,7 @@ export default async function SearchPage({ searchParams }) {
           <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
             The newest episode from each of the top shows on Apple Podcasts.
           </p>
-          <ul>
-            {chartEps.episodes.map((e) => (
-              <EpisodeRow key={e.id} ep={episodeCard(e)} desc={`#${e.chartRank} show on Apple Podcasts`} />
-            ))}
-          </ul>
-          {chartEps.more && (
-            <Link href={`/search?eps=${chartEps.count + 10}`} className="btn btn--shadow-sm load-more" scroll={false}>
-              Load more episodes
-            </Link>
-          )}
+          <TopEpisodes initial={chartEps.episodes} next={chartEps.next} />
         </section>
       )}
 
