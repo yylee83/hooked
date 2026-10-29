@@ -1,0 +1,19 @@
+{
+  "name": "hooked",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hooked — find what hooks you. A social podcast log.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@fontsource/bagel-fat-one": "^5.2.6",
+    "geist": "^1.4.2",
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1"
+  }
+}
