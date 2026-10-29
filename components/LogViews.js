@@ -24,6 +24,19 @@ function groupByMonth(logs) {
 
 const norm = (s = "") => s.toLowerCase();
 
+// Your review, two lines at a time. Tap to read the whole thing.
+function Hook({ text }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 70;
+  if (!long) return <span className="diary__hook">“{text}”</span>;
+  return (
+    <button className={`diary__hook diary__hook--btn ${open ? "is-open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open}>
+      <span className="diary__hook-text">“{text}”</span>
+      <span className="diary__more">{open ? "Show less" : "Read more"}</span>
+    </button>
+  );
+}
+
 // ---------- Diary: every episode you logged, newest first ----------
 const FILTERS = [
   ["all", "All"],
@@ -78,22 +91,22 @@ export function Diary({ logs }) {
             </h2>
             <ul className="diary__list">
               {g.items.map((l) => (
-                <li key={l.id}>
-                  <Link href={`/episode/${l.id}`} className="diary__row">
-                    <span className="mono diary__day">{new Date(l.loggedAt).getDate()}</span>
-                    <Art src={l.image} title={l.feedTitle} size={46} radius={10} />
-                    <span className="min0 grow">
-                      <span className="diary__title">{l.title}</span>
-                      <span className="diary__meta">
-                        <span className="diary__show">{l.feedTitle}</span>
-                        {l.rating > 0 && <Stars value={l.rating} size={13} />}
-                      </span>
-                      {l.hook && <span className="diary__hook">“{l.hook}”</span>}
+                <li key={l.id} className="diary__row">
+                  <span className="mono diary__day">{new Date(l.loggedAt).getDate()}</span>
+                  <Art src={l.image} title={l.feedTitle} size={46} radius={10} episodeId={l.id} />
+                  <span className="min0 grow">
+                    <Link href={`/episode/${l.id}`} className="diary__title">
+                      {l.title}
+                    </Link>
+                    <span className="diary__meta">
+                      <span className="diary__show">{l.feedTitle}</span>
+                      {l.rating > 0 && <Stars value={l.rating} size={13} />}
                     </span>
-                    <span className={`diary__verdict ${l.hooked ? "is-hooked" : ""}`} title={l.hooked ? "Hooked" : "Not hooked"}>
-                      {l.hooked ? "Hooked" : "Not"}
-                    </span>
-                  </Link>
+                    {l.hook && <Hook text={l.hook} />}
+                  </span>
+                  <span className={`diary__verdict ${l.hooked ? "is-hooked" : ""}`} title={l.hooked ? "Hooked" : "Not hooked"}>
+                    {l.hooked ? "Hooked" : "Not"}
+                  </span>
                 </li>
               ))}
             </ul>
