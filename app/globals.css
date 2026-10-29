@@ -609,3 +609,9 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .foryou__show { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -4px; }
 .foryou__actions { margin-top: auto; flex-wrap: wrap; }
 .foryou__actions .btn { padding-left: 10px; padding-right: 10px; }
+.me-tabs { gap: 5px; }
+.me-tabs .tab { padding: 6px 11px; font-size: 14.5px; }
+.tab__n { min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }
+.me-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 6px; }
+.me-stats span { display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12px; line-height: 1.1; }
+.me-stats b { margin: 0 0 2px; font-size: 20px; }
