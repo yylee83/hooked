@@ -6,7 +6,7 @@ import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/pod
 import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import { trendingTopics } from "@/lib/trends";
-import { popularOnHooked } from "@/lib/charts";
+import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
 
 export const metadata = { title: "Search" };
 
@@ -46,6 +46,7 @@ export default async function SearchPage({ searchParams }) {
   let shows = [];
   let topics = [];
   let popular = [];
+  let chartEps = { episodes: [], more: false, count: 10 };
 
   if (query) {
     const [e, s] = await Promise.all([
@@ -56,7 +57,10 @@ export default async function SearchPage({ searchParams }) {
     episodes = (e.data || []).map((x) => episodeCard(x));
     shows = s.data || [];
   } else {
-    popular = await popularOnHooked(30, 15);
+    const epCount = Math.min(50, Math.max(10, parseInt(sp.eps) || 10));
+    const [pop, top] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(epCount)]);
+    popular = pop;
+    chartEps = { ...top, count: epCount };
   }
 
   topics = await topicsPromise;
@@ -142,6 +146,25 @@ export default async function SearchPage({ searchParams }) {
             </ol>
           )}
         </>
+      )}
+
+      {!query && chartEps.episodes.length > 0 && (
+        <section style={{ marginTop: 28 }}>
+          <h2 className="label">Top episodes right now</h2>
+          <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
+            The newest episode from each of the top shows on Apple Podcasts.
+          </p>
+          <ul>
+            {chartEps.episodes.map((e) => (
+              <EpisodeRow key={e.id} ep={episodeCard(e)} desc={`#${e.chartRank} show on Apple Podcasts`} />
+            ))}
+          </ul>
+          {chartEps.more && (
+            <Link href={`/search?eps=${chartEps.count + 10}`} className="btn btn--shadow-sm load-more" scroll={false}>
+              Load more episodes
+            </Link>
+          )}
+        </section>
       )}
 
       {!error && query && type !== "shows" && (
