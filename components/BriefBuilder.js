@@ -66,8 +66,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     if (forceMode) setMode(forceMode);
     setLoading(true);
     setError("");
-    const keep = editing && result ? result.items.filter((x) => picked.includes(x.episodeId)) : [];
-    if (!editing) setResult(null);
+    // Keep episodes you've already chosen (from an earlier search or a pasted link).
+    const keep = result ? result.items.filter((x) => picked.includes(x.episodeId)) : [];
+    if (!editing && !keep.length) setResult(null);
     try {
       const res = await fetch(`/api/briefs/draft?${new URLSearchParams({ topic: t, mode: m })}`);
       const data = await res.json();
@@ -78,10 +79,12 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         setResult({ ...data, items: [...keep, ...data.items.filter((x) => !have.has(String(x.episodeId)))] });
         return;
       }
-      setResult(data);
-      const withClips = data.items.filter((x) => x.clips?.length);
-      const first = (m === "clips" && withClips.length ? withClips : data.items).slice(0, m === "clips" ? 5 : 4);
-      setPicked(first.map((x) => x.episodeId));
+      const have = new Set(keep.map((x) => String(x.episodeId)));
+      const fresh = data.items.filter((x) => !have.has(String(x.episodeId)));
+      setResult({ ...data, items: [...keep, ...fresh] });
+      const withClips = fresh.filter((x) => x.clips?.length);
+      const first = (m === "clips" && withClips.length ? withClips : fresh).slice(0, Math.max(0, (m === "clips" ? 5 : 4) - keep.length));
+      setPicked([...keep.map((x) => x.episodeId), ...first.map((x) => x.episodeId)]);
       if (!title) setTitle(titleCase(t));
     } catch (err) {
       setError(err.message);
@@ -125,6 +128,37 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
   function toggle(id) {
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 12 ? p : [...p, id]));
+  }
+
+  // Add one episode by pasting its Apple Podcasts or Spotify link.
+  const [link, setLink] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [linkMsg, setLinkMsg] = useState("");
+  async function addLink(e, value) {
+    e?.preventDefault();
+    const url = (value ?? link).trim();
+    if (!url) return;
+    setAdding(true);
+    setLinkMsg("");
+    try {
+      const m = result?.mode || mode;
+      const t = (result?.topic || topic).trim();
+      const res = await fetch(`/api/briefs/add?${new URLSearchParams({ url, topic: t, mode: m })}`);
+      const data = await res.json();
+      if (!res.ok || !data.item) throw new Error(data.error || "We couldn't find that episode.");
+      const item = data.item;
+      setResult((r) => {
+        const base = r || { topic: t || item.show, mode: m, items: [] };
+        const rest = base.items.filter((x) => String(x.episodeId) !== String(item.episodeId));
+        return { ...base, items: [item, ...rest] };
+      });
+      setPicked((p) => (p.includes(item.episodeId) ? p : p.length >= 12 ? p : [...p, item.episodeId]));
+      setLink("");
+      setLinkMsg(`Added “${item.episode}”.`);
+    } catch (err) {
+      setLinkMsg(err.message);
+    }
+    setAdding(false);
   }
 
   async function publish() {
@@ -208,12 +242,42 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         </button>
       </form>
 
+      <form className="paste" onSubmit={addLink} style={{ marginTop: 18 }}>
+        <label className="mono small paste__label" htmlFor="brief-link">
+          Have a specific episode? Paste its Apple Podcasts or Spotify link
+        </label>
+        <div className="paste__row">
+          <input
+            id="brief-link"
+            className="input"
+            type="url"
+            inputMode="url"
+            placeholder="https://open.spotify.com/episode/…"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            onPaste={(e) => {
+              const t = e.clipboardData.getData("text").trim();
+              if (!t) return;
+              e.preventDefault();
+              setLink(t);
+              addLink(null, t);
+            }}
+          />
+          <button className="btn btn--cobalt" disabled={adding || !link.trim()}>
+            {adding ? "Adding…" : "Add"}
+          </button>
+        </div>
+        {linkMsg && <p className="paste__msg">{linkMsg}</p>}
+      </form>
+
       {error && <p className="nudge" style={{ marginTop: 14 }}>{error}</p>}
 
       {result && (
         <section>
           <h2 className="label">
-            {result.items.length ? `${result.items.length} episodes mention “${result.topic}”` : `Nothing found for “${result.topic}”`}
+            {result.items.length
+              ? `${result.items.length} ${result.items.length === 1 ? "episode" : "episodes"}${result.topic ? ` · “${result.topic}”` : ""}`
+              : `Nothing found for “${result.topic}”`}
           </h2>
 
           {result.mode === "clips" && result.items.length > 0 && clipCount === 0 && (
