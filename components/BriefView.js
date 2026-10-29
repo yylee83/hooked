@@ -87,7 +87,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
           <article key={`${it.episodeId || it.episode}-${i}`} className="brief__item">
             <div className="brief__show">
               <div className="row gap center min0">
-                <Art src={it.image} title={it.show} size={52} radius={12} feedId={it.feedId} />
+                <Art src={it.image} title={it.show} size={52} radius={12} episodeId={it.found !== false ? it.episodeId : undefined} feedId={it.feedId} />
                 {it.feedId ? (
                   <Link href={`/show/${it.feedId}`} className="muted" style={{ fontSize: 19 }}>
                     {it.show}
@@ -100,7 +100,13 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
               </div>
               <span className="brief__label">{label}</span>
             </div>
-            <p className="brief__ep">{it.episode}</p>
+            {it.episodeId && it.found !== false ? (
+              <Link href={`/episode/${it.episodeId}`} className="brief__ep" style={{ display: "block" }}>
+                {it.episode}
+              </Link>
+            ) : (
+              <p className="brief__ep">{it.episode}</p>
+            )}
             {it.angle && <span className={`pill ${i % 2 ? "pill--butter" : "pill--bubblegum"}`}>{it.angle}</span>}
 
             {partial && (

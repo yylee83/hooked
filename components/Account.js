@@ -47,12 +47,12 @@ export function FreshLogs() {
       <ul>
         {logs.map((l) => (
           <li key={`${l.who.handle}-${l.episode_id}`} className="fresh">
-            <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} feedId={l.feed_id} />
+            <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeId={l.episode_id} feedId={l.feed_id} />
             <div className="min0 grow">
               <p className="small">
                 <b>@{l.who.handle}</b> {l.hooked ? "is hooked on" : "wasn't hooked by"}
               </p>
-              <Link href={`/log/${l.episode_id}`} className="title-sm" style={{ display: "block" }}>
+              <Link href={`/episode/${l.episode_id}`} className="title-sm" style={{ display: "block" }}>
                 {l.title}
               </Link>
               <p className="muted small row gap-xs center wrap">
@@ -70,5 +70,51 @@ export function FreshLogs() {
         ))}
       </ul>
     </>
+  );
+}
+
+// What people on Hooked said about one episode.
+export function EpisodeLogs({ episodeId }) {
+  const [logs, setLogs] = useState(null);
+  useEffect(() => {
+    const db = supabase();
+    if (!db) return setLogs([]);
+    let live = true;
+    db.from("logs")
+      .select("hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+      .eq("episode_id", episodeId)
+      .not("who.handle", "is", null)
+      .order("logged_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => live && setLogs(data || []));
+    return () => {
+      live = false;
+    };
+  }, [episodeId]);
+  if (!logs?.length) return null;
+  const hooked = logs.filter((l) => l.hooked).length;
+  return (
+    <section>
+      <h2 className="label">On Hooked</h2>
+      <p className="mono small" style={{ marginBottom: 6 }}>
+        {hooked} of {logs.length} hooked
+      </p>
+      <ul>
+        {logs.map((l) => (
+          <li key={l.who.handle} className="fresh">
+            <div className="min0 grow">
+              <p className="small row gap-xs center wrap">
+                <b>@{l.who.handle}</b>
+                <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`} style={{ fontSize: 11, padding: "2px 8px" }}>
+                  {l.hooked ? "Hooked" : "Not hooked"}
+                </span>
+                {l.rating > 0 && <Stars value={Number(l.rating)} size={14} />}
+              </p>
+              {l.hook && <p className="log__hook">“{l.hook}”</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -89,7 +89,7 @@ export default function LogSheet({ episode, preset }) {
       </header>
 
       <div className="sheet__ep">
-        <Art src={episode.image} title={episode.feedTitle} size={112} tilt={-3} radius={22} className="art--shadow" feedId={episode.feedId} />
+        <Art src={episode.image} title={episode.feedTitle} size={112} tilt={-3} radius={22} className="art--shadow" episodeId={episode.id} />
         <div>
           <h2 className="display sheet__epTitle">{episode.title}</h2>
           <p className="sheet__show">{episode.feedTitle}</p>

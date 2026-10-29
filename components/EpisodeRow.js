@@ -8,10 +8,10 @@ export default function EpisodeRow({ ep, showArt = true, desc }) {
   return (
     <li className="eps__row">
       <div className="row gap">
-        {showArt && <Art src={ep.image} title={ep.feedTitle} size={64} radius={12} feedId={ep.feedId} />}
+        {showArt && <Art src={ep.image} title={ep.feedTitle} size={64} radius={12} episodeId={ep.id} />}
         <div className="min0 grow">
           <p className="eps__meta">{[shortDate(ep.date), minutes(ep.duration)].filter(Boolean).join(" · ")}</p>
-          <Link href={`/log/${ep.id}`} className="eps__title" style={{ display: "block" }}>
+          <Link href={`/episode/${ep.id}`} className="eps__title" style={{ display: "block" }}>
             {ep.title}
           </Link>
           {showArt && ep.feedId && (

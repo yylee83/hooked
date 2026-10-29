@@ -53,7 +53,7 @@ export default async function ShowPage({ params }) {
         {episodes.map(({ raw, card }) => (
           <li key={card.id} className="eps__row">
             <p className="eps__meta">{[shortDate(card.date), minutes(card.duration)].filter(Boolean).join(" · ")}</p>
-            <Link href={`/log/${card.id}`} className="eps__title" style={{ display: "block" }}>
+            <Link href={`/episode/${card.id}`} className="eps__title" style={{ display: "block" }}>
               {card.title}
             </Link>
             {raw.description && <p className="eps__desc">{plainText(raw.description)}</p>}

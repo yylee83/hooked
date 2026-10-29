@@ -83,10 +83,10 @@ export default async function FriendsPage() {
               <span className="sticker">Hooked</span>
             </div>
             <div className="rec__body">
-              <Art src={item.image} title={item.feedTitle} size={96} radius={16} feedId={item.feedId} />
+              <Art src={item.image} title={item.feedTitle} size={96} radius={16} episodeId={item.episodeId} feedId={item.feedId} />
               <div className="min0">
                 {item.episodeId ? (
-                  <Link href={`/log/${item.episodeId}`} className="rec__title">
+                  <Link href={`/episode/${item.episodeId}`} className="rec__title">
                     {item.title}
                   </Link>
                 ) : (

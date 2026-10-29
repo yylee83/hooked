@@ -5,8 +5,8 @@ import Link from "next/link";
 const tones = ["var(--butter)", "var(--bubblegum)", "var(--cobalt)"];
 
 // Podcast cover art, with a friendly stand-in if the image is missing or broken.
-// Pass feedId to make the cover a link to that show's page.
-export default function Art({ src, title = "", size = 64, tilt = 0, radius, className = "", feedId }) {
+// Pass episodeId to make the cover open that episode, or feedId to open the show.
+export default function Art({ src, title = "", size = 64, tilt = 0, radius, className = "", feedId, episodeId }) {
   const [broken, setBroken] = useState(false);
   const style = {
     width: size,
@@ -30,9 +30,10 @@ export default function Art({ src, title = "", size = 64, tilt = 0, radius, clas
     // eslint-disable-next-line @next/next/no-img-element
     art = <img className={`art ${className}`} style={style} src={src} alt={title} loading="lazy" onError={() => setBroken(true)} />;
   }
-  if (!feedId) return art;
+  const href = episodeId ? `/episode/${episodeId}` : feedId ? `/show/${feedId}` : null;
+  if (!href) return art;
   return (
-    <Link href={`/show/${feedId}`} className="art-link" aria-label={title ? `Go to ${title}` : "Go to show"}>
+    <Link href={href} className="art-link" aria-label={episodeId ? "Open episode" : title ? `Go to ${title}` : "Go to show"}>
       {art}
     </Link>
   );

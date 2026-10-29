@@ -138,14 +138,14 @@ export function PlayerProvider({ children }) {
       {!hidden && (
         <div className="mini">
           <div className="mini__inner">
-            <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} feedId={s.ep.feedId} />
+            <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} episodeId={s.ep.id} />
             <div className="mini__text">
               {meta && (
                 <p className="mini__meta mono">
                   {meta.title} · clip {q.current.i + 1} of {q.current.segs.length}
                 </p>
               )}
-              <Link href={`/log/${s.ep.id}`} className="mini__title">
+              <Link href={`/episode/${s.ep.id}`} className="mini__title">
                 {s.ep.title}
               </Link>
               <div className="playhead playhead--live" onClick={seek} role="slider" aria-label="Seek" aria-valuenow={Math.round(progress * 100)}>

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
+import Wrapped from "./Wrapped";
 import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, removeFromList, saveProfile, signOut, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
@@ -182,7 +183,7 @@ export default function MyLog() {
         <section className="card np">
           <p className="mono cobalt small">Listening now</p>
           <div className="row gap center">
-            <Art src={np.image} title={np.feedTitle} size={64} radius={12} feedId={np.feedId} />
+            <Art src={np.image} title={np.feedTitle} size={64} radius={12} episodeId={np.id} />
             <div className="min0">
               <p className="title-md">{np.title}</p>
               <p className="muted">{np.feedTitle}</p>
@@ -205,10 +206,10 @@ export default function MyLog() {
           <ul className="list">
             {state.list.map((i) => (
               <li key={i.episodeId || i.title} className="list__row">
-                <Art src={i.image} title={i.feedTitle} size={48} radius={10} feedId={i.feedId} />
+                <Art src={i.image} title={i.feedTitle} size={48} radius={10} episodeId={i.episodeId} feedId={i.feedId} />
                 <div className="min0 grow">
                   {i.episodeId ? (
-                    <Link href={`/log/${i.episodeId}`} className="title-sm">
+                    <Link href={`/episode/${i.episodeId}`} className="title-sm">
                       {i.title}
                     </Link>
                   ) : (
@@ -244,7 +245,7 @@ export default function MyLog() {
               {g.items.map((l) => (
                 <li key={l.id} className="log__row">
                   <span className="mono log__day">{new Date(l.loggedAt).getDate()}</span>
-                  <Art src={l.image} title={l.feedTitle} size={56} radius={12} feedId={l.feedId} />
+                  <Art src={l.image} title={l.feedTitle} size={56} radius={12} episodeId={l.id} />
                   <Link href={`/log/${l.id}`} className="min0">
                     <p className="title-sm">{l.title}</p>
                     <p className="muted small row gap-xs center wrap">
@@ -265,6 +266,7 @@ export default function MyLog() {
           </section>
         ))
       )}
+      <Wrapped logs={logs} />
     </>
   );
 }
