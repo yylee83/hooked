@@ -65,7 +65,7 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 
 /* ---------- wordmark + playhead ---------- */
 .wordmark { display: inline-flex; flex-direction: column; gap: calc(var(--wm) * 0.12); }
-.wordmark__text { font-family: var(--display); color: var(--cobalt); font-size: var(--wm); line-height: 0.85; letter-spacing: -0.02em; }
+.wordmark__text { font-family: var(--display); color: var(--cobalt); font-size: var(--wm); line-height: 0.85; letter-spacing: -0.02em; white-space: nowrap; }
 .playhead { position: relative; display: block; height: 12px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--white); }
 .playhead__fill { position: absolute; left: 0; top: 0; bottom: 0; width: 34%; background: var(--bubblegum); border-radius: 999px 0 0 999px; }
 .playhead__knob { position: absolute; top: 50%; left: 34%; width: 22px; height: 22px; transform: translate(-50%, -50%); border: 2.5px solid var(--ink); border-radius: 50%; background: var(--butter); }
@@ -415,3 +415,44 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .mini__rate { justify-self: start; font-size: 14px; font-weight: 700; border: 2.5px solid var(--ink); border-radius: 999px; padding: 5px 11px; background: var(--butter); min-width: 58px; }
 .mini__controls .mini__skip { justify-self: end; }
 .mini__spacer { justify-self: end; width: 38px; }
+
+/* ---------- v9: close player ---------- */
+.mini__close { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--white); color: var(--ink); align-self: flex-start; }
+.mini__close:hover { background: var(--cream); }
+.mini__close:active { transform: scale(0.92); }
+
+/* ---------- v9: friends, profiles, sharing ---------- */
+.find-friends { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: var(--line); background: var(--white); color: var(--ink); }
+.find-friends:hover { background: var(--butter); }
+.friends-cta { margin-top: 26px; background: var(--butter); }
+.invite { margin-top: 24px; background: var(--bubblegum); }
+.person { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 2px solid rgba(21, 19, 29, 0.15); }
+.person__who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.person__name { display: block; font-weight: 700; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person__handle { display: block; color: var(--muted); font-size: 15px; }
+.person .avatar { flex: none; }
+.follow { display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.profile__name { font-size: clamp(32px, 9vw, 46px); color: var(--cobalt); overflow-wrap: anywhere; }
+.me__handle a { text-decoration: underline; text-decoration-color: rgba(21,19,29,.25); text-underline-offset: 3px; }
+.log__row--share { grid-template-columns: 26px auto 1fr auto; }
+.log__side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.share-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--white); color: var(--ink); }
+.share-icon:hover { background: var(--butter); }
+.share-sheet .plus-sheet__panel { max-height: 92vh; overflow-y: auto; }
+.share-ep { display: flex; gap: 14px; align-items: center; background: var(--white); border: var(--line); border-radius: 20px; padding: 12px; }
+.share-hook { font-style: italic; }
+.share-section { border-top: 2px dashed rgba(21,19,29,.2); padding-top: 14px; }
+.chip--sm { padding: 6px 14px; font-size: 15px; border-width: 2.5px; }
+.chip:disabled { opacity: .55; }
+.share-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.share-opt { display: grid; place-items: center; text-align: center; border: 2.5px solid var(--ink); border-radius: 14px; padding: 11px 6px; font-weight: 700; font-size: 15px; background: var(--white); }
+.share-opt:hover { background: var(--cream); }
+.share-opt--main { background: var(--cobalt); color: var(--white); grid-column: span 3; font-size: 17px; }
+.share-opt--main:hover { background: var(--cobalt); }
+.share-preview { margin-top: 12px; font-size: 13px; color: var(--muted); background: var(--white); border-radius: 12px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; border: 1.5px solid rgba(21,19,29,.15); }
+.share-ok { margin-top: 10px; font-weight: 700; color: #11795f; }
+.shared-by { margin: 16px 0 6px; background: var(--white); border: var(--line); border-radius: 24px; box-shadow: var(--shadow-sm); padding: 16px 18px; font-size: 18px; }
+.shared-by .avatar { flex: none; }
+.shared-by__take { margin-top: 12px; padding-top: 12px; border-top: 2px dashed rgba(21,19,29,.2); }
+.shared-by__hook { margin-top: 8px; font-size: 19px; }
+.join-nudge { margin-top: 26px; background: var(--butter); }

@@ -145,7 +145,7 @@ export default function Wrapped({ logs }) {
   return (
     <section className="wrapped" aria-labelledby="wrapped-title">
       <p className="mono small wrapped__kicker" id="wrapped-title">
-        Your listening, wrapped
+        Your listening, wrapped · only you can see this
       </p>
       <p className="display wrapped__headline">
         {lead ? (

@@ -43,7 +43,7 @@ export function FreshLogs() {
   if (!logs?.length) return null;
   return (
     <>
-      <h2 className="section-title">Fresh on Hooked</h2>
+      <h2 className="section-title">Just logged</h2>
       <ul>
         {logs.map((l) => (
           <li key={`${l.who.handle}-${l.episode_id}`} className="fresh">
@@ -95,7 +95,7 @@ export function EpisodeLogs({ episodeId }) {
   const hooked = logs.filter((l) => l.hooked).length;
   return (
     <section>
-      <h2 className="label">On Hooked</h2>
+      <h2 className="label">What listeners think</h2>
       <p className="mono small" style={{ marginBottom: 6 }}>
         {hooked} of {logs.length} hooked
       </p>

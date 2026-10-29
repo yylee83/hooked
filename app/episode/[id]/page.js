@@ -4,13 +4,33 @@ import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
+import { ShareButton } from "@/components/Share";
+import { JoinNudge } from "@/components/JoinNudge";
+import Stars from "@/components/Stars";
+import { Avatar } from "@/components/Friends";
 import { episodeCard, getEpisode, getShow, safe, artOf } from "@/lib/podcastindex";
+import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
+import { site } from "@/lib/site";
 
-export async function generateMetadata({ params }) {
+const cleanFrom = (v) => (typeof v === "string" && /^[a-z0-9._]{2,24}$/i.test(v) ? v.toLowerCase() : null);
+
+export async function generateMetadata({ params, searchParams }) {
   const { id } = await params;
+  const from = cleanFrom((await searchParams).from);
   const { data } = await safe(getEpisode(id));
-  return { title: data?.title || "Episode" };
+  if (!data) return { title: "Episode" };
+  const shared = from ? await getSharedLog(from, id) : null;
+  const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
+  const title = who ? `${who} thinks you'd enjoy "${data.title}"` : data.title;
+  const description = shared?.log?.hook ? `“${shared.log.hook}” Listen free on ${site.name}.` : `${data.feedTitle || "A podcast"} · Listen free on ${site.name}.`;
+  const image = `/api/og/episode?${new URLSearchParams({ id, ...(shared?.profile ? { from: shared.profile.handle } : {}) })}`;
+  return {
+    title: data.title,
+    description,
+    openGraph: { title, description, images: [{ url: image, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
 }
 
 // Keep paragraph breaks from the show notes, drop the HTML.
@@ -29,8 +49,9 @@ function notesToParagraphs(html = "") {
     .slice(0, 30);
 }
 
-export default async function EpisodePage({ params }) {
+export default async function EpisodePage({ params, searchParams }) {
   const { id } = await params;
+  const from = cleanFrom((await searchParams).from);
   if (!/^\d+$/.test(id)) notFound();
 
   const ep = await safe(getEpisode(id));
@@ -39,6 +60,7 @@ export default async function EpisodePage({ params }) {
   const e = ep.data;
   const { data: show } = await safe(getShow(e.feedId));
   const card = episodeCard(e, show);
+  const shared = from ? await getSharedLog(from, card.id) : null;
 
   return (
     <>
@@ -50,6 +72,29 @@ export default async function EpisodePage({ params }) {
         <Link href="/search" className="back">
           ← Search
         </Link>
+      )}
+
+      {shared?.profile && (
+        <section className="shared-by">
+          <div className="row gap center">
+            <Avatar person={shared.profile} size={44} />
+            <p className="min0">
+              <Link href={`/u/${shared.profile.handle}`}>
+                <b>{shared.profile.display_name || `@${shared.profile.handle}`}</b>
+              </Link>{" "}
+              thinks you'd enjoy this.
+            </p>
+          </div>
+          {shared.log && (shared.log.rating > 0 || shared.log.hook || shared.log.hooked) && (
+            <div className="shared-by__take">
+              <div className="row gap-xs center wrap">
+                {shared.log.hooked && <span className="sticker">Hooked</span>}
+                {shared.log.rating > 0 && <Stars value={Number(shared.log.rating)} size={18} />}
+              </div>
+              {shared.log.hook && <p className="shared-by__hook">“{shared.log.hook}”</p>}
+            </div>
+          )}
+        </section>
       )}
 
       <div className="ep-hero">
@@ -70,7 +115,10 @@ export default async function EpisodePage({ params }) {
         <Link href={`/log/${card.id}`} className="btn btn--sm btn--cobalt btn--shadow-sm">
           Log it
         </Link>
+        <ShareButton episode={card} />
       </div>
+
+      {shared?.profile && <JoinNudge from={shared.profile.handle} />}
 
       <EpisodeLogs episodeId={card.id} />
 

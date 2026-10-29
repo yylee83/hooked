@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
-import { addLog, useStore } from "@/lib/store";
-import { friendsToSendTo } from "@/lib/demo";
+import { addLog, sendRecommendation, useStore } from "@/lib/store";
 
 function RatingInput({ value, onChange }) {
   // Tap a star to rate. Tap the same star again for a half star.
@@ -70,7 +69,12 @@ export default function LogSheet({ episode, preset }) {
     setSaving(true);
     setError("");
     try {
-      await addLog({ ...episode, hooked, rating, hook: hook.trim(), sentTo: sendTo });
+      const review = { hooked, rating, hook: hook.trim() };
+      await addLog({ ...episode, ...review, sentTo: sendTo });
+      // Send to friends picked here (once each).
+      const already = existing?.sentTo || [];
+      const ids = (state?.following || []).filter((f) => sendTo.includes(f.handle) && !already.includes(f.handle)).map((f) => f.id);
+      if (ids.length) await sendRecommendation(ids, episode, { review });
       router.push("/me");
     } catch (e) {
       setSaving(false);
@@ -123,20 +127,37 @@ export default function LogSheet({ episode, preset }) {
       />
 
       <h3 className="label">Send it to a friend</h3>
-      <div className="row gap wrap">
-        {friendsToSendTo.map((f) => {
-          const on = sendTo.includes(f);
-          return (
-            <button
-              key={f}
-              className={`chip ${on ? "chip--on" : ""}`}
-              onClick={() => setSendTo(on ? sendTo.filter((x) => x !== f) : [...sendTo, f])}
-            >
-              {f}
-            </button>
-          );
-        })}
-      </div>
+      {state?.user && state.following?.length > 0 ? (
+        <div className="row gap wrap">
+          {state.following.map((f) => {
+            const on = sendTo.includes(f.handle);
+            const sent = existing?.sentTo?.includes(f.handle);
+            return (
+              <button
+                key={f.id}
+                className={`chip ${on ? "chip--on" : ""}`}
+                disabled={sent}
+                title={sent ? "Already sent" : undefined}
+                onClick={() => setSendTo(on ? sendTo.filter((x) => x !== f.handle) : [...sendTo, f.handle])}
+              >
+                {sent ? "✓ " : ""}@{f.handle}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="muted small">
+          {state?.user ? (
+            <>
+              Follow friends to send them episodes. <Link href="/people" className="u-link">Find friends</Link>
+            </>
+          ) : (
+            <>
+              <Link href={`/login?next=/log/${episode.id}`} className="u-link">Sign in</Link> to send this to friends.
+            </>
+          )}
+        </p>
+      )}
 
       <button className="btn btn--big btn--display btn--cobalt sheet__save" onClick={save} disabled={saving}>
         {saving ? "Saving…" : "Log it"}

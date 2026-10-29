@@ -32,7 +32,7 @@ export default async function BriefsPage() {
 
       {community.length > 0 && (
         <>
-          <h2 className="section-title">Made on Hooked</h2>
+          <h2 className="section-title">Made by listeners</h2>
           {community.map((b) => (
             <Link key={b.id} href={`/briefs/b/${b.id}`} className={`brief-tile brief-tile--sm tone-${b.color}`}>
               <h2 className="display">{b.title}</h2>

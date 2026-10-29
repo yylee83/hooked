@@ -1,10 +1,13 @@
-# Hooked
+# Hooked on
 
 Find what hooks you. A social podcast log, built with Next.js and the Podcast Index API.
 
 ## What's here
 
-- **Friends**: listening now, friends' recommendations with reactions, and live trending shows.
+- **Friends**: what people you follow are listening to, episodes they sent you, and their latest logs.
+- **Find friends** (`/people`): search by name or @handle, follow, invite.
+- **Profiles** (`/u/handle`): anyone's public log and the shows they're hooked on. Wrapped stays private.
+- **Sharing**: send an episode to friends in-app, or share a no-login link (`/episode/ID?from=handle`) with your review and a custom preview image.
 - **Briefs**: a topic, the best episodes from several shows, and each show's angle.
 - **Search**: live search of about 4 million podcasts.
 - **Show pages**: details plus the latest episodes, with Play and Log it.
@@ -15,19 +18,18 @@ Find what hooks you. A social podcast log, built with Next.js and the Podcast In
 - **Trending now** (on Search): today's top US searches from Google Trends, with one tap to hear podcasts on it or make a brief.
 - **Brief builder**: pick a topic, then whole episodes or just the parts that mention it, played back to back.
 
-"Listening now" and "Recommended to you" friends are still samples (see `lib/demo.js`).
 Clips only work for shows that publish timed transcripts; other episodes play in full.
 
 ## Easy edits
 
 - Your initials and handle: `lib/site.js`
 - Briefs: `lib/briefs.js` (copy a block to add a new one)
-- Sample friends: `lib/demo.js`
 - Colors and styles: `app/globals.css`
 
 ## Database
 
-Run `supabase/setup.sql` once in Supabase → SQL Editor. It's safe to run again.
+Run `supabase/setup.sql` once in Supabase → SQL Editor (dropdown set to your database, not Logs). It's safe to run again.
+Already set up before friends existed? Run `supabase/update-friends.sql` instead.
 
 ## Keys
 

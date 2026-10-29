@@ -78,6 +78,22 @@ export function PlayerProvider({ children }) {
     [playQueue]
   );
 
+  // Close the player: stop, unload, hide.
+  const close = useCallback(() => {
+    const el = audio.current;
+    if (el) {
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+    }
+    src.current = "";
+    q.current = { segs: [], i: 0, meta: null };
+    setProgress(0);
+    setTimes({ elapsed: 0, length: 0 });
+    setPlaying(false);
+    force((n) => n + 1);
+  }, []);
+
   const toggle = () => {
     const el = audio.current;
     if (el) el.paused ? el.play().catch(() => {}) : el.pause();
@@ -208,7 +224,7 @@ export function PlayerProvider({ children }) {
   const shownElapsed = drag !== null ? drag * times.length : times.elapsed;
 
   return (
-    <PlayerContext.Provider value={{ play, playQueue, toggle, current: s?.ep || null, playing, queueMeta: meta }}>
+    <PlayerContext.Provider value={{ play, playQueue, toggle, close, current: s?.ep || null, playing, queueMeta: meta }}>
       {children}
       <audio ref={audio} preload="none" />
       {!hidden && (
@@ -227,6 +243,11 @@ export function PlayerProvider({ children }) {
                 </Link>
                 <p className="mini__show">{s.ep.feedTitle}</p>
               </div>
+              <button className="mini__close" onClick={close} aria-label="Close player">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </button>
             </div>
 
             <div className="mini__scrub">

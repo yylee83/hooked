@@ -4,6 +4,7 @@ import Art from "./Art";
 import Stars from "./Stars";
 import Wrapped from "./Wrapped";
 import PasswordForm from "./PasswordForm";
+import { ShareButton } from "./Share";
 import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, removeFromList, saveProfile, signOut, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
@@ -54,6 +55,12 @@ function ProfilePanel({ state }) {
         >
           Edit profile
         </button>
+        <Link href={`/u/${state.profile.handle}`} className="btn btn--sm">
+          View public profile
+        </Link>
+        <Link href="/people" className="btn btn--sm">
+          Find friends
+        </Link>
         <button className="btn btn--sm" onClick={() => (setPwOpen(!pwOpen), setPwSaved(false))} aria-expanded={pwOpen}>
           {pwSaved ? "Password saved ✓" : "Set password"}
         </button>
@@ -169,7 +176,12 @@ export default function MyLog() {
         <div className="avatar avatar--lg">{state.user ? initialsOf(state.profile) : site.me.initials}</div>
         <div className="min0">
           <h1 className="display me__title">My log</h1>
-          {state.profile?.handle && <p className="me__handle">@{state.profile.handle}</p>}
+          {state.profile?.handle && (
+            <p className="me__handle">
+              <Link href={`/u/${state.profile.handle}`}>@{state.profile.handle}</Link>
+              <span className="muted small"> · {plural(state.following?.length || 0, "friend")} followed</span>
+            </p>
+          )}
           <p className="mono me__stats">
             {plural(logs.length, "episode")} · Hooked on {plural(shows.length, "show")}
           </p>
@@ -258,7 +270,7 @@ export default function MyLog() {
             <h2 className="label">{g.label}</h2>
             <ul className="log">
               {g.items.map((l) => (
-                <li key={l.id} className="log__row">
+                <li key={l.id} className="log__row log__row--share">
                   <span className="mono log__day">{new Date(l.loggedAt).getDate()}</span>
                   <Art src={l.image} title={l.feedTitle} size={56} radius={12} episodeId={l.id} />
                   <Link href={`/log/${l.id}`} className="min0">
@@ -274,7 +286,10 @@ export default function MyLog() {
                     </p>
                     {l.hook && <p className="log__hook">“{l.hook}”</p>}
                   </Link>
-                  <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
+                  <div className="log__side">
+                    <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
+                    <ShareButton compact episode={{ id: l.id, title: l.title, feedId: l.feedId, feedTitle: l.feedTitle, image: l.image, audio: l.audio, duration: l.duration }} />
+                  </div>
                 </li>
               ))}
             </ul>
