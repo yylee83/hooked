@@ -2,9 +2,127 @@
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
-import { hookedShows, removeFromList, useStore } from "@/lib/store";
-import { plural } from "@/lib/format";
+import { useEffect, useState } from "react";
+import { hookedShows, initialsOf, removeFromList, saveProfile, signOut, useStore } from "@/lib/store";
+import { supabase } from "@/lib/supabase/client";
+import { minutes, plural } from "@/lib/format";
 import { site } from "@/lib/site";
+
+// Sign-in prompt, first-time handle setup, or profile controls.
+function ProfilePanel({ state }) {
+  const [editing, setEditing] = useState(false);
+  const [handle, setHandle] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (!state.accounts) return null;
+
+  if (!state.user) {
+    return (
+      <div className="card profile-cta">
+        <p className="display h-md" style={{ margin: 0 }}>Make it yours.</p>
+        <p style={{ margin: "8px 0 16px" }}>
+          Your log is only saved on this device. Make a profile to keep it, share it, and make briefs.
+        </p>
+        <Link href="/login?next=/me" className="btn btn--cobalt btn--shadow-sm">
+          Make a profile
+        </Link>
+        <Link href="/login?next=/me" className="link-btn small" style={{ marginLeft: 14 }}>
+          or sign in
+        </Link>
+      </div>
+    );
+  }
+
+  const needsHandle = !state.profile?.handle;
+  if (!needsHandle && !editing) {
+    return (
+      <div className="row gap center" style={{ marginTop: 14 }}>
+        <button
+          className="btn btn--sm"
+          onClick={() => {
+            setHandle(state.profile.handle || "");
+            setName(state.profile.display_name || "");
+            setEditing(true);
+          }}
+        >
+          Edit profile
+        </button>
+        <button className="link-btn small" onClick={() => signOut()}>
+          Sign out
+        </button>
+      </div>
+    );
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await saveProfile({ handle, displayName: name });
+      setEditing(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="card stack" onSubmit={submit} style={{ marginTop: 22 }}>
+      <p className="display h-md" style={{ margin: 0 }}>{needsHandle ? "Pick your handle." : "Edit profile"}</p>
+      {needsHandle && <p className="muted">It's how friends find you, like @maya.k.</p>}
+      <input className="input" placeholder="handle" value={handle} onChange={(e) => setHandle(e.target.value)} autoCapitalize="none" required />
+      <input className="input" placeholder="Your name (optional)" value={name} onChange={(e) => setName(e.target.value)} />
+      {error && <p className="nudge">{error}</p>}
+      <div className="row gap">
+        <button className="btn btn--cobalt btn--shadow-sm" disabled={busy}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+        {!needsHandle && (
+          <button type="button" className="btn" onClick={() => setEditing(false)}>
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+// Briefs you've made.
+function MyBriefs({ userId }) {
+  const [briefs, setBriefs] = useState(null);
+  useEffect(() => {
+    let live = true;
+    supabase()
+      ?.from("briefs")
+      .select("id, title, color, mode, total_seconds, items")
+      .eq("author_id", userId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => live && setBriefs(data || []));
+    return () => {
+      live = false;
+    };
+  }, [userId]);
+  if (!briefs?.length) return null;
+  return (
+    <section>
+      <h2 className="label">My briefs</h2>
+      <div className="row gap wrap">
+        {briefs.map((b) => (
+          <Link key={b.id} href={`/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
+            <span className="display">{b.title}</span>
+            <span className="mono small">
+              {b.items.length} shows{b.total_seconds ? ` · ${minutes(b.total_seconds)}` : ""}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -32,14 +150,19 @@ export default function MyLog() {
   return (
     <>
       <header className="me">
-        <div className="avatar avatar--lg">{site.me.initials}</div>
-        <div>
+        <div className="avatar avatar--lg">{state.user ? initialsOf(state.profile) : site.me.initials}</div>
+        <div className="min0">
           <h1 className="display me__title">My log</h1>
+          {state.profile?.handle && <p className="me__handle">@{state.profile.handle}</p>}
           <p className="mono me__stats">
             {plural(logs.length, "episode")} · Hooked on {plural(shows.length, "show")}
           </p>
         </div>
       </header>
+
+      {state.error && <div className="notice"><p>{state.error}</p></div>}
+      <ProfilePanel state={state} />
+      {state.user && <MyBriefs userId={state.user.id} />}
 
       {shows.length > 0 && (
         <section>

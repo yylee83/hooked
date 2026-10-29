@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
 import { addLog, useStore } from "@/lib/store";
@@ -56,13 +57,23 @@ export default function LogSheet({ episode, preset }) {
     setSendTo(existing.sentTo || []);
   }
 
-  function save() {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
     if (hooked === undefined) {
       setNudge(true);
       return;
     }
-    addLog({ ...episode, hooked, rating, hook: hook.trim(), sentTo: sendTo });
-    router.push("/me");
+    setSaving(true);
+    setError("");
+    try {
+      await addLog({ ...episode, hooked, rating, hook: hook.trim(), sentTo: sendTo });
+      router.push("/me");
+    } catch (e) {
+      setSaving(false);
+      setError("Couldn't save that log. Try again in a moment.");
+    }
   }
 
   return (
@@ -125,9 +136,15 @@ export default function LogSheet({ episode, preset }) {
         })}
       </div>
 
-      <button className="btn btn--big btn--display btn--cobalt sheet__save" onClick={save}>
-        Log it
+      <button className="btn btn--big btn--display btn--cobalt sheet__save" onClick={save} disabled={saving}>
+        {saving ? "Saving…" : "Log it"}
       </button>
+      {error && <p className="nudge" style={{ marginTop: 14 }}>{error}</p>}
+      {state?.accounts && !state.user && (
+        <p className="muted small" style={{ marginTop: 14, textAlign: "center" }}>
+          Saved on this device for now. <Link href={`/login?next=/log/${episode.id}`} className="u-link">Make a profile</Link> to keep it everywhere.
+        </p>
+      )}
     </div>
   );
 }

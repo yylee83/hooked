@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@fontsource/bagel-fat-one": "^5.2.6",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "geist": "^1.4.2",
     "next": "^16.4.3",
     "react": "^19.3.1",

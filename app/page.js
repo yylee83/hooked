@@ -6,7 +6,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { RecActions, Reactions } from "@/components/Social";
 import { artOf, findEpisode, findShow, safe, trendingShows } from "@/lib/podcastindex";
 import { listeningNow, recommendations } from "@/lib/demo";
-import { site } from "@/lib/site";
+import { AvatarLink, FreshLogs } from "@/components/Account";
 
 // Refresh trending and friend data every 15 minutes.
 export const revalidate = 900;
@@ -33,9 +33,7 @@ export default async function FriendsPage() {
     <>
       <header className="topbar">
         <Wordmark size={48} />
-        <Link href="/me" className="avatar" aria-label="My log">
-          {site.me.initials}
-        </Link>
+        <AvatarLink />
       </header>
 
       <KeysNotice error={trending.error} />
@@ -62,6 +60,8 @@ export default async function FriendsPage() {
           );
         })}
       </div>
+
+      <FreshLogs />
 
       <h2 className="section-title">Recommended to you</h2>
       {recs.map((r) => {
