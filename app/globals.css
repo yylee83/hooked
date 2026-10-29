@@ -615,3 +615,4 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .me-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 6px; }
 .me-stats span { display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12px; line-height: 1.1; }
 .me-stats b { margin: 0 0 2px; font-size: 20px; }
+.taste-cta--sm { margin-top: 28px; padding: 18px; }

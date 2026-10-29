@@ -6,6 +6,7 @@ import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/pod
 import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import TopEpisodes from "@/components/TopEpisodes";
+import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
 
@@ -145,6 +146,8 @@ export default async function SearchPage({ searchParams }) {
           )}
         </>
       )}
+
+      {!query && <ForYou compact />}
 
       {!query && chartEps.episodes.length > 0 && (
         <section style={{ marginTop: 28 }}>

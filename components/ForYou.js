@@ -32,7 +32,7 @@ function inputsFrom(state) {
   };
 }
 
-export default function ForYou() {
+export default function ForYou({ compact = false }) {
   const state = useStore();
   const [picks, setPicks] = useState(null);
   const inputs = state ? inputsFrom(state) : null;
@@ -55,7 +55,7 @@ export default function ForYou() {
 
   if (!hasTaste) {
     return (
-      <section id="for-you" className="card taste-cta">
+      <section id="for-you" className={`card taste-cta ${compact ? "taste-cta--sm" : ""}`}>
         <p className="display h-md" style={{ margin: 0 }}>Get picks made for you.</p>
         <p style={{ margin: "8px 0 14px" }}>Tell us what you're into and the shows you already love. Takes 30 seconds.</p>
         <Link href="/welcome" className="btn btn--cobalt btn--shadow-sm">
@@ -66,9 +66,9 @@ export default function ForYou() {
   }
 
   return (
-    <section id="for-you">
+    <section id="for-you" style={compact ? { marginTop: 28 } : undefined}>
       <div className="row center" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
-        <h2 className="section-title">For you</h2>
+        <h2 className={compact ? "label" : "section-title"}>For you</h2>
         <Link href="/welcome" className="more-link">Tune it →</Link>
       </div>
       {picks === null ? (
