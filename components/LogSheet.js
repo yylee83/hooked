@@ -144,7 +144,7 @@ export default function LogSheet({ episode, preset }) {
       {error && <p className="nudge" style={{ marginTop: 14 }}>{error}</p>}
       {state?.accounts && !state.user && (
         <p className="muted small" style={{ marginTop: 14, textAlign: "center" }}>
-          Saved on this device for now. <Link href={`/login?next=/log/${episode.id}`} className="u-link">Make a profile</Link> to keep it everywhere.
+          Saved on this device for now. <Link href={`/login?mode=signup&next=/log/${episode.id}`} className="u-link">Make a profile</Link> to keep it everywhere.
         </p>
       )}
     </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
 import Wrapped from "./Wrapped";
+import PasswordForm from "./PasswordForm";
 import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, removeFromList, saveProfile, signOut, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
@@ -16,6 +17,8 @@ function ProfilePanel({ state }) {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwSaved, setPwSaved] = useState(false);
 
   if (!state.accounts) return null;
 
@@ -26,7 +29,7 @@ function ProfilePanel({ state }) {
         <p style={{ margin: "8px 0 16px" }}>
           Your log is only saved on this device. Make a profile to keep it, share it, and make briefs.
         </p>
-        <Link href="/login?next=/me" className="btn btn--cobalt btn--shadow-sm">
+        <Link href="/login?mode=signup&next=/me" className="btn btn--cobalt btn--shadow-sm">
           Make a profile
         </Link>
         <Link href="/login?next=/me" className="link-btn small" style={{ marginLeft: 14 }}>
@@ -39,7 +42,8 @@ function ProfilePanel({ state }) {
   const needsHandle = !state.profile?.handle;
   if (!needsHandle && !editing) {
     return (
-      <div className="row gap center" style={{ marginTop: 14 }}>
+      <>
+      <div className="row gap center wrap" style={{ marginTop: 14 }}>
         <button
           className="btn btn--sm"
           onClick={() => {
@@ -50,10 +54,21 @@ function ProfilePanel({ state }) {
         >
           Edit profile
         </button>
+        <button className="btn btn--sm" onClick={() => (setPwOpen(!pwOpen), setPwSaved(false))} aria-expanded={pwOpen}>
+          {pwSaved ? "Password saved ✓" : "Set password"}
+        </button>
         <button className="link-btn small" onClick={() => signOut()}>
           Sign out
         </button>
       </div>
+      {pwOpen && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <p className="label" style={{ marginTop: 0 }}>Set a password</p>
+          <p className="muted small" style={{ marginBottom: 10 }}>So you can sign in with your email and password, no link needed.</p>
+          <PasswordForm onDone={() => (setPwOpen(false), setPwSaved(true))} />
+        </div>
+      )}
+      </>
     );
   }
 

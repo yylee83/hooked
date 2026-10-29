@@ -383,3 +383,11 @@ li:last-child > .pick { border-bottom: var(--line); }
 .stat__label { font-weight: 600; font-size: 14px; }
 .wrapped__top { display: flex; gap: 14px; align-items: center; margin-top: 18px; padding-top: 18px; border-top: 2px dashed rgba(21, 19, 29, 0.25); }
 .wrapped__top .mono { color: var(--cobalt); font-size: 12px; }
+
+/* ---------- v7: sign in ---------- */
+.auth-tabs { margin-top: 22px; }
+.auth-tabs .tab { cursor: pointer; }
+.pw { position: relative; }
+.pw .input { padding-right: 76px; }
+.pw__toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 14px; color: var(--cobalt); padding: 6px 8px; }
+.auth-alt { margin-top: 18px; text-align: center; }

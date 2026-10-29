@@ -1,14 +1,20 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { sendLoginLink, useStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
+import { sendLoginLink, sendPasswordReset, signInWithPassword, signUpWithPassword, useStore } from "@/lib/store";
 
-export default function LoginForm({ next = "/me", linkError }) {
+// Sign in with a password (default), create an account, get a one-time link, or reset a password.
+export default function LoginForm({ next = "/me", linkError, startMode = "signin" }) {
+  const router = useRouter();
   const state = useStore();
+  const [mode, setMode] = useState(startMode); // signin | signup | link | forgot
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(linkError ? "That link expired or was already used. Send a new one." : "");
+  const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset"
+  const [error, setError] = useState(linkError ? "That link expired or was already used. Sign in below, or get a new link." : "");
 
   if (state && !state.accounts) {
     return (
@@ -34,53 +40,144 @@ export default function LoginForm({ next = "/me", linkError }) {
   }
 
   if (sent) {
+    const copy = {
+      link: ["Check your email.", "We sent a sign-in link to"],
+      confirm: ["Confirm your email.", "Almost there. We sent a confirmation link to"],
+      reset: ["Check your email.", "We sent a link to set a new password to"],
+    }[sent];
     return (
       <div className="card">
-        <p className="display h-md" style={{ marginTop: 0 }}>Check your email.</p>
+        <p className="display h-md" style={{ marginTop: 0 }}>{copy[0]}</p>
         <p style={{ fontSize: 19 }}>
-          We sent a sign-in link to <b>{email}</b>. Open it on this device and you're in.
+          {copy[1]} <b>{email}</b>. Open it on this device.
         </p>
-        <button className="link-btn small" style={{ marginTop: 14 }} onClick={() => setSent(false)}>
-          Use a different email
+        <button className="link-btn small" style={{ marginTop: 14 }} onClick={() => (setSent(null), setMode("signin"))}>
+          Back to sign in
         </button>
       </div>
     );
   }
 
+  const switchTo = (m) => {
+    setMode(m);
+    setError("");
+  };
+
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
+    const addr = email.trim();
     try {
-      await sendLoginLink(email.trim(), next);
-      setSent(true);
+      if (mode === "signin") {
+        await signInWithPassword(addr, password);
+        router.push(next);
+      } else if (mode === "signup") {
+        const ready = await signUpWithPassword(addr, password, next);
+        if (ready) router.push(next);
+        else setSent("confirm");
+      } else if (mode === "forgot") {
+        await sendPasswordReset(addr);
+        setSent("reset");
+      } else {
+        await sendLoginLink(addr, next);
+        setSent("link");
+      }
     } catch (err) {
-      setError(/rate|seconds/i.test(err.message) ? "Too many tries. Wait a minute, then send again." : "Couldn't send the link. Check the email and try again.");
+      setError(err.message);
     } finally {
       setBusy(false);
     }
   }
 
+  const needsPassword = mode === "signin" || mode === "signup";
+  const cta = { signin: "Sign in", signup: "Create account", link: "Email me a link", forgot: "Send reset link" }[mode];
+
   return (
-    <form onSubmit={submit} className="stack">
-      <label className="label" htmlFor="email" style={{ margin: "8px 0 0" }}>
-        Your email
-      </label>
-      <input
-        id="email"
-        className="input"
-        type="email"
-        required
-        autoComplete="email"
-        placeholder="you@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 18 }} disabled={busy || !state}>
-        {busy ? "Sending…" : "Send me a link"}
-      </button>
-      {error && <p className="nudge">{error}</p>}
-      <p className="muted small">No password. New here? The same link makes your profile.</p>
-    </form>
+    <>
+      {(mode === "signin" || mode === "signup") && (
+        <div className="tabs auth-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={mode === "signin"} className={`tab ${mode === "signin" ? "is-on" : ""}`} onClick={() => switchTo("signin")}>
+            Sign in
+          </button>
+          <button type="button" role="tab" aria-selected={mode === "signup"} className={`tab ${mode === "signup" ? "is-on" : ""}`} onClick={() => switchTo("signup")}>
+            Create account
+          </button>
+        </div>
+      )}
+      {mode === "forgot" && <p className="display h-md" style={{ margin: "18px 0 6px" }}>Forgot your password?</p>}
+      {mode === "link" && <p className="display h-md" style={{ margin: "18px 0 6px" }}>Sign in with a link</p>}
+      {(mode === "forgot" || mode === "link") && (
+        <p className="muted" style={{ marginBottom: 6 }}>
+          {mode === "forgot" ? "We'll email you a link to set a new one." : "No password needed. We'll email you a one-time link."}
+        </p>
+      )}
+
+      <form onSubmit={submit} className="stack">
+        <label className="label" htmlFor="email" style={{ margin: "10px 0 0" }}>
+          Email
+        </label>
+        <input
+          id="email"
+          className="input"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        {needsPassword && (
+          <>
+            <div className="row center" style={{ justifyContent: "space-between", marginTop: 16 }}>
+              <label className="label" htmlFor="password" style={{ margin: 0 }}>
+                Password
+              </label>
+              {mode === "signin" && (
+                <button type="button" className="link-btn small" onClick={() => switchTo("forgot")}>
+                  Forgot password?
+                </button>
+              )}
+            </div>
+            <div className="pw">
+              <input
+                id="password"
+                className="input"
+                type={show ? "text" : "password"}
+                required
+                minLength={mode === "signup" ? 8 : undefined}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button type="button" className="pw__toggle" onClick={() => setShow(!show)} aria-label={show ? "Hide password" : "Show password"}>
+                {show ? "Hide" : "Show"}
+              </button>
+            </div>
+          </>
+        )}
+
+        <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 22 }} disabled={busy || !state}>
+          {busy ? "One sec…" : cta}
+        </button>
+        {error && <p className="nudge">{error}</p>}
+      </form>
+
+      <div className="auth-alt">
+        {mode === "signin" && (
+          <button type="button" className="link-btn small" onClick={() => switchTo("link")}>
+            Email me a sign-in link instead
+          </button>
+        )}
+        {mode === "signup" && <p className="muted small">Already have an account? Use the Sign in tab.</p>}
+        {(mode === "forgot" || mode === "link") && (
+          <button type="button" className="link-btn small" onClick={() => switchTo("signin")}>
+            ← Back to sign in with a password
+          </button>
+        )}
+      </div>
+    </>
   );
 }
