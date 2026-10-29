@@ -12,7 +12,7 @@ Find what hooks you. A social podcast log, built with Next.js and the Podcast In
 - **My log**: your stats, the shows you're hooked on, your list, and your log by month.
 - **Profiles**: email-link sign-in (no passwords). Logs, hooked shows, lists and briefs save to your account.
 - **+ button**: log a review, or make a brief.
-- **Trending now**: today's top US searches from Google Trends, with one tap to hear podcasts on it or make a brief.
+- **Trending now** (on Search): today's top US searches from Google Trends, with one tap to hear podcasts on it or make a brief.
 - **Brief builder**: pick a topic, then whole episodes or just the parts that mention it, played back to back.
 
 "Listening now" and "Recommended to you" friends are still samples (see `lib/demo.js`).

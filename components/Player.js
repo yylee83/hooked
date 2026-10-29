@@ -138,7 +138,7 @@ export function PlayerProvider({ children }) {
       {!hidden && (
         <div className="mini">
           <div className="mini__inner">
-            <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} />
+            <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} feedId={s.ep.feedId} />
             <div className="mini__text">
               {meta && (
                 <p className="mini__meta mono">

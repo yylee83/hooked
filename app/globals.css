@@ -347,3 +347,6 @@ li:last-child > .pick { border-bottom: var(--line); }
 
 .trending--search { overflow: hidden; margin: 4px 0 8px; border: var(--line); border-radius: 22px; box-shadow: var(--shadow-sm); }
 .trending--search .trending__row { margin: 0 -20px; padding: 0 20px 4px; }
+.art-link { display: block; flex: none; border-radius: inherit; transition: transform 0.12s ease; }
+.art-link:hover { transform: translate(-1px, -2px) rotate(-1deg); }
+.art-link:focus-visible { outline-offset: 4px; }

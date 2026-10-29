@@ -7,14 +7,12 @@ import { RecActions, Reactions } from "@/components/Social";
 import { artOf, findEpisode, findShow, safe, trendingShows } from "@/lib/podcastindex";
 import { listeningNow, recommendations } from "@/lib/demo";
 import { AvatarLink, FreshLogs } from "@/components/Account";
-import TrendingBar from "@/components/TrendingBar";
-import { trendingTopics } from "@/lib/trends";
 
 // Refresh trending and friend data every 15 minutes.
 export const revalidate = 900;
 
 export default async function FriendsPage() {
-  const [trending, topics] = await Promise.all([safe(trendingShows(9)), trendingTopics(12)]);
+  const trending = await safe(trendingShows(9));
 
   const friends = await Promise.all(
     listeningNow.map(async (f) => {
@@ -37,8 +35,6 @@ export default async function FriendsPage() {
         <Wordmark size={48} />
         <AvatarLink />
       </header>
-
-      <TrendingBar topics={topics} />
 
       <KeysNotice error={trending.error} />
 
@@ -87,7 +83,7 @@ export default async function FriendsPage() {
               <span className="sticker">Hooked</span>
             </div>
             <div className="rec__body">
-              <Art src={item.image} title={item.feedTitle} size={96} radius={16} />
+              <Art src={item.image} title={item.feedTitle} size={96} radius={16} feedId={item.feedId} />
               <div className="min0">
                 {item.episodeId ? (
                   <Link href={`/log/${item.episodeId}`} className="rec__title">

@@ -31,7 +31,7 @@ export function FreshLogs() {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("episode_id, title, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
+      .select("episode_id, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!inner(handle)")
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
       .limit(8)
@@ -47,7 +47,7 @@ export function FreshLogs() {
       <ul>
         {logs.map((l) => (
           <li key={`${l.who.handle}-${l.episode_id}`} className="fresh">
-            <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} />
+            <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} feedId={l.feed_id} />
             <div className="min0 grow">
               <p className="small">
                 <b>@{l.who.handle}</b> {l.hooked ? "is hooked on" : "wasn't hooked by"}

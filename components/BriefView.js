@@ -87,7 +87,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
           <article key={`${it.episodeId || it.episode}-${i}`} className="brief__item">
             <div className="brief__show">
               <div className="row gap center min0">
-                <Art src={it.image} title={it.show} size={52} radius={12} />
+                <Art src={it.image} title={it.show} size={52} radius={12} feedId={it.feedId} />
                 {it.feedId ? (
                   <Link href={`/show/${it.feedId}`} className="muted" style={{ fontSize: 19 }}>
                     {it.show}
