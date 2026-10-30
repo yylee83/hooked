@@ -264,23 +264,26 @@ export function PlayerProvider({ children }) {
   actions.current = { toggle, skip, seekTo, startSeg, total };
   const msEp = s?.ep;
   const msKey = `${msEp?.id || ""}|${q.current.i}|${meta?.title || ""}`;
-  useEffect(() => {
+
+  // Fill in the Now Playing card. iPhone Safari wipes it every time a new audio file loads,
+  // so this runs again once the audio is actually playing (see the listener below).
+  const applyNowPlaying = useRef(() => {});
+  applyNowPlaying.current = () => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator) || !msEp) return;
     const ms = navigator.mediaSession;
     const origin = window.location.origin;
     const abs = (u) => (!u ? "" : u.startsWith("//") ? `https:${u}` : u.startsWith("/") ? origin + u : u);
     // Prefer the https version of each cover; keep the original as a fallback.
     const art = [...new Set([msEp.image, msEp.feedImage].map(abs).filter(Boolean).flatMap((u) => [u.replace(/^http:\/\//, "https://"), u]))];
+    const album = meta ? `${meta.title} · clip ${q.current.i + 1} of ${q.current.segs.length}` : "Hooked on";
+    if (audio.current) audio.current.title = `${msEp.title || ""} · ${msEp.feedTitle || ""}`;
     try {
       ms.metadata = new window.MediaMetadata({
         title: msEp.title || "",
         artist: msEp.feedTitle || "",
-        album: meta ? `${meta.title} · clip ${q.current.i + 1} of ${q.current.segs.length}` : "Hooked on",
+        album,
         artwork: [
-          ...art.flatMap((src) => [
-            { src, sizes: "512x512" },
-            { src, sizes: "1024x1024" },
-          ]),
+          ...art.map((src) => ({ src, sizes: "600x600" })),
           { src: `${origin}/apple-icon.png`, sizes: "180x180", type: "image/png" },
         ],
       });
@@ -290,8 +293,8 @@ export function PlayerProvider({ children }) {
         ms.setActionHandler(name, fn);
       } catch {}
     };
-    set("play", () => actions.current.toggle());
-    set("pause", () => actions.current.toggle());
+    set("play", () => audio.current?.play().catch(() => {}));
+    set("pause", () => audio.current?.pause());
     set("seekbackward", (d) => actions.current.skip(-(d?.seekOffset || 15)));
     set("seekforward", (d) => actions.current.skip(d?.seekOffset || 30));
     set("seekto", (d) => {
@@ -305,7 +308,23 @@ export function PlayerProvider({ children }) {
     const many = q.current.segs.length > 1;
     set("previoustrack", many ? () => actions.current.startSeg(Math.max(0, q.current.i - 1)) : null);
     set("nexttrack", many && q.current.i + 1 < q.current.segs.length ? () => actions.current.startSeg(q.current.i + 1) : null);
-  }, [msKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+
+  useEffect(() => {
+    applyNowPlaying.current();
+  }, [msKey]);
+
+  useEffect(() => {
+    const el = audio.current;
+    if (!el) return;
+    const again = () => applyNowPlaying.current();
+    el.addEventListener("playing", again);
+    el.addEventListener("loadedmetadata", again);
+    return () => {
+      el.removeEventListener("playing", again);
+      el.removeEventListener("loadedmetadata", again);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
