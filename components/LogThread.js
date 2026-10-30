@@ -2,7 +2,7 @@
 // Reactions and replies under one person's log of one episode.
 import { useState } from "react";
 import Link from "next/link";
-import { useStore } from "@/lib/store";
+import { addToList, useStore } from "@/lib/store";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
 
 export default function LogThread({ logUserId, episodeId, defaultOpen = false, id }) {
@@ -13,6 +13,7 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [added, setAdded] = useState(false);
 
   if (!logUserId || !episodeId || (state && !state.accounts)) return null;
 
@@ -29,8 +30,16 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
     setError("");
     if (!me) return setError("signin");
     try {
-      await toggleReaction(me, logUserId, episodeId, kind);
+      const on = await toggleReaction(me, logUserId, episodeId, kind);
       setPicking(false);
+      // "Adding it" also puts the episode in your Up next.
+      if (kind === "adding" && on && !state?.list?.some((i) => String(i.episodeId) === String(episodeId))) {
+        const ep = await fetch(`/api/episode?id=${episodeId}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        if (ep) {
+          await addToList({ episodeId: ep.id, title: ep.title, feedId: ep.feedId, feedTitle: ep.feedTitle, image: ep.image || ep.feedImage, from: "a review" });
+          setAdded(true);
+        }
+      }
     } catch (e) {
       setError(e.message);
     }
@@ -80,6 +89,15 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
         </button>
       </div>
 
+      {added && (
+        <p className="small thread__note">
+          Added to your{" "}
+          <Link href="/me#upnext" className="u-link">
+            Up next
+          </Link>
+          .
+        </p>
+      )}
       {error === "signin" ? (
         <p className="small muted thread__note">
           <Link href={signInHref} className="u-link">

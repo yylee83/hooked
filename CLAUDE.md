@@ -77,6 +77,10 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   localStorage when signed out (moved into the account on sign-in).
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30, speed, drag the playhead,
   auto-advance through Up next).
+- **Reactions** (`lib/social.js`): great take (rates the review), agree / disagree (opinion on the
+  episode; mutually exclusive), adding it (wants to listen; also adds to Up next). Old "same"/"ooh"
+  map to agree/great. `reviewScore()` ranks reviews on episode pages (great take and adding it weigh
+  most). A reactor who later logs the episode = the review "got them to listen" (derivable from data).
 - **Search ranking**: `lib/rank.js`. A result must contain the phrase, or all the words close
   together. Exact show names are boosted, and so are Apple popularity and recency. Show nothing
   rather than unrelated results.

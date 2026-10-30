@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Art from "./Art";
 import { Avatar } from "./Friends";
 import { useStore } from "@/lib/store";
-import { fetchNotifications, markAllRead, timeAgo, unreadCount } from "@/lib/social";
+import { fetchNotifications, markAllRead, timeAgo, unreadCount, REACTION_WORDS } from "@/lib/social";
 
 // The bell, with a count of unread notifications. Checks every minute while the tab is open.
 export function NotificationBell() {
@@ -43,7 +43,6 @@ export function NotificationBell() {
   );
 }
 
-const REACTION_WORDS = { same: "same", ooh: "ooh", adding: "adding it", disagree: "hard disagree" };
 
 function describe(n, myHandle) {
   const who = n.actor?.handle ? `@${n.actor.handle}` : "Someone";

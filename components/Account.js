@@ -6,6 +6,7 @@ import Stars from "./Stars";
 import { initialsOf, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread from "./LogThread";
+import { reviewScore } from "@/lib/social";
 
 // Top-right avatar: your initials when signed in, a sign-in prompt when not.
 export function AvatarLink() {
@@ -84,13 +85,27 @@ export function EpisodeLogs({ episodeId }) {
     const db = supabase();
     if (!db) return setLogs([]);
     let live = true;
-    db.from("logs")
-      .select("user_id, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
-      .eq("episode_id", episodeId)
-      .not("who.handle", "is", null)
-      .order("logged_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => live && setLogs(data || []));
+    // Reviews, plus every reaction and reply on them, so the most useful reviews can go first.
+    Promise.all([
+      db
+        .from("logs")
+        .select("user_id, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
+        .eq("episode_id", episodeId)
+        .not("who.handle", "is", null)
+        .order("logged_at", { ascending: false })
+        .limit(50),
+      db.from("reactions").select("log_user_id, kind").eq("episode_id", episodeId).limit(2000),
+      db.from("comments").select("log_user_id").eq("episode_id", episodeId).limit(2000),
+    ]).then(([l, r, c]) => {
+      if (!live) return;
+      const by = (rows, id) => (rows || []).filter((x) => x.log_user_id === id);
+      const scored = (l.data || []).map((x) => ({
+        ...x,
+        score: reviewScore({ reactions: by(r.data, x.user_id), comments: by(c.data, x.user_id), hook: x.hook }),
+      }));
+      scored.sort((a, b) => b.score - a.score || new Date(b.logged_at) - new Date(a.logged_at));
+      setLogs(scored.slice(0, 20));
+    });
     return () => {
       live = false;
     };
@@ -102,6 +117,7 @@ export function EpisodeLogs({ episodeId }) {
   return (
     <section>
       <h2 className="label">What listeners think</h2>
+      {logs.length > 2 && <p className="muted small" style={{ marginTop: -4 }}>Most useful reviews first.</p>}
       <p className="mono small" style={{ marginBottom: 6 }}>
         {hooked} of {logs.length} hooked
       </p>

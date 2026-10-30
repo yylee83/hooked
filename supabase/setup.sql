@@ -178,12 +178,12 @@ create table if not exists public.comments (
 );
 create index if not exists comments_log on public.comments (log_user_id, episode_id, created_at);
 
--- Quick reactions on someone's log: same, ooh, adding it, hard disagree.
+-- Quick reactions on someone's log: great take, agree, disagree, adding it.
 create table if not exists public.reactions (
   log_user_id uuid not null references public.profiles (id) on delete cascade,
   episode_id bigint not null,
   user_id uuid not null default auth.uid() references public.profiles (id) on delete cascade,
-  kind text not null check (kind in ('same', 'ooh', 'adding', 'disagree')),
+  kind text not null check (kind in ('great', 'agree', 'disagree', 'adding')),
   created_at timestamptz not null default now(),
   primary key (log_user_id, episode_id, user_id, kind),
   foreign key (log_user_id, episode_id) references public.logs (user_id, episode_id) on delete cascade
@@ -301,3 +301,16 @@ create trigger on_reaction after insert on public.reactions for each row execute
 -- Taste picker topics + a faster lookup for show ratings.
 alter table public.profiles add column if not exists interests jsonb not null default '[]'::jsonb;
 create index if not exists logs_feed on public.logs (feed_id);
+
+-- Reactions: great take / agree / disagree / adding it (converts older same / ooh).
+alter table public.reactions drop constraint if exists reactions_kind_check;
+update public.reactions r set kind = 'agree'
+  where kind = 'same' and not exists (
+    select 1 from public.reactions x where x.log_user_id = r.log_user_id and x.episode_id = r.episode_id and x.user_id = r.user_id and x.kind = 'agree');
+update public.reactions r set kind = 'great'
+  where kind = 'ooh' and not exists (
+    select 1 from public.reactions x where x.log_user_id = r.log_user_id and x.episode_id = r.episode_id and x.user_id = r.user_id and x.kind = 'great');
+delete from public.reactions where kind in ('same', 'ooh');
+alter table public.reactions add constraint reactions_kind_check check (kind in ('great', 'agree', 'disagree', 'adding'));
+create index if not exists reactions_episode on public.reactions (episode_id);
+create index if not exists comments_episode on public.comments (episode_id);

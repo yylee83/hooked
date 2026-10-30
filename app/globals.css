@@ -118,8 +118,8 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 .chip--on { background: var(--butter); }
 
 .react { display: inline-flex; gap: 6px; align-items: center; border: 2.5px solid var(--ink); border-radius: 999px; padding: 4px 13px; font-weight: 700; font-size: 15px; }
-.react--ooh { background: var(--cobalt); color: var(--white); }
-.react--same { background: var(--bubblegum); }
+.react--great { background: var(--cobalt); color: var(--white); }
+.react--agree { background: var(--bubblegum); }
 .react--list { background: var(--butter); }
 .react--disagree { background: var(--white); }
 .react--add { background: transparent; border-style: dashed; color: var(--muted); }
