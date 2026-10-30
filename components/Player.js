@@ -123,6 +123,9 @@ export function PlayerProvider({ children }) {
     setProgress(0);
     setTimes({ elapsed: 0, length: 0 });
     setPlaying(false);
+    try {
+      navigator.mediaSession.metadata = null;
+    } catch {}
     force((n) => n + 1);
   }, []);
 
@@ -254,6 +257,76 @@ export function PlayerProvider({ children }) {
 
   const s = seg();
   const meta = q.current.meta;
+
+  // ---------- Lock screen / Control Center ("Now Playing") ----------
+  // Tells the phone what's playing (title, show, cover art) and wires its buttons to the player.
+  const actions = useRef({});
+  actions.current = { toggle, skip, seekTo, startSeg, total };
+  const msEp = s?.ep;
+  const msKey = `${msEp?.id || ""}|${q.current.i}|${meta?.title || ""}`;
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator) || !msEp) return;
+    const ms = navigator.mediaSession;
+    const origin = window.location.origin;
+    const abs = (u) => (!u ? "" : u.startsWith("//") ? `https:${u}` : u.startsWith("/") ? origin + u : u);
+    // Prefer the https version of each cover; keep the original as a fallback.
+    const art = [...new Set([msEp.image, msEp.feedImage].map(abs).filter(Boolean).flatMap((u) => [u.replace(/^http:\/\//, "https://"), u]))];
+    try {
+      ms.metadata = new window.MediaMetadata({
+        title: msEp.title || "",
+        artist: msEp.feedTitle || "",
+        album: meta ? `${meta.title} · clip ${q.current.i + 1} of ${q.current.segs.length}` : "Hooked on",
+        artwork: [
+          ...art.flatMap((src) => [
+            { src, sizes: "512x512" },
+            { src, sizes: "1024x1024" },
+          ]),
+          { src: `${origin}/apple-icon.png`, sizes: "180x180", type: "image/png" },
+        ],
+      });
+    } catch {}
+    const set = (name, fn) => {
+      try {
+        ms.setActionHandler(name, fn);
+      } catch {}
+    };
+    set("play", () => actions.current.toggle());
+    set("pause", () => actions.current.toggle());
+    set("seekbackward", (d) => actions.current.skip(-(d?.seekOffset || 15)));
+    set("seekforward", (d) => actions.current.skip(d?.seekOffset || 30));
+    set("seekto", (d) => {
+      const t = actions.current.total();
+      const el = audio.current;
+      if (d?.seekTime == null) return;
+      if (q.current.meta && t) actions.current.seekTo(d.seekTime / t);
+      else if (el?.duration) el.currentTime = d.seekTime;
+    });
+    // In a brief's cut, the track buttons jump between clips.
+    const many = q.current.segs.length > 1;
+    set("previoustrack", many ? () => actions.current.startSeg(Math.max(0, q.current.i - 1)) : null);
+    set("nexttrack", many && q.current.i + 1 < q.current.segs.length ? () => actions.current.startSeg(q.current.i + 1) : null);
+  }, [msKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    navigator.mediaSession.playbackState = !msEp ? "none" : playing ? "playing" : "paused";
+  }, [playing, msEp]);
+
+  // Keep the lock screen's progress bar in step (a few times a minute is plenty).
+  const lastPos = useRef(0);
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.mediaSession?.setPositionState || !times.length) return;
+    if (Math.abs(times.elapsed - lastPos.current) < 5 && times.elapsed > 1) return;
+    lastPos.current = times.elapsed;
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: times.length,
+        position: Math.min(times.elapsed, times.length),
+        playbackRate: rate,
+      });
+    } catch {}
+  }, [times, rate]);
+
   const hidden = !s || path.startsWith("/log/");
   const shown = drag ?? progress;
   const shownElapsed = drag !== null ? drag * times.length : times.elapsed;
