@@ -273,8 +273,10 @@ export function PlayerProvider({ children }) {
     const ms = navigator.mediaSession;
     const origin = window.location.origin;
     const abs = (u) => (!u ? "" : u.startsWith("//") ? `https:${u}` : u.startsWith("/") ? origin + u : u);
-    // Prefer the https version of each cover; keep the original as a fallback.
-    const art = [...new Set([msEp.image, msEp.feedImage].map(abs).filter(Boolean).flatMap((u) => [u.replace(/^http:\/\//, "https://"), u]))];
+    // iPhone Safari only uses the first image and often fails on huge or off-site covers,
+    // so hand it one 512×512 copy served from this site.
+    const cover = abs(msEp.image || msEp.feedImage || "");
+    const art = cover && /^https?:\/\//.test(cover) ? `${origin}/_next/image?url=${encodeURIComponent(cover)}&w=512&q=75` : "";
     const album = meta ? `${meta.title} · clip ${q.current.i + 1} of ${q.current.segs.length}` : "Hooked on";
     if (audio.current) audio.current.title = `${msEp.title || ""} · ${msEp.feedTitle || ""}`;
     try {
@@ -282,10 +284,9 @@ export function PlayerProvider({ children }) {
         title: msEp.title || "",
         artist: msEp.feedTitle || "",
         album,
-        artwork: [
-          ...art.map((src) => ({ src, sizes: "600x600" })),
-          { src: `${origin}/apple-icon.png`, sizes: "180x180", type: "image/png" },
-        ],
+        artwork: art
+          ? [{ src: art, sizes: "512x512" }]
+          : [{ src: `${origin}/apple-icon.png`, sizes: "180x180", type: "image/png" }],
       });
     } catch {}
     const set = (name, fn) => {
@@ -320,9 +321,15 @@ export function PlayerProvider({ children }) {
     const again = () => applyNowPlaying.current();
     el.addEventListener("playing", again);
     el.addEventListener("loadedmetadata", again);
+    // Safari can drop the Now Playing card when the page goes to the background
+    // (e.g. locking the phone), so put it back whenever the page hides or shows.
+    document.addEventListener("visibilitychange", again);
+    window.addEventListener("pageshow", again);
     return () => {
       el.removeEventListener("playing", again);
       el.removeEventListener("loadedmetadata", again);
+      document.removeEventListener("visibilitychange", again);
+      window.removeEventListener("pageshow", again);
     };
   }, []);
 
