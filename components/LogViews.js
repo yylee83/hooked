@@ -1,7 +1,7 @@
 "use client";
 // The tabs on My log: Diary, Shows, Up next. Built to stay easy to browse at 10 logs or 500.
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Art from "./Art";
 import Stars from "./Stars";
 import { usePlayer } from "./Player";
@@ -27,11 +27,35 @@ const norm = (s = "") => s.toLowerCase();
 // Your review, two lines at a time. Tap to read the whole thing.
 function Hook({ text }) {
   const [open, setOpen] = useState(false);
-  const long = text.length > 70;
-  if (!long) return <span className="diary__hook">“{text}”</span>;
+  const [cut, setCut] = useState(false); // is the 2-line preview actually hiding text?
+  const ref = useRef(null);
+
+  // Measure on screen: only offer "Read more" when the text doesn't fit in two lines.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || open) return;
+    const check = () => {
+      if (!el.isConnected) return;
+      setCut(el.scrollHeight > el.clientHeight + 1);
+    };
+    check();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(check) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [text, open, cut]);
+
+  if (!cut && !open) {
+    return (
+      <span className="diary__hook diary__hook--clamp" ref={ref}>
+        “{text}”
+      </span>
+    );
+  }
   return (
     <button className={`diary__hook diary__hook--btn ${open ? "is-open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open}>
-      <span className="diary__hook-text">“{text}”</span>
+      <span className="diary__hook-text" ref={ref}>
+        “{text}”
+      </span>
       <span className="diary__more">{open ? "Show less" : "Read more"}</span>
     </button>
   );
