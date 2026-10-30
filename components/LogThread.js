@@ -5,26 +5,27 @@ import Link from "next/link";
 import { addToList, useStore } from "@/lib/store";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
 
-// Icons for the reactions. "great take" stays as words: it's the one that matters most.
-const ICONS = {
-  agree: (
-    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
-      <path d="M7 10.5V21H3.5V10.5z" />
-      <path d="M7 10.5l4.2-7.3c1.6 0 2.8 1.3 2.6 2.9L13.3 9.5h5.4a2 2 0 0 1 2 2.4l-1.5 7.3A2.2 2.2 0 0 1 17 21H7" />
+// Small black icons for the reactions. Yours are filled in (and + turns into a check).
+const THUMB = "M7 10.5V21H3.5V10.5z M7 10.5l4.2-7.3c1.6 0 2.8 1.3 2.6 2.9L13.3 9.5h5.4a2 2 0 0 1 2 2.4l-1.5 7.3A2.2 2.2 0 0 1 17 21H7";
+function Icon({ kind, on }) {
+  const common = { viewBox: "0 0 24 24", width: 18, height: 18, "aria-hidden": true, strokeLinejoin: "round", strokeLinecap: "round" };
+  if (kind === "adding") {
+    return on ? (
+      <svg {...common} fill="none" stroke="currentColor" strokeWidth="2.8">
+        <path d="M4.5 12.5l5 5L19.5 7" />
+      </svg>
+    ) : (
+      <svg {...common} fill="none" stroke="currentColor" strokeWidth="2.4">
+        <path d="M12 4.5v15M4.5 12h15" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common} fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" style={kind === "disagree" ? { transform: "rotate(180deg)" } : undefined}>
+      <path d={THUMB} />
     </svg>
-  ),
-  disagree: (
-    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true" style={{ transform: "rotate(180deg)" }}>
-      <path d="M7 10.5V21H3.5V10.5z" />
-      <path d="M7 10.5l4.2-7.3c1.6 0 2.8 1.3 2.6 2.9L13.3 9.5h5.4a2 2 0 0 1 2 2.4l-1.5 7.3A2.2 2.2 0 0 1 17 21H7" />
-    </svg>
-  ),
-  adding: (
-    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
-      <path d="M12 4.5v15M4.5 12h15" />
-    </svg>
-  ),
-};
+  );
+}
 
 export default function LogThread({ logUserId, episodeId, defaultOpen = false, id }) {
   const state = useStore();
@@ -101,7 +102,7 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
         {shown.map((r) => (
           <span key={r.kind} className="react-wrap">
             <button
-              className={`react ${r.cls} ${ICONS[r.kind] ? "react--icon" : ""} ${mine.has(r.kind) ? "is-mine" : ""}`}
+              className={`react-i ${mine.has(r.kind) ? "is-mine" : ""}`}
               onClick={() => {
                 if (held.current) return void (held.current = false);
                 me ? react(r.kind) : setError("signin");
@@ -115,10 +116,10 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
               title={r.label}
               disabled={isOwner}
             >
-              {ICONS[r.kind] || r.label}
+              <Icon kind={r.kind} on={mine.has(r.kind)} />
               {counts[r.kind] > 0 && <span className="react__n">{counts[r.kind]}</span>}
             </button>
-            {tip === r.kind && ICONS[r.kind] && <span className="react-tip" role="tooltip">{r.label}</span>}
+            {tip === r.kind && <span className="react-tip" role="tooltip">{r.label}</span>}
           </span>
         ))}
         <button className="thread__toggle" onClick={() => setOpen(!open)} aria-expanded={open}>

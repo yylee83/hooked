@@ -648,3 +648,9 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .paste__msg { margin-top: 8px; font-size: 14px; font-weight: 600; }
 .diary__hook--clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .thread__bar .react { height: 32px; padding: 0 11px; }
+/* Reactions: small black icons, no bubble */
+.thread__bar { gap: 2px; }
+.react-i { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 6px 7px; color: var(--ink); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; border-radius: 8px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.react-i:hover:not(:disabled) { background: rgba(21, 19, 29, 0.06); }
+.react-i:disabled { cursor: default; }
+.react-i .react__n { font-family: var(--mono); font-size: 12px; }
