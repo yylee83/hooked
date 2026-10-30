@@ -34,7 +34,13 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [added, setAdded] = useState(false);
+  const [added, setAdded] = useState(null); // "Added to queue" message after tapping +
+  const addedTimer = useRef(null);
+  const flash = (msg) => {
+    clearTimeout(addedTimer.current);
+    setAdded(msg);
+    if (msg) addedTimer.current = setTimeout(() => setAdded(null), 3500);
+  };
   const [tip, setTip] = useState(null); // reaction name shown while pressing and holding
   const holdTimer = useRef(null);
   const held = useRef(false); // a press-and-hold shows the name; it shouldn't also count as a tap
@@ -67,16 +73,18 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
     setError("");
     if (!me) return setError("signin");
     try {
+      const turningOn = kind === "adding" && !mine.has("adding");
+      if (turningOn) flash("Added to queue");
+      if (kind === "adding" && !turningOn) flash(null);
       const on = await toggleReaction(me, logUserId, episodeId, kind);
-      // "Adding it" also puts the episode in your Up next.
+      // "+" also puts the episode in your queue (Up next).
       if (kind === "adding" && on && !state?.list?.some((i) => String(i.episodeId) === String(episodeId))) {
         const ep = await fetch(`/api/episode?id=${episodeId}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-        if (ep) {
-          await addToList({ episodeId: ep.id, title: ep.title, feedId: ep.feedId, feedTitle: ep.feedTitle, image: ep.image || ep.feedImage, from: "a review" });
-          setAdded(true);
-        }
+        if (ep) await addToList({ episodeId: ep.id, title: ep.title, feedId: ep.feedId, feedTitle: ep.feedTitle, image: ep.image || ep.feedImage, from: "a review" });
+        else flash(null);
       }
     } catch (e) {
+      flash(null);
       setError(e.message);
     }
   }
@@ -131,12 +139,11 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
       </div>
 
       {added && (
-        <p className="small thread__note">
-          Added to your{" "}
-          <Link href="/me#upnext" className="u-link">
-            Up next
+        <p className="queued-toast" role="status">
+          ✓ {added}
+          <Link href="/me#upnext" className="queued-toast__link">
+            See queue
           </Link>
-          .
         </p>
       )}
       {error === "signin" ? (
