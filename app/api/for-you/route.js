@@ -94,7 +94,7 @@ export async function POST(req) {
     const pop = (await popularOnHooked(30, 8)).filter((s) => !knownShows.has(String(s.feedId)));
     for (const s of pop.slice(0, 4)) {
       const { data } = await safe(getEpisodes(s.feedId, 1));
-      const x = take(data?.[0], "Popular on Hooked on", "popular");
+      const x = take(data?.[0], "Popular on Hooked", "popular");
       if (x) picks.push(x);
     }
   }

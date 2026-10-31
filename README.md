@@ -1,4 +1,4 @@
-# Hooked on
+# Hooked
 
 Working on this with Claude or another AI? Start with `CLAUDE.md`.
 
@@ -51,7 +51,7 @@ For the weekly email, also add (server-only, never public):
 ```
 SUPABASE_SERVICE_ROLE_KEY
 RESEND_API_KEY
-DIGEST_FROM        e.g. Hooked on <hello@yourdomain.com>
+DIGEST_FROM        e.g. Hooked <hello@yourdomain.com>
 CRON_SECRET        any long random string
 ```
 

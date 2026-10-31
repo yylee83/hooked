@@ -137,7 +137,7 @@ export default async function SearchPage({ searchParams }) {
 
       {!query && (
         <>
-          <h2 className="label">Popular on Hooked on</h2>
+          <h2 className="label">Popular on Hooked</h2>
           <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
             The shows people here logged most in the last 30 days.
           </p>

@@ -1,5 +1,5 @@
 "use client";
-// On a show page: your take (from the episodes you logged) next to everyone's on Hooked on.
+// On a show page: your take (from the episodes you logged) next to everyone's on Hooked.
 import Stars from "./Stars";
 import { useStore } from "@/lib/store";
 import { plural } from "@/lib/format";
@@ -29,7 +29,7 @@ export default function ShowRatings({ feedId, community }) {
       )}
       {community && (
         <div className="show-ratings__box">
-          <p className="mono small">On Hooked on</p>
+          <p className="mono small">On Hooked</p>
           {community.avg > 0 ? (
             <p className="show-ratings__score">
               <Stars value={community.avg} size={16} /> <span className="mono">{community.avg.toFixed(1)}</span>
