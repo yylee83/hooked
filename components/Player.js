@@ -277,7 +277,7 @@ export function PlayerProvider({ children }) {
     // so hand it one 512×512 copy served from this site.
     const cover = abs(msEp.image || msEp.feedImage || "");
     const art = cover && /^https?:\/\//.test(cover) ? `${origin}/_next/image?url=${encodeURIComponent(cover)}&w=512&q=75` : "";
-    const album = meta ? `${meta.title} · clip ${q.current.i + 1} of ${q.current.segs.length}` : "Hooked on";
+    const album = meta ? `${meta.title} · clip ${q.current.i + 1} of ${q.current.segs.length}` : "Hooked";
     if (audio.current) audio.current.title = `${msEp.title || ""} · ${msEp.feedTitle || ""}`;
     try {
       ms.metadata = new window.MediaMetadata({

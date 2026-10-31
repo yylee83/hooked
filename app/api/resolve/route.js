@@ -1,4 +1,4 @@
-// Paste-a-link logging: Apple Podcasts / Spotify link → where to go in Hooked on.
+// Paste-a-link logging: Apple Podcasts / Spotify link → where to go in Hooked.
 import { resolveLink } from "@/lib/links";
 
 export async function GET(req) {

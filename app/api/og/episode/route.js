@@ -115,7 +115,7 @@ export async function GET(request) {
         {/* right: words */}
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-            <div style={{ display: "flex", fontFamily: "Bagel", fontSize: 54, color: C.cobalt, lineHeight: 1 }}>hooked on</div>
+            <div style={{ display: "flex", fontFamily: "Bagel", fontSize: 54, color: C.cobalt, lineHeight: 1 }}>hooked</div>
             <div style={{ display: "flex", position: "relative", width: 300, height: 16, border: `3px solid ${C.ink}`, borderRadius: 999, background: "#fff", marginTop: 10 }}>
               <div style={{ display: "flex", width: 102, height: 10, background: C.pink, borderRadius: 999 }} />
               <div style={{ display: "flex", position: "absolute", left: 88, top: -10, width: 30, height: 30, borderRadius: 999, border: `3px solid ${C.ink}`, background: C.butter }} />

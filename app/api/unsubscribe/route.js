@@ -15,9 +15,9 @@ async function turnOff(request) {
 
 export async function GET(request) {
   const ok = await turnOff(request);
-  const page = `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hooked on</title>
+  const page = `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hooked</title>
   <body style="margin:0;background:#FFF7EE;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#15131D;display:grid;place-items:center;min-height:100vh;padding:24px">
-  <div style="max-width:420px;text-align:center"><div style="font-size:36px;font-weight:900;color:#2340FF">hooked on</div>
+  <div style="max-width:420px;text-align:center"><div style="font-size:36px;font-weight:900;color:#2340FF">hooked</div>
   <p style="font-size:20px;font-weight:700;margin:24px 0 8px">${ok ? "Weekly emails are off." : "That link didn't work."}</p>
   <p style="color:#55526A">${ok ? "You can turn them back on anytime from My log." : "Turn weekly emails off from My log instead."}</p>
   <p style="margin-top:24px"><a href="${siteUrl()}/me" style="color:#2340FF;font-weight:700">Go to My log</a></p></div></body>`;
