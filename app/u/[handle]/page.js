@@ -52,8 +52,10 @@ export default async function ProfilePage({ params }) {
           <p className="mono me__stats">
             {plural(logs.length, "episode")} · {hookedCount} hooked
           </p>
-          <p className="mono me__stats">
-            {plural(followers, "follower")} · {following} following
+          <p className="me__people small">
+            <Link href={`/u/${profile.handle}/people?tab=following`}><b>{following}</b> following</Link>
+            <span aria-hidden="true"> · </span>
+            <Link href={`/u/${profile.handle}/people?tab=followers`}><b>{followers}</b> {followers === 1 ? "follower" : "followers"}</Link>
           </p>
         </div>
       </header>

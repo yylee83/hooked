@@ -19,7 +19,7 @@ export function Avatar({ person, size = 48 }) {
   );
 }
 
-export function FollowButton({ person, small = false }) {
+export function FollowButton({ person, small = false, label = "Follow" }) {
   const state = useStore();
   const [error, setError] = useState("");
   if (!state?.accounts) return null;
@@ -46,7 +46,7 @@ export function FollowButton({ person, small = false }) {
         }}
         aria-pressed={on}
       >
-        {on ? "Following" : "Follow"}
+        {on ? "Following" : label}
       </button>
       {error && <span className="nudge small">{error}</span>}
     </span>
@@ -162,13 +162,6 @@ export function PeopleFinder() {
           {copied ? "Link copied" : "Invite friends"}
         </button>
       </div>
-
-      {state?.following?.length > 0 && (
-        <section>
-          <h2 className="label">You follow</h2>
-          <ul>{state.following.map((p) => <PersonRow key={p.id} p={p} />)}</ul>
-        </section>
-      )}
 
       {suggestions.length > 0 && (
         <section>
