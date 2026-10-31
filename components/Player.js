@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
 import { getState, removeFromList, setNowPlaying, upNext } from "@/lib/store";
+import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
 
 const PlayerContext = createContext(null);
 
@@ -20,6 +21,10 @@ export function PlayerProvider({ children }) {
   const [rate, setRate] = useState(1);
   const rateRef = useRef(1);
   const [drag, setDrag] = useState(null); // fraction while dragging the knob
+  // After a reload the player comes back paused, before its audio has loaded.
+  // `pending` holds the spot (in seconds) to start from when you press play.
+  const pending = useRef(null);
+  const lastSaved = useRef(0);
   const path = usePathname() || "";
 
   const seg = () => q.current.segs[q.current.i];
@@ -33,6 +38,11 @@ export function PlayerProvider({ children }) {
     q.current.i = i;
     force((n) => n + 1);
     const at = s.start + offset;
+    pending.current = null;
+    lastSaved.current = at;
+    // Remember a single episode so it comes back after a reload. (A brief's cut doesn't.)
+    if (q.current.meta) clearLast();
+    else saveLast(s.ep);
     if (src.current !== s.ep.audio) {
       src.current = s.ep.audio;
       el.src = s.ep.audio;
@@ -54,26 +64,27 @@ export function PlayerProvider({ children }) {
 
   // Play a list of segments: [{ ep, start, end }], with optional { title } for a brief.
   const playQueue = useCallback(
-    (segs, meta = null) => {
+    (segs, meta = null, offset = 0) => {
       if (!segs.length) return;
       q.current = { segs, i: 0, meta };
       setProgress(0);
-      startSeg(0);
+      startSeg(0, offset);
     },
     [startSeg]
   );
 
-  // Play/pause one episode.
+  // Play/pause one episode, picking up where you left off.
   const play = useCallback(
     (ep) => {
       const el = audio.current;
       if (!el || !ep?.audio) return;
       const cur = seg();
-      if (!q.current.meta && cur?.ep.id === ep.id) {
+      const same = !q.current.meta && cur?.ep.id === ep.id;
+      if (same && src.current === ep.audio) {
         el.paused ? el.play() : el.pause();
         return;
       }
-      playQueue([{ ep, start: 0, end: null }]);
+      playQueue([{ ep, start: 0, end: null }], null, (same && pending.current) || resumeAt(ep.id));
     },
     [playQueue]
   );
@@ -87,7 +98,7 @@ export function PlayerProvider({ children }) {
         if (!res.ok) return false;
         const ep = await res.json();
         if (!ep.audio) return false;
-        playQueue([{ ep, start: 0, end: null }]);
+        playQueue([{ ep, start: 0, end: null }], null, resumeAt(ep.id));
         return true;
       } catch {
         return false;
@@ -113,6 +124,11 @@ export function PlayerProvider({ children }) {
   // Close the player: stop, unload, hide.
   const close = useCallback(() => {
     const el = audio.current;
+    // Keep your spot in the episode, but don't bring the player back after a reload.
+    const cur = q.current.segs[q.current.i];
+    if (el && cur && !q.current.meta && src.current === cur.ep.audio && el.readyState >= 1) saveProgress(cur.ep.id, el.currentTime, el.duration);
+    clearLast();
+    pending.current = null;
     if (el) {
       el.pause();
       el.removeAttribute("src");
@@ -131,8 +147,50 @@ export function PlayerProvider({ children }) {
 
   const toggle = () => {
     const el = audio.current;
+    const cur = seg();
+    // Brought back after a reload: load the audio and start from the saved spot.
+    if (el && cur && src.current !== cur.ep.audio) {
+      startSeg(q.current.i, pending.current ?? resumeAt(cur.ep.id));
+      return;
+    }
     if (el) el.paused ? el.play().catch(() => {}) : el.pause();
   };
+
+  // After a reload, bring back the episode you were on, paused at your spot.
+  useEffect(() => {
+    const ep = loadLast();
+    if (!ep || q.current.segs.length) return;
+    q.current = { segs: [{ ep, start: 0, end: null }], i: 0, meta: null };
+    const t = resumeAt(ep.id);
+    const d = ep.duration || 0;
+    pending.current = t;
+    setTimes({ elapsed: t, length: d });
+    setProgress(d ? Math.min(1, t / d) : 0);
+    force((n) => n + 1);
+  }, []);
+
+  // Save your spot when you pause, and when you leave the page or switch apps.
+  useEffect(() => {
+    const el = audio.current;
+    if (!el) return;
+    const save = () => {
+      const cur = q.current.segs[q.current.i];
+      if (!cur || q.current.meta || src.current !== cur.ep.audio || el.readyState < 1 || el.seeking) return;
+      saveProgress(cur.ep.id, el.currentTime, el.duration);
+      lastSaved.current = el.currentTime;
+    };
+    const onHide = () => {
+      if (document.visibilityState === "hidden") save();
+    };
+    el.addEventListener("pause", save);
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", save);
+    return () => {
+      el.removeEventListener("pause", save);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", save);
+    };
+  }, []);
 
   // Remember your playback speed between visits.
   useEffect(() => {
@@ -152,6 +210,11 @@ export function PlayerProvider({ children }) {
       const { i, segs } = q.current;
       if (i + 1 < segs.length) startSeg(i + 1);
       else {
+        // Finished: next time this episode starts from the top.
+        if (!q.current.meta && segs[i]) {
+          clearProgress(segs[i].ep.id);
+          clearLast();
+        }
         el.pause();
         if (!q.current.meta) advanceUpNext(segs[i]?.ep);
       }
@@ -170,6 +233,11 @@ export function PlayerProvider({ children }) {
       } else {
         setProgress(end ? el.currentTime / end : 0);
         setTimes({ elapsed: el.currentTime, length: end || 0 });
+        // Save your spot every 5 seconds of listening.
+        if (src.current === s.ep.audio && el.readyState >= 1 && !el.seeking && Math.abs(el.currentTime - lastSaved.current) >= 5) {
+          saveProgress(s.ep.id, el.currentTime, el.duration);
+          lastSaved.current = el.currentTime;
+        }
       }
     };
     const on = () => setPlaying(true);
@@ -197,6 +265,13 @@ export function PlayerProvider({ children }) {
         if (target <= len || i === q.current.segs.length - 1) return startSeg(i, Math.min(target, len));
         target -= len;
       }
+    } else if (seg() && src.current !== seg().ep.audio && times.length) {
+      // Brought back after a reload and not loaded yet: just move the saved spot.
+      const t = f * times.length;
+      pending.current = t;
+      setProgress(f);
+      setTimes({ elapsed: t, length: times.length });
+      saveProgress(seg().ep.id, t, times.length);
     } else if (el?.duration) {
       el.currentTime = f * el.duration;
     }
@@ -209,6 +284,8 @@ export function PlayerProvider({ children }) {
     if (q.current.meta) {
       const t = total();
       if (t) seekTo((times.elapsed + seconds) / t);
+    } else if (seg() && src.current !== seg().ep.audio && times.length) {
+      seekTo((times.elapsed + seconds) / times.length);
     } else if (el.duration) {
       el.currentTime = Math.max(0, Math.min(el.duration - 0.5, el.currentTime + seconds));
     }
