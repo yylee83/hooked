@@ -50,5 +50,8 @@ Each step is its own branch and pull request.
 
 ## Known issues
 
+- Preview links use the live database (keys turned on for Preview on 2026-10-31). Before step 7, give previews their own test database so trying a branch can never damage real data.
+- The link-preview picture (`app/opengraph-image.png`, `twitter-image.png`) still says "hooked on". It needs redrawing, ideally as code so it follows `site.name`.
+- To sign in on a preview link, use email + password. Magic links return to the live site until preview addresses are added to Supabase's allowed redirect list (step 5).
 - Search results are weak. This waits for step 7, because better search needs episode descriptions stored in our own database.
 - Two server fetches need the safe-fetch guard: the Spotify short-link check in `lib/links.js` (the host check also matches look-alike domains) and cover images in `app/api/og/episode/route.js`. These are part of step 4.
