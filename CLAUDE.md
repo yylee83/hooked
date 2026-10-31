@@ -1,10 +1,14 @@
-# Hooked on: guide for anyone (and any Claude) working on this project
+# Hooked: guide for anyone (and any Claude) working on this project
 
 @AGENTS.md
 
+**Read `docs/PLAN.md` first.** Erin and YY merged two versions of the app. The plan records the
+decisions that replace older notes below (name, invite-only sign-up, data model, migrations,
+TypeScript for new code) and the order of work.
+
 ## What this is
 
-**Hooked on** (hooked-nu.vercel.app) is "Letterboxd for podcasts." People find podcast episodes, log them
+**Hooked** (hooked-nu.vercel.app) is "Letterboxd for podcasts." People find podcast episodes, log them
 (hooked or not hooked, optional 0.5–5 stars, and "What's the hook?", a one-line review), keep a diary
 of what they listened to, follow friends, send and discuss episodes, and make **Briefs**: topic
 collections that can be cut down to just the parts of each episode where the topic comes up.
