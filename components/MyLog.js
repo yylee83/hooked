@@ -237,7 +237,13 @@ export default function MyLog() {
           {state.profile?.handle && (
             <p className="me__handle">
               <Link href={`/u/${state.profile.handle}`}>@{state.profile.handle}</Link>
-              <span className="muted small"> · {plural(state.following?.length || 0, "friend")} followed</span>
+            </p>
+          )}
+          {state.user && (
+            <p className="me__people small">
+              <Link href="/people?tab=following"><b>{state.following?.length || 0}</b> following</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/people?tab=followers"><b>{state.followerCount || 0}</b> {state.followerCount === 1 ? "follower" : "followers"}</Link>
             </p>
           )}
         </div>

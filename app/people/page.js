@@ -1,15 +1,17 @@
-import { PeopleFinder } from "@/components/Friends";
+import PeopleTabs from "@/components/People";
 
-export const metadata = { title: "Find friends" };
+export const metadata = { title: "People" };
 
-export default function PeoplePage() {
+// Your people: who you follow, who follows you, and finding new people.
+export default async function PeoplePage({ searchParams }) {
+  const { tab } = await searchParams;
   return (
     <>
-      <h1 className="display h-lg cobalt">Find friends</h1>
+      <h1 className="display h-lg cobalt">People</h1>
       <p className="muted" style={{ marginTop: 6, fontSize: 19 }}>
         Follow people to see what they're hooked on.
       </p>
-      <PeopleFinder />
+      <PeopleTabs initialTab={typeof tab === "string" ? tab : ""} />
     </>
   );
 }
