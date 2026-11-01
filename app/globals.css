@@ -192,9 +192,11 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 .choice .btn { white-space: normal; text-align: center; }
 .choice .btn.is-on { box-shadow: var(--shadow); }
 .nudge { color: #d4006a; font-weight: 700; }
+.rating-row { display: flex; align-items: center; gap: 12px; }
 .rating { display: flex; gap: 6px; }
 .rating__star { padding: 2px; transition: transform 0.1s; }
 .rating__star:active { transform: scale(0.9); }
+.rating__value { font-size: 18px; font-weight: 600; color: var(--cobalt); min-width: 2.5ch; }
 .sheet__save { margin-top: 44px; }
 
 /* ---------- my log ---------- */
