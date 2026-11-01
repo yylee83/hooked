@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Art from "./Art";
 import { useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
+import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
 
@@ -198,6 +199,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
+    for (const it of items) refreshCatalog({ episodeId: it.episodeId });
     try {
       sessionStorage.removeItem(DRAFT);
     } catch {}

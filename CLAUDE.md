@@ -52,7 +52,8 @@ off Home).
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: required (the anon key is safe for the browser)
 - `SUPABASE_SERVICE_ROLE_KEY`: server-only. Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
   Trending shows only what Google lists right now. Also used by the weekly digest.
-- `RESEND_API_KEY`, `DIGEST_FROM`, `CRON_SECRET`: only for the weekly digest (not set yet)
+- `CRON_SECRET`: protects the scheduled jobs (daily catalog refresh, weekly digest). Vercel sends it automatically.
+- `RESEND_API_KEY`, `DIGEST_FROM`: only for the weekly digest (not set yet)
 - Test-only overrides, which point external calls at a local mock: `PODCASTINDEX_BASE_URL`, `CHARTS_FEED_URL`,
   `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`, and
   `SAFE_FETCH_ALLOW_PRIVATE=1` (lets `safeFetch` reach local mocks; never set it on Vercel)
@@ -80,6 +81,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   covers passwords, email links and Google. **To invite someone:** Supabase → Table Editor →
   `allowed_emails` → Insert row → their email in lower case. Never write email addresses into a
   migration: the repo is public.
+- **Shows and episodes** (`shows`, `episodes`, our own 8-character ids): every save that mentions an
+  episode fills in `episode_ref` / `show_ref` by itself (triggers in `*_refs_on_save.sql`), creating a basic
+  entry if needed. `lib/catalog.js` upgrades entries from Podcast Index. See `docs/DATA_MODEL.md`.
 - Tables: `allowed_emails` (the invite list; no app access), `trending_topics` (48 hours of Google Trends; only the server writes), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
   (one per user+episode), `hooked_shows`, `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
