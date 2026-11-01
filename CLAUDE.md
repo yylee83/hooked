@@ -27,6 +27,9 @@ off Home).
   preview URL; merge to `main` only when it's ready to go live.
 - Vercel is on the **Hobby** plan. Keep the repo **public**: on Hobby, commits from non-owners to a
   private repo are blocked from deploying.
+- **Fetching addresses that come from outside** (pasted links, image or transcript URLs from podcast feeds)
+  always goes through `safeFetch` in `lib/safe-fetch.js`. It blocks private and internal addresses (on every
+  redirect) and caps time, redirects and size. Plain `fetch` is only for fixed, known services.
 - **Never put secrets in the code.** They live only in Vercel → Settings → Environment Variables.
   The Podcast Index secret and the Supabase service-role key must stay server-only: never prefix
   them with `NEXT_PUBLIC_`, and never import them into a client component.
@@ -51,7 +54,8 @@ off Home).
   Trending shows only what Google lists right now. Also used by the weekly digest.
 - `RESEND_API_KEY`, `DIGEST_FROM`, `CRON_SECRET`: only for the weekly digest (not set yet)
 - Test-only overrides, which point external calls at a local mock: `PODCASTINDEX_BASE_URL`, `CHARTS_FEED_URL`,
-  `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`
+  `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`, and
+  `SAFE_FETCH_ALLOW_PRIVATE=1` (lets `safeFetch` reach local mocks; never set it on Vercel)
 
 For local development, put the required keys in `.env.local` (it's gitignored), then run `npm install` and `npm run dev`.
 
