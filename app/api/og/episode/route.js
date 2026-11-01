@@ -4,6 +4,7 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { getEpisode, getShow, safe, artOf } from "@/lib/podcastindex";
 import { getSharedLog } from "@/lib/supabase/public";
+import { safeFetch } from "@/lib/safe-fetch";
 
 const C = { cobalt: "#2340FF", pink: "#FF7AC6", butter: "#FFE14D", ink: "#15131D", cream: "#FFF7EE", muted: "#55526A" };
 
@@ -26,15 +27,14 @@ async function loadFonts() {
 }
 
 // Download the cover ourselves so a slow or broken image never breaks the preview.
+// The address comes from the podcast's feed, so it goes through safeFetch.
 async function coverDataUrl(url) {
   if (!url || !/^https?:\/\//.test(url)) return null;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    const res = await safeFetch(url, { timeoutMs: 4000, maxBytes: 4_000_000 });
     const type = res.headers.get("content-type") || "";
     if (!res.ok || !/image\/(png|jpe?g|gif|webp)/.test(type)) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length > 4_000_000) return null;
-    return `data:${type.split(";")[0]};base64,${buf.toString("base64")}`;
+    return `data:${type.split(";")[0]};base64,${res.body.toString("base64")}`;
   } catch {
     return null;
   }
