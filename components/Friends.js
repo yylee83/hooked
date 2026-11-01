@@ -157,7 +157,7 @@ export function PeopleFinder() {
 
       <div className="card invite">
         <p className="display h-md" style={{ margin: 0 }}>Bring your friends.</p>
-        <p style={{ margin: "6px 0 14px" }}>Send them a link to your profile. They can browse it without signing up.</p>
+        <p style={{ margin: "6px 0 14px" }}>Send them a link to your profile. They can browse it without signing up. Making an account is invite-only for now.</p>
         <button className="btn btn--cobalt btn--shadow-sm" onClick={invite}>
           {copied ? "Link copied" : "Invite friends"}
         </button>

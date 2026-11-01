@@ -107,6 +107,11 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
       )}
       {mode === "forgot" && <p className="display h-md" style={{ margin: "18px 0 6px" }}>Forgot your password?</p>}
       {mode === "link" && <p className="display h-md" style={{ margin: "18px 0 6px" }}>Sign in with a link</p>}
+      {mode === "signup" && (
+        <p className="muted" style={{ margin: "14px 0 0" }}>
+          Hooked is invite-only for now. Use the email you were invited with.
+        </p>
+      )}
       {(mode === "forgot" || mode === "link") && (
         <p className="muted" style={{ marginBottom: 6 }}>
           {mode === "forgot" ? "We'll email you a link to set a new one." : "No password needed. We'll email you a one-time link."}
@@ -162,7 +167,7 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 22 }} disabled={busy || !state}>
           {busy ? "One sec…" : cta}
         </button>
-        {error && <p className="nudge">{error}</p>}
+        {error && <p className="nudge" role="alert">{error}</p>}
       </form>
 
       <div className="auth-alt">
