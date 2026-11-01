@@ -1,7 +1,7 @@
 # Step 7: our own shows and episodes
 
-A design for review by Erin and YY. Nothing here is built yet. The five decisions at the bottom need a
-yes, a no or a change from both of you.
+The design for step 7. **Decided 2026-11-01:** yes to all five decisions at the bottom (our own ids,
+short addresses, basic Spotify-only entries, briefs stay as they are, old columns removed after a week).
 
 ## In one paragraph
 
@@ -22,6 +22,7 @@ Everything people do (logs, ratings, reviews, Up next, sends, briefs) points at 
   sources in the background.
 - **Faster pages.** Episode and show pages read from our database instead of waiting on Podcast Index.
 - **Links keep working.** Old addresses like `/episode/62497006265` redirect to the new ones forever.
+  New ones are short: `/episode/k3x9q2ab` (8 characters, no look-alike letters such as 0/o or 1/l).
 - **Room for our own information:** topics, our own descriptions, "Hooked on" counts, editor picks,
   later search.
 
@@ -108,7 +109,7 @@ The live site keeps working the whole time.
 **Backup before stages A and D:** a full export of the live data, kept outside the repo. The same
 kind of copy filled the test database.
 
-## Decisions for you
+## Decisions (all agreed)
 
 1. **Which ids do we use?**
    - **(a) Recommended: our own ids.** Podcast Index's number becomes one stored reference among
@@ -117,8 +118,8 @@ kind of copy filled the test database.
    - (b) Keep Podcast Index's numbers as our ids, and invent numbers for shows that aren't in Podcast
      Index. There's less to change, but we stay tied to Podcast Index's numbering, which is part of
      what broke.
-2. **What do new addresses look like?** Recommended: `/episode/<short id>`, a short random code like
-   `/episode/k3x9q2` rather than a long internal id. Readable "slug" addresses
+2. **What do new addresses look like?** `/episode/<short id>`, an 8-character random code like
+   `/episode/k3x9q2ab` rather than a long internal id. Readable "slug" addresses
    (`/show/the-daily`) could come later.
 3. **Spotify-only shows:** keep basic, log-only entries? Recommended: yes. Otherwise those shows can't
    be logged at all.
