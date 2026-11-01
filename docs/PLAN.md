@@ -42,7 +42,7 @@ Each step is its own branch and pull request.
 3. People page with Following, Followers and Find tabs, plus tappable counts.
 4. Baseline migrations that match the live database, plus lint and a build check.
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
-6. Trending topics over 48 hours: save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
+6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
 7. New data model: back up, create `shows` and `episodes`, copy the existing data over, switch the code, and remove the old tables.
 8. Listening progress saved to your account (synced across devices), then better search.
 9. Home split into Everyone and Friends, and friends' ratings on episode and show pages.

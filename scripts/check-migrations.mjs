@@ -15,7 +15,7 @@ await db.exec(`
   create table auth.users (id uuid primary key, email text);
   create function auth.uid() returns uuid language sql stable
     as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-  create role anon; create role authenticated; create role service_role; create role supabase_auth_admin;
+  create role anon; create role authenticated; create role service_role bypassrls; create role supabase_auth_admin;
 `);
 
 for (const f of files) {

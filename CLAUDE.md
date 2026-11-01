@@ -39,7 +39,7 @@ off Home).
 | Apple Podcasts search/lookup (free, no key) | Popularity-aware search, matching pasted Apple links | `lib/itunes.js`, `lib/links.js` |
 | Apple top-shows chart RSS | "Trending right now" (Home), Top episodes and taste picker | `lib/charts.js` |
 | Spotify public pages / oEmbed | Matching pasted Spotify links | `lib/links.js` |
-| Google Trends RSS (Wikipedia fallback) | Trending topics bar on Search | `lib/trends.js` |
+| Google Trends RSS (Wikipedia fallback) | Trending topics bar on Search: the past 48 hours, saved in `trending_topics` | `lib/trends.js` |
 | Supabase | Auth (email + password, magic link), Postgres with row-level security | `lib/supabase/*`, `lib/store.js`, `lib/social.js` |
 | Resend | Weekly digest email (dormant until keys are added) | `lib/digest.js`, `app/api/cron/digest` |
 
@@ -47,7 +47,9 @@ off Home).
 
 - `PODCASTINDEX_API_KEY`, `PODCASTINDEX_API_SECRET`: required, server-only
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: required (the anon key is safe for the browser)
-- `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `DIGEST_FROM`, `CRON_SECRET`: only for the weekly digest (not set yet)
+- `SUPABASE_SERVICE_ROLE_KEY`: server-only. Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
+  Trending shows only what Google lists right now. Also used by the weekly digest.
+- `RESEND_API_KEY`, `DIGEST_FROM`, `CRON_SECRET`: only for the weekly digest (not set yet)
 - Test-only overrides, which point external calls at a local mock: `PODCASTINDEX_BASE_URL`, `CHARTS_FEED_URL`,
   `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`
 
@@ -67,7 +69,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   covers passwords, email links and Google. **To invite someone:** Supabase → Table Editor →
   `allowed_emails` → Insert row → their email in lower case. Never write email addresses into a
   migration: the repo is public.
-- Tables: `allowed_emails` (the invite list; no app access), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
+- Tables: `allowed_emails` (the invite list; no app access), `trending_topics` (48 hours of Google Trends; only the server writes), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
   (one per user+episode), `hooked_shows`, `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
   and `briefs`.

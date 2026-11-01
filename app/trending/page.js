@@ -10,7 +10,7 @@ export default async function TrendingPage() {
     <>
       <h1 className="display h-lg cobalt">Trending now</h1>
       <p className="muted" style={{ margin: "8px 0 22px", fontSize: 19 }}>
-        {topics[0]?.source === "wikipedia" ? "What people are reading about most today." : "What the US is searching for today, from Google Trends."} Tap one to hear what podcasts are saying, or make it a brief.
+        {topics[0]?.source === "wikipedia" ? "What people are reading about most today." : "What the US has been searching for over the past two days, from Google Trends."} Tap one to hear what podcasts are saying, or make it a brief.
       </p>
 
       {topics.length === 0 && <p className="muted">Trending topics aren't loading right now. Check back in a bit.</p>}
