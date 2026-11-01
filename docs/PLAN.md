@@ -50,8 +50,8 @@ Each step is its own branch and pull request.
 
 ## Known issues
 
-- Preview links use the live database (keys turned on for Preview on 2026-10-31). Before step 7, give previews their own test database so trying a branch can never damage real data.
+- ~~Preview links use the live database~~ (done 2026-11-01: previews use the `hooked-test` project, a copy of live).
 - The link-preview picture (`app/opengraph-image.png`, `twitter-image.png`) still says "hooked on". It needs redrawing, ideally as code so it follows `site.name`.
-- To sign in on a preview link, use email + password. Magic links return to the live site until preview addresses are added to Supabase's allowed redirect list (step 5).
+- To sign in on a preview link, use "Email me a sign-in link" or "Forgot password?" (the test database's copied accounts have no password).
 - Search results are weak. This waits for step 7, because better search needs episode descriptions stored in our own database.
 - ~~Safe-fetch guard~~ (done: `lib/safe-fetch.js` for pasted Spotify short links, share-image covers and transcripts).
