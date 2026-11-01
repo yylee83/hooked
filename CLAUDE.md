@@ -68,6 +68,13 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - To apply new migrations to the live database: `supabase db push` (the project must be linked once
   with `supabase link --project-ref ltdjzjbqhojhtahewgtd`). Merge the PR first, then push, so the live
   code and database change together. Back up before anything that changes or deletes data.
+- **Two databases.** The live site uses `hooked` (`ltdjzjbqhojhtahewgtd`). Preview links use `hooked-test`
+  (`wxbpizgeauuomagbmwja`), a copy with the same migrations and a copy of the live data (Vercel's
+  Supabase settings are split: Production → live, Preview → test). Try new migrations on the test
+  database first: link a separate working folder to it (`supabase link --project-ref wxbpizgeauuomagbmwja
+  --workdir <folder>`) so the main folder stays linked to live. The test database can be wiped and
+  re-copied from live at any time. On previews, sign in with an email link or "Forgot password?"
+  (copied accounts have no password).
 - **Invite-only sign-up.** Anyone can browse, but only emails in `allowed_emails` can create an
   account. Supabase Auth checks this itself (the `hook_invite_gate` "Before User Created" hook), so it
   covers passwords, email links and Google. **To invite someone:** Supabase → Table Editor →
