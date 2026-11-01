@@ -62,7 +62,12 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - To apply new migrations to the live database: `supabase db push` (the project must be linked once
   with `supabase link --project-ref ltdjzjbqhojhtahewgtd`). Merge the PR first, then push, so the live
   code and database change together. Back up before anything that changes or deletes data.
-- Tables: `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
+- **Invite-only sign-up.** Anyone can browse, but only emails in `allowed_emails` can create an
+  account. Supabase Auth checks this itself (the `hook_invite_gate` "Before User Created" hook), so it
+  covers passwords, email links and Google. **To invite someone:** Supabase → Table Editor →
+  `allowed_emails` → Insert row → their email in lower case. Never write email addresses into a
+  migration: the repo is public.
+- Tables: `allowed_emails` (the invite list; no app access), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
   (one per user+episode), `hooked_shows`, `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
   and `briefs`.
