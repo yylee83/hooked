@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "db:check": "node scripts/check-migrations.mjs",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@fontsource/bagel-fat-one": "^5.2.6",
@@ -17,5 +19,10 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.16",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.3"
   }
 }

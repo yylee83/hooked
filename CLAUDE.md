@@ -55,10 +55,13 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Database (Supabase)
 
-- The full schema is in `supabase/setup.sql`, which is safe to re-run. Smaller `update-*.sql` files hold
-  later changes. Schema changes must be **run by hand** in Supabase → SQL Editor, with the dropdown
-  set to the database (not "Logs"). Write them to be idempotent (`if not exists`), add the same
-  change to `setup.sql`, and tell YY exactly what to paste.
+- **Every schema change is a migration**: a new numbered file in `supabase/migrations/`
+  (`YYYYMMDDHHMMSS_short_name.sql`). Never edit an existing migration, and never change the database by
+  hand or through the SQL Editor. `20261031000000_baseline.sql` is the schema as it was when we started.
+- Before pushing, run `npm run db:check`: it applies every migration to an empty in-memory database.
+- To apply new migrations to the live database: `supabase db push` (the project must be linked once
+  with `supabase link --project-ref ltdjzjbqhojhtahewgtd`). Merge the PR first, then push, so the live
+  code and database change together. Back up before anything that changes or deletes data.
 - Tables: `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
   (one per user+episode), `hooked_shows`, `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
@@ -101,6 +104,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - Copy is short, warm and plain: no jargon, no exclamation-heavy hype.
 
 ## Testing
+
+Before pushing, run `npm run lint`, `npm run db:check` and `npm run build`. GitHub runs the same three on every
+pull request (`.github/workflows/check.yml`); a red check means don't merge yet.
 
 External services may not be reachable from a sandbox. The approach that has worked: run small
 local mocks of Podcast Index, Apple and Spotify, plus a fake Supabase REST/auth server, point the

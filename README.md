@@ -32,8 +32,8 @@ Clips only work for shows that publish timed transcripts; other episodes play in
 
 ## Database
 
-Run `supabase/setup.sql` once in Supabase → SQL Editor (dropdown set to your database, not Logs). It's safe to run again.
-Already set up earlier? Run the `supabase/update-*.sql` files you haven't run yet (latest: `update-interests.sql`).
+The schema lives in `supabase/migrations/`, one numbered file per change. Check them with `npm run db:check`
+and apply new ones to the live database with `supabase db push`. See CLAUDE.md for the rules.
 
 ## Keys
 
