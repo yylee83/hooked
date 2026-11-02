@@ -73,7 +73,8 @@ export function ShareSheet({ episode, onClose }) {
   const review = mine ? { hooked: mine.hooked, rating: mine.rating, hook: mine.hook } : null;
   const handle = state?.profile?.handle;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const url = `${origin}/episode/${episode.id}${handle ? `?from=${encodeURIComponent(handle)}` : ""}`;
+  // Our short address when we know it; otherwise the Podcast Index number, which redirects to it.
+  const url = `${origin}/episode/${episode.ref || episode.id}${handle ? `?from=${encodeURIComponent(handle)}` : ""}`;
   const text = shareText(episode, review);
   const full = `${text}\n${url}`;
   const enc = encodeURIComponent;
