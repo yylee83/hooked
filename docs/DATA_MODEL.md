@@ -102,7 +102,7 @@ The live site keeps working the whole time.
 | Stage | What happens | Can it be undone? |
 |---|---|---|
 | **A. Add** | Create `shows` and `episodes`. Add a new episode/show column next to the old one in each table above. Fill everything in from Podcast Index, falling back to the copied details in old logs when Podcast Index fails, so nothing is lost. The app doesn't change yet. | Yes: drop the new tables and columns. |
-| **B. Write both** (B1 done: saves fill in references by themselves through database triggers; `/api/catalog/refresh` and a daily job upgrade entries from Podcast Index) | The app saves new logs, Up next items, sends and briefs with both the old and new ids. Episode and show pages read from our tables, with Podcast Index as backup. | Yes: the old columns are still complete. |
+| **B. Write both** (B2 done: episode and show pages read our tables first, Podcast Index as backup, and save new entries in the background; descriptions are stored and shown as plain text with links. B1 done: saves fill in references by themselves through database triggers; `/api/catalog/refresh` and a daily job upgrade entries from Podcast Index) | The app saves new logs, Up next items, sends and briefs with both the old and new ids. Episode and show pages read from our tables, with Podcast Index as backup. | Yes: the old columns are still complete. |
 | **C. Switch** | Page addresses use our ids, old addresses redirect, and the app reads only the new columns. Shows from Apple feeds and Spotify-only entries start working. | Yes, until stage D. |
 | **D. Tidy** | After **both of you** have checked live for a while: remove the old id columns and copied details. Back up first. | No, which is why it waits. |
 

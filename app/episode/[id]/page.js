@@ -10,7 +10,9 @@ import { JoinNudge } from "@/components/JoinNudge";
 import LogThread from "@/components/LogThread";
 import Stars from "@/components/Stars";
 import { Avatar } from "@/components/Friends";
-import { episodeCard, getEpisode, getShow, safe, artOf } from "@/lib/podcastindex";
+import { episodeCard, artOf } from "@/lib/podcastindex";
+import { loadEpisode } from "@/lib/catalog";
+import Notes from "@/components/Notes";
 import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -20,7 +22,7 @@ const cleanFrom = (v) => (typeof v === "string" && /^[a-z0-9._]{2,24}$/i.test(v)
 export async function generateMetadata({ params, searchParams }) {
   const { id } = await params;
   const from = cleanFrom((await searchParams).from);
-  const { data } = await safe(getEpisode(id));
+  const data = (await loadEpisode(id)).data?.episode;
   if (!data) return { title: "Episode" };
   const shared = from ? await getSharedLog(from, id) : null;
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
@@ -35,32 +37,16 @@ export async function generateMetadata({ params, searchParams }) {
   };
 }
 
-// Keep paragraph breaks from the show notes, drop the HTML.
-function notesToParagraphs(html = "") {
-  return html
-    .replace(/<\/(p|div|li|h\d)>|<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&rsquo;|&lsquo;/g, "'")
-    .replace(/&[a-z]+;/g, " ")
-    .split(/\n+/)
-    .map((p) => p.replace(/\s+/g, " ").trim())
-    .filter(Boolean)
-    .slice(0, 30);
-}
-
 export default async function EpisodePage({ params, searchParams }) {
   const { id } = await params;
   const from = cleanFrom((await searchParams).from);
   if (!/^\d+$/.test(id)) notFound();
 
-  const ep = await safe(getEpisode(id));
+  // Our own copy first, Podcast Index as backup (lib/catalog.js).
+  const ep = await loadEpisode(id);
   if (ep.error) return <KeysNotice error={ep.error} />;
   if (!ep.data) notFound();
-  const e = ep.data;
-  const { data: show } = await safe(getShow(e.feedId));
+  const { episode: e, show } = ep.data;
   const card = episodeCard(e, show);
   const shared = from ? await getSharedLog(from, card.id) : null;
 
@@ -105,7 +91,7 @@ export default async function EpisodePage({ params, searchParams }) {
       </div>
 
       <p className="eps__meta">{[shortDate(card.date), minutes(card.duration)].filter(Boolean).join(" · ")}</p>
-      <h1 className="display ep-title">{card.title}</h1>
+      <h1 className="display ep-title" data-from={ep.from}>{card.title}</h1>
       {card.feedId && (
         <Link href={`/show/${card.feedId}`} className="ep-show">
           <Art src={artOf(show) || card.feedImage} title={card.feedTitle} size={36} radius={9} />
@@ -129,11 +115,7 @@ export default async function EpisodePage({ params, searchParams }) {
       {e.description && (
         <section>
           <h2 className="label">Show notes</h2>
-          <div className="ep-notes">
-            {notesToParagraphs(e.description).map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
+          <Notes text={e.description} />
         </section>
       )}
     </>

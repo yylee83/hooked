@@ -4,14 +4,15 @@ import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { HookShowButton, QueueButton } from "@/components/Social";
-import { artOf, episodeCard, getEpisodes, getShow, plainText, safe } from "@/lib/podcastindex";
+import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
+import { loadShow } from "@/lib/catalog";
 import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const { data } = await safe(getShow(id));
+  const { data } = await loadShow(id);
   return { title: data?.title || "Show" };
 }
 
@@ -20,7 +21,8 @@ export default async function ShowPage({ params, searchParams }) {
   const { note } = (await searchParams) || {};
   if (!/^\d+$/.test(id)) notFound();
 
-  const show = await safe(getShow(id));
+  // Our own copy first, Podcast Index as backup (lib/catalog.js).
+  const show = await loadShow(id);
   if (show.error) return <KeysNotice error={show.error} />;
   if (!show.data) notFound();
   const s = show.data;
@@ -43,7 +45,7 @@ export default async function ShowPage({ params, searchParams }) {
       <div className="show__hero">
         <Art src={artOf(s)} title={s.title} size={150} tilt={-2.5} radius={24} className="art--shadow" />
       </div>
-      <h1 className="display show__title">{s.title}</h1>
+      <h1 className="display show__title" data-from={show.from}>{s.title}</h1>
       <p className="muted" style={{ fontSize: 19, marginTop: 6 }}>
         {s.author || s.ownerName}
       </p>
