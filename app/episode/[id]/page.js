@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
@@ -11,7 +11,8 @@ import LogThread from "@/components/LogThread";
 import Stars from "@/components/Stars";
 import { Avatar } from "@/components/Friends";
 import { episodeCard, artOf } from "@/lib/podcastindex";
-import { loadEpisode } from "@/lib/catalog";
+import { REF, episodeRefFor, loadEpisode } from "@/lib/catalog";
+import { withQuery } from "@/lib/addresses";
 import Notes from "@/components/Notes";
 import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
@@ -24,11 +25,11 @@ export async function generateMetadata({ params, searchParams }) {
   const from = cleanFrom((await searchParams).from);
   const data = (await loadEpisode(id)).data?.episode;
   if (!data) return { title: "Episode" };
-  const shared = from ? await getSharedLog(from, id) : null;
+  const shared = from ? await getSharedLog(from, data.id) : null;
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
   const title = who ? `${who} thinks you'd enjoy "${data.title}"` : data.title;
   const description = shared?.log?.hook ? `“${shared.log.hook}” Listen free on ${site.name}.` : `${data.feedTitle || "A podcast"} · Listen free on ${site.name}.`;
-  const image = `/api/og/episode?${new URLSearchParams({ id, ...(shared?.profile ? { from: shared.profile.handle } : {}) })}`;
+  const image = `/api/og/episode?${new URLSearchParams({ id: String(data.id), ...(shared?.profile ? { from: shared.profile.handle } : {}) })}`;
   return {
     title: data.title,
     description,
@@ -39,15 +40,20 @@ export async function generateMetadata({ params, searchParams }) {
 
 export default async function EpisodePage({ params, searchParams }) {
   const { id } = await params;
-  const from = cleanFrom((await searchParams).from);
-  if (!/^\d+$/.test(id)) notFound();
+  const query = await searchParams;
+  const from = cleanFrom(query.from);
+  // Old addresses use Podcast Index's number: send them to our short one (/episode/k3x9q2ab).
+  if (/^\d{1,15}$/.test(id)) {
+    const ref = (await episodeRefFor(id)) || (await loadEpisode(id)).data?.episode?.ref;
+    if (ref) redirect(withQuery(`/episode/${ref}`, query));
+  } else if (!REF.test(id)) notFound();
 
   // Our own copy first, Podcast Index as backup (lib/catalog.js).
   const ep = await loadEpisode(id);
   if (ep.error) return <KeysNotice error={ep.error} />;
   if (!ep.data) notFound();
   const { episode: e, show } = ep.data;
-  const card = episodeCard(e, show);
+  const card = { ...episodeCard(e, show), ref: e.ref };
   const shared = from ? await getSharedLog(from, card.id) : null;
 
   return (

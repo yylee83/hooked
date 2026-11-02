@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { HookShowButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
-import { loadShow } from "@/lib/catalog";
+import { REF, loadShow, showRefFor } from "@/lib/catalog";
+import { withQuery } from "@/lib/addresses";
 import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
@@ -18,8 +19,13 @@ export async function generateMetadata({ params }) {
 
 export default async function ShowPage({ params, searchParams }) {
   const { id } = await params;
-  const { note } = (await searchParams) || {};
-  if (!/^\d+$/.test(id)) notFound();
+  const query = (await searchParams) || {};
+  const { note } = query;
+  // Old addresses use Podcast Index's number: send them to our short one (/show/k3x9q2ab).
+  if (/^\d{1,15}$/.test(id)) {
+    const ref = (await showRefFor(id)) || (await loadShow(id)).data?.ref;
+    if (ref) redirect(withQuery(`/show/${ref}`, query));
+  } else if (!REF.test(id)) notFound();
 
   // Our own copy first, Podcast Index as backup (lib/catalog.js).
   const show = await loadShow(id);
