@@ -13,7 +13,7 @@ export default function Notes({ text, className = "ep-notes" }) {
               piece
             ) : (
               <a key={j} href={piece.href} target="_blank" rel="noopener noreferrer nofollow ugc" className="ep-notes__link">
-                {piece.href.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60)}
+                {piece.text.slice(0, 80)}
               </a>
             )
           )}
