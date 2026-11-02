@@ -85,9 +85,10 @@ export function ShareSheet({ episode, onClose }) {
     } catch {}
   }
 
+  // "Copy link" copies just the address. Share…, Messages, Email and the rest send the message with it.
   async function copy() {
     try {
-      await navigator.clipboard.writeText(full);
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
