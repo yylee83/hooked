@@ -12,7 +12,7 @@ export default async function LogPage({ params, searchParams }) {
   const query = await searchParams;
   const { hooked } = query;
   if (/^\d{1,15}$/.test(id)) {
-    const ref = await episodeRefFor(id);
+    const ref = (await episodeRefFor(id)) || (await loadEpisode(id)).data?.episode?.ref;
     if (ref) redirect(withQuery(`/log/${ref}`, query));
   } else if (!REF.test(id)) notFound();
 

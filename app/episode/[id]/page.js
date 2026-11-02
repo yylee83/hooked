@@ -44,7 +44,7 @@ export default async function EpisodePage({ params, searchParams }) {
   const from = cleanFrom(query.from);
   // Old addresses use Podcast Index's number: send them to our short one (/episode/k3x9q2ab).
   if (/^\d{1,15}$/.test(id)) {
-    const ref = await episodeRefFor(id);
+    const ref = (await episodeRefFor(id)) || (await loadEpisode(id)).data?.episode?.ref;
     if (ref) redirect(withQuery(`/episode/${ref}`, query));
   } else if (!REF.test(id)) notFound();
 

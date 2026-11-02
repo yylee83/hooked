@@ -23,7 +23,7 @@ export default async function ShowPage({ params, searchParams }) {
   const { note } = query;
   // Old addresses use Podcast Index's number: send them to our short one (/show/k3x9q2ab).
   if (/^\d{1,15}$/.test(id)) {
-    const ref = await showRefFor(id);
+    const ref = (await showRefFor(id)) || (await loadShow(id)).data?.ref;
     if (ref) redirect(withQuery(`/show/${ref}`, query));
   } else if (!REF.test(id)) notFound();
 
