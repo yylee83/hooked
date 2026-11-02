@@ -2,7 +2,7 @@
 
 @AGENTS.md
 
-**Read `docs/PLAN.md` first.** Erin and YY merged two versions of the app. The plan records the
+**Read `docs/PLAN.md` first**, especially "Where we left off". Erin and YY merged two versions of the app. The plan records the
 decisions that replace older notes below (name, invite-only sign-up, data model, migrations,
 TypeScript for new code) and the order of work.
 
