@@ -369,6 +369,8 @@ li:last-child > .pick { border-bottom: var(--line); }
 .ep-show { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
 .ep-show .art { border-width: 2px; }
 .ep-notes p { margin: 0 0 12px; color: var(--muted); font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.ep-notes__link { color: var(--cobalt); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.ep-notes__link:hover { text-decoration-thickness: 2.5px; }
 
 /* ---------- v6: listening wrapped ---------- */
 .wrapped { margin-top: 40px; background: var(--white); border: var(--line); border-radius: 28px; box-shadow: var(--shadow); padding: 24px 20px; }
