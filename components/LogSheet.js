@@ -7,31 +7,52 @@ import { STAR_PATH } from "./Stars";
 import { addLog, sendRecommendation, useStore } from "@/lib/store";
 
 function RatingInput({ value, onChange }) {
-  // Tap a star to rate. Tap the same star again for a half star.
+  // Tap the left half of a star for a half star, the right half for a full star.
+  // Tapping your current rating again clears it. Arrow keys move by half a star.
+  const pick = (n, e) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    // Keyboard "clicks" have no position: treat them as the full star.
+    const half = e.detail > 0 && e.clientX - box.left < box.width / 2;
+    const next = half ? n - 0.5 : n;
+    onChange(next === value ? 0 : next);
+  };
+  const onKeyDown = (e) => {
+    const step = { ArrowRight: 0.5, ArrowUp: 0.5, ArrowLeft: -0.5, ArrowDown: -0.5 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    onChange(Math.max(0, Math.min(5, value + step)));
+  };
   return (
-    <div className="rating" role="radiogroup" aria-label="Your rating">
-      {[1, 2, 3, 4, 5].map((n) => {
-        const fill = Math.max(0, Math.min(1, value - (n - 1)));
-        return (
-          <button
-            key={n}
-            type="button"
-            className="rating__star"
-            aria-label={`${n} stars`}
-            onClick={() => onChange(value === n ? n - 0.5 : value === n - 0.5 ? 0 : n)}
-          >
-            <svg viewBox="0 0 24 24" width="52" height="52" aria-hidden="true">
-              <defs>
-                <linearGradient id={`g${n}`}>
-                  <stop offset={fill} stopColor="#2340FF" />
-                  <stop offset={fill} stopColor="transparent" />
-                </linearGradient>
-              </defs>
-              <path d={STAR_PATH} fill={`url(#g${n})`} stroke="#2340FF" strokeWidth="1.4" strokeLinejoin="round" />
-            </svg>
-          </button>
-        );
-      })}
+    <div className="rating-row">
+      <div className="rating" role="radiogroup" aria-label="Your rating" onKeyDown={onKeyDown}>
+        {[1, 2, 3, 4, 5].map((n) => {
+          const fill = Math.max(0, Math.min(1, value - (n - 1)));
+          const on = value > n - 1 && value <= n;
+          return (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              tabIndex={on || (!value && n === 1) ? 0 : -1}
+              className="rating__star"
+              aria-label={on && value === n - 0.5 ? `${n - 0.5} stars` : `${n} star${n === 1 ? "" : "s"}`}
+              onClick={(e) => pick(n, e)}
+            >
+              <svg viewBox="0 0 24 24" width="52" height="52" aria-hidden="true">
+                <defs>
+                  <linearGradient id={`g${n}`}>
+                    <stop offset={fill} stopColor="#2340FF" />
+                    <stop offset={fill} stopColor="transparent" />
+                  </linearGradient>
+                </defs>
+                <path d={STAR_PATH} fill={`url(#g${n})`} stroke="#2340FF" strokeWidth="1.4" strokeLinejoin="round" />
+              </svg>
+            </button>
+          );
+        })}
+      </div>
+      <span className="rating__value mono" aria-live="polite">{value ? value : ""}</span>
     </div>
   );
 }
@@ -114,6 +135,7 @@ export default function LogSheet({ episode, preset }) {
       </p>
 
       <h3 className="label">Your rating</h3>
+      <p className="muted small" style={{ margin: "0 0 6px" }}>Tap the left half of a star for a half star.</p>
       <RatingInput value={rating} onChange={setRating} />
 
       <h3 className="display h-md cobalt">What's the hook?</h3>
