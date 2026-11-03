@@ -104,7 +104,7 @@ export default async function ProfilePage({ params }) {
             <h2 className="label">{g.label}</h2>
             <ul className="log">
               {g.items.map((l) => (
-                <li key={l.episode_id} className="log__row log__row--share">
+                <li key={l.episode_ref || l.episode_id} className="log__row log__row--share">
                   <span className="mono log__day">{new Date(l.logged_at).getDate()}</span>
                   <Art src={l.image} title={l.feed_title || ""} size={56} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                   <div className="min0">
@@ -121,7 +121,7 @@ export default async function ProfilePage({ params }) {
                       )}
                     </p>
                     {l.hook && <p className="log__hook">“{l.hook}”</p>}
-                    <LogThread logUserId={profile.id} episodeId={l.episode_id} />
+                    <LogThread logUserId={profile.id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                   </div>
                   <div className="log__side">
                     <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>

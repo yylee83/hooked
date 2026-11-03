@@ -49,7 +49,7 @@ export function FreshLogs() {
       <h2 className="section-title">Just logged</h2>
       <ul>
         {logs.map((l) => (
-          <li key={`${l.who.handle}-${l.episode_id}`} className="fresh">
+          <li key={`${l.who.handle}-${l.episode_ref || l.episode_id}`} className="fresh">
             <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} feedId={l.feed_id} />
             <div className="min0 grow">
               <p className="small">
@@ -68,7 +68,7 @@ export function FreshLogs() {
                 )}
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
-              <LogThread logUserId={l.user_id} episodeId={l.episode_id} />
+              <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
             </div>
           </li>
         ))}
@@ -86,17 +86,20 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
     const db = supabase();
     if (!db) return setLogs([]);
     let live = true;
+    // Matched by our episode id (episodes Podcast Index doesn't have only have that).
+    const col = episodeRef ? "episode_ref" : "episode_id";
+    const key = episodeRef || episodeId;
     // Reviews, plus every reaction and reply on them, so the most useful reviews can go first.
     Promise.all([
       db
         .from("logs")
         .select("user_id, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
-        .eq("episode_id", episodeId)
+        .eq(col, key)
         .not("who.handle", "is", null)
         .order("logged_at", { ascending: false })
         .limit(50),
-      db.from("reactions").select("log_user_id, kind").eq("episode_id", episodeId).limit(2000),
-      db.from("comments").select("log_user_id").eq("episode_id", episodeId).limit(2000),
+      db.from("reactions").select("log_user_id, kind").eq(col, key).limit(2000),
+      db.from("comments").select("log_user_id").eq(col, key).limit(2000),
     ]).then(([l, r, c]) => {
       if (!live) return;
       const by = (rows, id) => (rows || []).filter((x) => x.log_user_id === id);
@@ -110,7 +113,7 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
     return () => {
       live = false;
     };
-  }, [episodeId, me]);
+  }, [episodeId, episodeRef, me]);
   if (!logs?.length) return null;
   const hooked = logs.filter((l) => l.hooked).length;
   // Your own review first.
@@ -139,7 +142,7 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
                   Edit your review
                 </Link>
               )}
-              <LogThread logUserId={l.user_id} episodeId={episodeId} />
+              <LogThread logUserId={l.user_id} episodeRef={episodeRef} episodeId={episodeId} />
             </div>
           </li>
         ))}

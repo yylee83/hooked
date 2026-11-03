@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { addToList, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
+import { addToList, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
 
 // "+ Up next" / "Not for me" on a friend's recommendation.
 export function RecActions({ item }) {
@@ -93,7 +93,7 @@ export function QueueButton({ episode, from }) {
     image: episode.image || episode.feedImage,
     ...(from ? { from } : {}),
   };
-  const on = !!state?.list.some((i) => String(i.episodeId) === String(episode.id));
+  const on = inUpNext(state, episode);
   return (
     <button
       className={`btn btn--sm ${on ? "btn--butter" : ""}`}

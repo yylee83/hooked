@@ -5,7 +5,7 @@ import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
 import { logHref } from "@/lib/addresses";
-import { addLog, sendRecommendation, useStore } from "@/lib/store";
+import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
 
 function RatingInput({ value, onChange }) {
   // Tap the left half of a star for a half star, the right half for a full star.
@@ -61,7 +61,7 @@ function RatingInput({ value, onChange }) {
 export default function LogSheet({ episode, preset }) {
   const router = useRouter();
   const state = useStore();
-  const existing = state?.logs.find((l) => l.id === episode.id);
+  const existing = findLog(state, episode);
   const [touched, setTouched] = useState(false);
   const [hooked, setHooked] = useState(preset);
   const [rating, setRating] = useState(0);

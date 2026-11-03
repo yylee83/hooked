@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
-import { sendRecommendation, useStore } from "@/lib/store";
+import { findLog, sendRecommendation, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
 
@@ -70,7 +70,7 @@ export function ShareSheet({ episode, onClose }) {
     };
   }, [onClose]);
 
-  const mine = state?.logs?.find((l) => String(l.id) === String(episode.id));
+  const mine = findLog(state, episode);
   const review = mine ? { hooked: mine.hooked, rating: mine.rating, hook: mine.hook } : null;
   const handle = state?.profile?.handle;
   const origin = typeof window !== "undefined" ? window.location.origin : "";

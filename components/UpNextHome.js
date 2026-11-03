@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import Art from "./Art";
 import { PauseIcon, PlayIcon, usePlayer } from "./Player";
-import { upNext, useStore } from "@/lib/store";
+import { sameEpisode, upNext, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 
 export default function UpNextHome() {
@@ -12,12 +12,12 @@ export default function UpNextHome() {
   const player = usePlayer();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const list = upNext(state).filter((i) => i.episodeId);
+  const list = upNext(state).filter((i) => i.episodeRef || i.episodeId);
   if (!list.length) return null;
 
   const first = list[0];
   const rest = list.slice(1, 4);
-  const isThis = !player?.queueMeta && String(player?.current?.id) === String(first.episodeId);
+  const isThis = !player?.queueMeta && sameEpisode(player?.current, { ref: first.episodeRef, id: first.episodeId });
 
   async function play() {
     if (isThis) return player.toggle();
@@ -53,7 +53,7 @@ export default function UpNextHome() {
         <div className="upnext-home__rest">
           <span className="small">Then:</span>
           {rest.map((i) => (
-            <Art key={i.episodeId} src={i.image} title={i.feedTitle} size={34} radius={8} episodeRef={i.episodeRef} episodeId={i.episodeId} />
+            <Art key={i.episodeRef || i.episodeId} src={i.image} title={i.feedTitle} size={34} radius={8} episodeRef={i.episodeRef} episodeId={i.episodeId} />
           ))}
           {list.length > 4 && <span className="mono small">+{list.length - 4}</span>}
         </div>

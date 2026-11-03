@@ -2,7 +2,8 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { getEpisode, getShow, safe, artOf } from "@/lib/podcastindex";
+import { artOf } from "@/lib/podcastindex";
+import { REF, loadEpisode } from "@/lib/catalog";
 import { getSharedLog } from "@/lib/supabase/public";
 import { safeFetch } from "@/lib/safe-fetch";
 
@@ -69,15 +70,14 @@ export async function GET(request) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id") || "";
   const from = url.searchParams.get("from") || "";
-  if (!/^\d+$/.test(id)) return new Response("Not found", { status: 404 });
+  // Our short id, or a Podcast Index number (older shared links).
+  if (!REF.test(id) && !/^\d{1,15}$/.test(id)) return new Response("Not found", { status: 404 });
 
-  const [{ data: ep }, shared, f] = await Promise.all([
-    safe(getEpisode(id)),
-    from ? getSharedLog(from, id).catch(() => null) : null,
-    loadFonts(),
-  ]);
+  const [loaded, f] = await Promise.all([loadEpisode(id), loadFonts()]);
+  const ep = loaded.data?.episode;
   if (!ep) return new Response("Not found", { status: 404 });
-  const { data: show } = await safe(getShow(ep.feedId));
+  const show = loaded.data.show;
+  const shared = from ? await getSharedLog(from, { ref: ep.ref, id: ep.id }).catch(() => null) : null;
   const cover = await coverDataUrl(ep.image || ep.feedImage || artOf(show));
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
   const log = shared?.log;
