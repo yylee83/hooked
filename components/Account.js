@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Art from "./Art";
 import Stars from "./Stars";
 import { initialsOf, useStore } from "@/lib/store";
@@ -10,15 +11,22 @@ import { reviewScore } from "@/lib/social";
 import { episodeHref, logHref } from "@/lib/addresses";
 
 // Top-right avatar: your initials when signed in, a sign-in prompt when not.
+// "Sign in" for page headers. Shows only when signed out, and brings you back here afterwards.
+export function SignInButton() {
+  const state = useStore();
+  const path = usePathname();
+  if (!state?.accounts || state.user) return null;
+  const next = path && path !== "/login" ? `?next=${encodeURIComponent(path)}` : "";
+  return (
+    <Link href={`/login${next}`} className="btn btn--sm btn--shadow-sm">
+      Sign in
+    </Link>
+  );
+}
+
 export function AvatarLink() {
   const state = useStore();
-  if (state?.accounts && !state.user) {
-    return (
-      <Link href="/login" className="btn btn--sm btn--shadow-sm">
-        Sign in
-      </Link>
-    );
-  }
+  if (state?.accounts && !state.user) return <SignInButton />;
   return (
     <Link href="/me" className="avatar" aria-label="My log">
       {state?.user ? initialsOf(state.profile) : "me"}

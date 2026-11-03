@@ -11,6 +11,7 @@ import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
 import { isPodcastLink, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
+import { SignInButton } from "@/components/Account";
 import { episodeRefFor, showRefFor, withRefs, withShowRefs } from "@/lib/catalog";
 import { logHref, showHref } from "@/lib/addresses";
 
@@ -85,7 +86,10 @@ export default async function SearchPage({ searchParams }) {
 
   return (
     <>
-      <h1 className="display h-lg cobalt">Search</h1>
+      <div className="row center page-head">
+        <h1 className="display h-lg cobalt">Search</h1>
+        <SignInButton />
+      </div>
       <p className="muted" style={{ marginTop: 6 }}>
         Find an episode or a show. Search a person to see everywhere they've been on.
       </p>
