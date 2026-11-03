@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { briefs } from "@/lib/briefs";
+import { SignInButton } from "@/components/Account";
 import { recentBriefs } from "@/lib/supabase/public";
 import { artOf, findShow, safe } from "@/lib/podcastindex";
 import { minutes } from "@/lib/format";
@@ -33,11 +34,14 @@ export default async function BriefsPage() {
 
   return (
     <>
-      <div className="row center" style={{ justifyContent: "space-between" }}>
+      <div className="row center page-head">
         <h1 className="display h-lg cobalt">Briefs</h1>
-        <Link href="/briefs/new" className="btn btn--sm btn--cobalt btn--shadow-sm">
-          + New brief
-        </Link>
+        <div className="row center page-head__actions">
+          <SignInButton />
+          <Link href="/briefs/new" className="btn btn--sm btn--cobalt btn--shadow-sm">
+            + New brief
+          </Link>
+        </div>
       </div>
       <p className="muted" style={{ margin: "8px 0 24px", fontSize: 19 }}>
         A topic, the best episodes and sections from several shows, and each show's angle.
