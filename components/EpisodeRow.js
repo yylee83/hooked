@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Art from "./Art";
 import { PlayButton } from "./Player";
-import { QueueButton } from "./Social";
+import { LogButton, QueueButton } from "./Social";
 import { minutes, shortDate } from "@/lib/format";
-import { episodeHref, logHref, showHref } from "@/lib/addresses";
+import { episodeHref, showHref } from "@/lib/addresses";
 
 // One episode in a list: art, show, title, date and length, Play and Log it.
 export default function EpisodeRow({ ep, showArt = true, desc }) {
@@ -24,9 +24,7 @@ export default function EpisodeRow({ ep, showArt = true, desc }) {
           {desc && <p className="eps__desc">{desc}</p>}
           <div className="row gap">
             <PlayButton episode={ep} />
-            <Link href={logHref(ep.ref, ep.id)} className="btn btn--sm btn--cobalt">
-              Log it
-            </Link>
+            <LogButton episode={ep} />
             <QueueButton episode={ep} />
           </div>
         </div>

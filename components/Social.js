@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
-import { addToList, findHookedShow, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
+import Link from "next/link";
+import { addToList, findHookedShow, findLog, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
+import { logHref } from "@/lib/addresses";
 
 // "+ Up next" / "Not for me" on a friend's recommendation.
 export function RecActions({ item }) {
@@ -119,5 +121,27 @@ export function QueueAll({ items, tone }) {
     >
       {done ? "Added to Up next. See My log." : `Add all ${items.length} to Up next`}
     </button>
+  );
+}
+
+// "Log it" on an episode. Once you've logged it, it shows your stars ("★ 4.5"), or "✓ Logged" if you
+// didn't give any, and opens your log to edit. Yellow, like "✓ Up next", so done things look alike.
+export function LogButton({ episode, shadow = false }) {
+  const state = useStore();
+  const mine = findLog(state, episode);
+  const href = logHref(episode.ref, episode.id);
+  const extra = shadow ? " btn--shadow-sm" : "";
+  if (!mine) {
+    return (
+      <Link href={href} className={`btn btn--sm btn--cobalt${extra}`}>
+        Log it
+      </Link>
+    );
+  }
+  const r = Number(mine.rating) || 0;
+  return (
+    <Link href={href} className={`btn btn--sm btn--butter${extra}`} title="You logged this. Tap to edit." aria-label={r ? `You rated it ${r} stars. Edit your log` : "Logged. Edit your log"}>
+      {r ? `★ ${Number.isInteger(r) ? r : r.toFixed(1)}` : "✓ Logged"}
+    </Link>
   );
 }

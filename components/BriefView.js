@@ -1,11 +1,11 @@
 import Link from "next/link";
 import Art from "./Art";
 import { ClipChip, PlayButton, PlayCut } from "./Player";
-import { QueueAll, QueueButton } from "./Social";
+import { LogButton, QueueAll, QueueButton } from "./Social";
 import BriefOwner from "./BriefOwner";
 import { briefQueue, briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes } from "@/lib/format";
-import { episodeHref, logHref, showHref } from "@/lib/addresses";
+import { episodeHref, showHref } from "@/lib/addresses";
 
 // *word* in a dek becomes italic.
 function Dek({ text = "" }) {
@@ -138,9 +138,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
             {it.episodeId && it.found !== false && (
               <div className="brief__actions">
                 <PlayButton episode={ep} />
-                <Link href={logHref(it.episodeRef, it.episodeId)} className="btn btn--sm btn--cobalt">
-                  Log it
-                </Link>
+                <LogButton episode={ep} />
                 <QueueButton episode={ep} from={`${brief.title} brief`} />
               </div>
             )}
