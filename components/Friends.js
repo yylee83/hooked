@@ -7,6 +7,7 @@ import Stars from "./Stars";
 import { addToList, dismissRecommendation, follow, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread from "./LogThread";
+import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
 
 const HOUR = 3600 * 1000;
@@ -243,7 +244,7 @@ export function FriendsFeed() {
           <h2 className="section-title">Listening now</h2>
           <div className="np-row">
             {data.listening.map((p, i) => (
-              <Link key={p.id} href={`/episode/${p.now_playing.id}`} className="np">
+              <Link key={p.id} href={episodeHref(p.now_playing.ref, p.now_playing.id)} className="np">
                 <Art src={p.now_playing.image} title={p.now_playing.feedTitle || ""} size={150} tilt={[-2, 1.5, -1][i % 3]} radius={22} />
                 <p className="np__who">@{p.handle}</p>
                 <p className="np__show">{p.now_playing.feedTitle || p.now_playing.title}</p>
@@ -279,7 +280,7 @@ export function FriendsFeed() {
           <ul>
             {(data?.logs || []).map((l) => (
               <li key={`${l.who.id}-${l.episode_id}`} className="fresh">
-                <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeId={l.episode_id} />
+                <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                 <div className="min0 grow">
                   <p className="small">
                     <Link href={`/u/${l.who.handle}`}>
@@ -287,7 +288,7 @@ export function FriendsFeed() {
                     </Link>{" "}
                     {l.hooked ? "is hooked on" : "wasn't hooked by"}
                   </p>
-                  <Link href={`/episode/${l.episode_id}`} className="title-sm" style={{ display: "block" }}>
+                  <Link href={episodeHref(l.episode_ref, l.episode_id)} className="title-sm" style={{ display: "block" }}>
                     {l.title}
                   </Link>
                   <p className="muted small row gap-xs center wrap">
@@ -313,7 +314,7 @@ export function FriendsFeed() {
 
 function RecCard({ r, onDismiss }) {
   const state = useStore();
-  const item = { episodeId: r.episode_id, title: r.title, feedId: r.feed_id, feedTitle: r.feed_title, image: r.image, from: r.sender?.handle ? `@${r.sender.handle}` : "a friend" };
+  const item = { episodeId: r.episode_id, episodeRef: r.episode_ref || undefined, title: r.title, feedId: r.feed_id, feedTitle: r.feed_title, image: r.image, from: r.sender?.handle ? `@${r.sender.handle}` : "a friend" };
   const saved = state?.list?.some((i) => String(i.episodeId) === String(r.episode_id));
   return (
     <article className="card rec">
@@ -327,9 +328,9 @@ function RecCard({ r, onDismiss }) {
         {r.hooked && <span className="sticker">Hooked</span>}
       </div>
       <div className="rec__body">
-        <Art src={r.image} title={r.feed_title || ""} size={96} radius={16} episodeId={r.episode_id} />
+        <Art src={r.image} title={r.feed_title || ""} size={96} radius={16} episodeRef={r.episode_ref} episodeId={r.episode_id} />
         <div className="min0">
-          <Link href={`/episode/${r.episode_id}`} className="rec__title">
+          <Link href={episodeHref(r.episode_ref, r.episode_id)} className="rec__title">
             {r.title}
           </Link>
           <p className="muted row gap-xs center wrap" style={{ marginTop: 4 }}>

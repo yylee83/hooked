@@ -7,6 +7,7 @@ import { initialsOf, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread from "./LogThread";
 import { reviewScore } from "@/lib/social";
+import { episodeHref, logHref } from "@/lib/addresses";
 
 // Top-right avatar: your initials when signed in, a sign-in prompt when not.
 export function AvatarLink() {
@@ -33,7 +34,7 @@ export function FreshLogs() {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("user_id, episode_id, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
+      .select("user_id, episode_id, episode_ref, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
       .limit(8)
@@ -49,12 +50,12 @@ export function FreshLogs() {
       <ul>
         {logs.map((l) => (
           <li key={`${l.who.handle}-${l.episode_id}`} className="fresh">
-            <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeId={l.episode_id} feedId={l.feed_id} />
+            <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} feedId={l.feed_id} />
             <div className="min0 grow">
               <p className="small">
                 <b>@{l.who.handle}</b> {l.hooked ? "is hooked on" : "wasn't hooked by"}
               </p>
-              <Link href={`/episode/${l.episode_id}`} className="title-sm" style={{ display: "block" }}>
+              <Link href={episodeHref(l.episode_ref, l.episode_id)} className="title-sm" style={{ display: "block" }}>
                 {l.title}
               </Link>
               <p className="muted small row gap-xs center wrap">
@@ -77,7 +78,7 @@ export function FreshLogs() {
 }
 
 // What people on Hooked said about one episode.
-export function EpisodeLogs({ episodeId }) {
+export function EpisodeLogs({ episodeId, episodeRef }) {
   const state = useStore();
   const me = state?.user?.id;
   let [logs, setLogs] = useState(null);
@@ -134,7 +135,7 @@ export function EpisodeLogs({ episodeId }) {
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
               {l.user_id === me && (
-                <Link href={`/log/${episodeId}`} className="link-btn small">
+                <Link href={logHref(episodeRef, episodeId)} className="link-btn small">
                   Edit your review
                 </Link>
               )}

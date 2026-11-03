@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { genreLabel } from "@/lib/genres";
+import { showHref } from "@/lib/addresses";
 
 // Checked for colorblind separation; each slice also has an outline and a labeled legend row.
 const COLORS = ["#2340FF", "#F0559F", "#D9A900", "#11957A", "#E8622E", "#7C4DFF"];
@@ -200,10 +201,10 @@ export default function Wrapped({ logs }) {
 
       {topShow && (
         <div className="wrapped__top">
-          <Art src={topShow.feedImage || topShow.image} title={topShow.feedTitle} size={64} radius={14} feedId={topShow.feedId} />
+          <Art src={topShow.feedImage || topShow.image} title={topShow.feedTitle} size={64} radius={14} showRef={topShow.showRef} feedId={topShow.feedId} />
           <div className="min0">
             <p className="mono small">Most logged show</p>
-            <Link href={`/show/${topShow.feedId}`} className="title-md" style={{ display: "block" }}>
+            <Link href={showHref(topShow.showRef, topShow.feedId)} className="title-md" style={{ display: "block" }}>
               {topShow.feedTitle}
             </Link>
             <p className="muted small">{showCount[topShowId]} episodes</p>

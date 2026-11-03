@@ -11,8 +11,11 @@ Done and live: steps 1–6, and step 7 stages A, B1, B2, C1 and C2 (PR #17: shor
 just the link). Details of each stage: `docs/DATA_MODEL.md`.
 
 **Next: step 7, stage C3**, as separate PRs:
-1. The app's own links use short addresses (`/episode/<ref>`) directly instead of forwarding from Podcast Index numbers.
-   About 40 places build these links (`grep -rn "/episode/\${" app components lib`).
+1. ~~The app's own links use short addresses (`/episode/<ref>`) directly~~ (branch `stage-c3-links`). Links go through
+   `episodeHref` / `showHref` / `logHref` in `lib/addresses.js`, which use the short id when the data has it and the
+   Podcast Index number otherwise (that still redirects). Podcast Index lists get short ids from one lookup
+   (`withRefs` / `withShowRefs` in `lib/catalog.js`); episodes we don't have yet keep their number until opened.
+   Known gap: show links built from logs use the number (logs have no `show_ref`), until part 2.
 2. Logs, Up next, sends, reactions, comments and the player use our episode ids (`episode_ref`) instead of Podcast
    Index numbers, so episodes Podcast Index doesn't have can be logged. This touches saved data: rehearse on a copy of
    the live data in memory first (as for stage A), then on the test database, then live.
@@ -86,7 +89,7 @@ Each step is its own branch and pull request.
 4. ~~Baseline migrations, lint and build checks, safe fetching~~ (done).
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
-7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **In progress: A, B and C1–C2 done; C3 and D left.**
+7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **In progress: A, B, C1–C2 and C3 part 1 done; C3 parts 2–3 and D left.**
 8. Listening progress saved to your account (synced across devices), then better search.
 9. Home split into Everyone and Friends, and friends' ratings on episode and show pages.
 10. Google sign-in.

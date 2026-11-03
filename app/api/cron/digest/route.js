@@ -41,7 +41,7 @@ export async function GET(request) {
     const [{ data: notes }, { data: follows }] = await Promise.all([
       db
         .from("notifications")
-        .select("type, episode_id, title, body, created_at, actor:profiles!notifications_actor_id_fkey(handle), owner:profiles!notifications_log_user_id_fkey(handle)")
+        .select("type, episode_id, episode_ref, title, body, created_at, actor:profiles!notifications_actor_id_fkey(handle), owner:profiles!notifications_log_user_id_fkey(handle)")
         .eq("user_id", profile.id)
         .is("read_at", null)
         .gte("created_at", since)
@@ -53,7 +53,7 @@ export async function GET(request) {
     const { data: friendLogs } = ids.length
       ? await db
           .from("logs")
-          .select("episode_id, title, feed_title, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
+          .select("episode_id, episode_ref, title, feed_title, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
           .in("user_id", ids)
           .gte("logged_at", since)
           .order("logged_at", { ascending: false })

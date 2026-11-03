@@ -11,6 +11,8 @@ import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
 import { isPodcastLink, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
+import { episodeRefFor, showRefFor, withRefs, withShowRefs } from "@/lib/catalog";
+import { logHref, showHref } from "@/lib/addresses";
 
 export const metadata = { title: "Search" };
 
@@ -19,7 +21,7 @@ const PAGE = 20;
 function ShowRow({ s }) {
   return (
     <li>
-      <Link href={`/show/${s.id}`} className="results__row">
+      <Link href={showHref(s.showRef, s.id)} className="results__row">
         <Art src={artOf(s)} title={s.title} size={68} radius={14} />
         <div className="min0">
           <p className="title-sm">{s.title}</p>
@@ -48,8 +50,9 @@ export default async function SearchPage({ searchParams }) {
   let linkError = null;
   if (query && isPodcastLink(query)) {
     const r = await resolveLink(query);
-    if (r.episodeId) redirect(`/log/${r.episodeId}`);
-    if (r.feedId) redirect(`/show/${r.feedId}${r.note ? `?note=${encodeURIComponent(r.note)}` : ""}`);
+    // Straight to our short address (creating a basic entry if needed), so there's no second redirect.
+    if (r.episodeId) redirect(logHref(await episodeRefFor(r.episodeId), r.episodeId));
+    if (r.feedId) redirect(`${showHref(await showRefFor(r.feedId), r.feedId)}${r.note ? `?note=${encodeURIComponent(r.note)}` : ""}`);
     linkError = r;
   }
 
@@ -69,8 +72,7 @@ export default async function SearchPage({ searchParams }) {
       type === "episodes" ? { data: [] } : safe(searchShows(query, type === "shows" ? max + 1 : 6)),
     ]);
     error = e.error || s.error;
-    episodes = (e.data || []).map((x) => episodeCard(x));
-    shows = s.data || [];
+    [episodes, shows] = await Promise.all([withRefs((e.data || []).map((x) => episodeCard(x))), withShowRefs(s.data || [], "id")]);
   } else {
     [popular, chartEps] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10)]);
   }
@@ -149,7 +151,7 @@ export default async function SearchPage({ searchParams }) {
             <ol className="pop-list">
               {popular.map((s, i) => (
                 <li key={s.feedId}>
-                  <Link href={`/show/${s.feedId}`} className="results__row">
+                  <Link href={showHref(s.showRef, s.feedId)} className="results__row">
                     <span className="pop-list__rank display">{i + 1}</span>
                     <Art src={s.image} title={s.title} size={60} radius={14} />
                     <div className="min0">

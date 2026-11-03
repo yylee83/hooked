@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
 import { getState, removeFromList, setNowPlaying, upNext } from "@/lib/store";
+import { episodeHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
 
 const PlayerContext = createContext(null);
@@ -442,14 +443,14 @@ export function PlayerProvider({ children }) {
         <div className="mini">
           <div className="mini__inner">
             <div className="mini__top">
-              <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} episodeId={s.ep.id} />
+              <Art src={s.ep.image} title={s.ep.feedTitle} size={46} radius={10} episodeRef={s.ep.ref} episodeId={s.ep.id} />
               <div className="mini__text">
                 {meta && (
                   <p className="mini__meta mono">
                     {meta.title} · clip {q.current.i + 1} of {q.current.segs.length}
                   </p>
                 )}
-                <Link href={`/episode/${s.ep.id}`} className="mini__title">
+                <Link href={episodeHref(s.ep.ref, s.ep.id)} className="mini__title">
                   {s.ep.title}
                 </Link>
                 <p className="mini__show">{s.ep.feedTitle}</p>
