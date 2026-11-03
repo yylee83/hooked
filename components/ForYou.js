@@ -26,7 +26,7 @@ function inputsFrom(state) {
   for (const [id, avg] of rated) if (!loved[id]) loved[id] = `You rate it ${avg.toFixed(1)}★`;
   return {
     loved: Object.entries(loved), // [feedId, reason], in priority order
-    logged: state.logs.map((l) => l.id),
+    logged: state.logs.map((l) => l.id).filter(Boolean),
     shows: [...new Set([...state.logs.map((l) => l.feedId), ...Object.keys(state.shows || {})])].filter(Boolean),
     genres: state.interests || [],
     friends: (state.following || []).map((f) => f.id),

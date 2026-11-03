@@ -116,7 +116,7 @@ export function Diary({ logs }) {
             </h2>
             <ul className="diary__list">
               {g.items.map((l) => (
-                <li key={l.id} className="diary__row">
+                <li key={l.ref || l.id} className="diary__row">
                   <span className="mono diary__day">{new Date(l.loggedAt).getDate()}</span>
                   <Art src={l.image} title={l.feedTitle} size={46} radius={10} episodeRef={l.ref} episodeId={l.id} />
                   <span className="min0 grow">
@@ -237,7 +237,7 @@ export function ShowsView({ logs, hooked }) {
                   {s.logs
                     .sort((a, b) => b.loggedAt - a.loggedAt)
                     .map((l) => (
-                      <Link key={l.id} href={episodeHref(l.ref, l.id)} className="shows-list__ep">
+                      <Link key={l.ref || l.id} href={episodeHref(l.ref, l.id)} className="shows-list__ep">
                         <span className="min0 grow">{l.title}</span>
                         {l.rating > 0 ? <Stars value={l.rating} size={12} /> : <span className="muted small">{l.hooked ? "Hooked" : "Not hooked"}</span>}
                       </Link>
@@ -266,7 +266,7 @@ export function UpNextView({ state }) {
   async function play(item) {
     setFailed(null);
     const ok = await player?.playItem(item);
-    if (!ok) setFailed(item.episodeId || item.title);
+    if (!ok) setFailed(item.episodeRef || item.episodeId || item.title);
   }
 
   if (!list.length) {
@@ -281,7 +281,7 @@ export function UpNextView({ state }) {
     );
   }
 
-  const first = list.find((i) => i.episodeId);
+  const first = list.find((i) => i.episodeRef || i.episodeId);
   return (
     <>
       {first && (
@@ -291,13 +291,13 @@ export function UpNextView({ state }) {
       )}
       <ol className="upnext">
         {list.map((i, n) => {
-          const key = i.episodeId || i.title;
+          const key = i.episodeRef || i.episodeId || i.title;
           return (
             <li key={key} className="list__row">
               <span className="mono upnext__n">{n + 1}</span>
               <Art src={i.image} title={i.feedTitle} size={48} radius={10} episodeRef={i.episodeRef} episodeId={i.episodeId} showRef={i.showRef} feedId={i.feedId} />
               <div className="min0 grow">
-                {i.episodeId ? (
+                {i.episodeRef || i.episodeId ? (
                   <Link href={episodeHref(i.episodeRef, i.episodeId)} className="title-sm">
                     {i.title}
                   </Link>
@@ -311,7 +311,7 @@ export function UpNextView({ state }) {
                 {failed === key && <p className="nudge small">Couldn't play this one.</p>}
               </div>
               <div className="upnext__actions">
-                {i.episodeId && (
+                {(i.episodeRef || i.episodeId) && (
                   <button className="btn btn--sm" onClick={() => play(i)} aria-label={`Play ${i.title}`}>
                     ▶
                   </button>

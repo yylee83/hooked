@@ -18,7 +18,7 @@ export default async function LogPage({ params, searchParams }) {
 
   const ep = await loadEpisode(id);
   if (ep.error) return <KeysNotice error={ep.error} />;
-  if (!ep.data?.episode?.id) notFound();
+  if (!ep.data?.episode?.ref && !ep.data?.episode?.id) notFound(); // our id is enough: not every episode is in Podcast Index
 
   const preset = hooked === "1" ? true : hooked === "0" ? false : undefined;
   const { episode, show } = ep.data;

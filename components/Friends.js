@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
-import { addToList, dismissRecommendation, follow, initialsOf, unfollow, useStore } from "@/lib/store";
+import { addToList, dismissRecommendation, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
@@ -279,7 +279,7 @@ export function FriendsFeed() {
           {data && data.logs.length === 0 && <p className="muted">Nothing logged yet. Nudge them.</p>}
           <ul>
             {(data?.logs || []).map((l) => (
-              <li key={`${l.who.id}-${l.episode_id}`} className="fresh">
+              <li key={`${l.who.id}-${l.episode_ref || l.episode_id}`} className="fresh">
                 <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                 <div className="min0 grow">
                   <p className="small">
@@ -301,7 +301,7 @@ export function FriendsFeed() {
                     )}
                   </p>
                   {l.hook && <p className="log__hook">“{l.hook}”</p>}
-                  <LogThread logUserId={l.user_id} episodeId={l.episode_id} />
+                  <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                 </div>
               </li>
             ))}
@@ -315,7 +315,7 @@ export function FriendsFeed() {
 function RecCard({ r, onDismiss }) {
   const state = useStore();
   const item = { episodeId: r.episode_id, episodeRef: r.episode_ref || undefined, title: r.title, feedId: r.feed_id, feedTitle: r.feed_title, image: r.image, from: r.sender?.handle ? `@${r.sender.handle}` : "a friend" };
-  const saved = state?.list?.some((i) => String(i.episodeId) === String(r.episode_id));
+  const saved = inUpNext(state, { ref: r.episode_ref, id: r.episode_id });
   return (
     <article className="card rec">
       <div className="rec__head">

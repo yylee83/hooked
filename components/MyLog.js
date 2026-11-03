@@ -6,7 +6,7 @@ import PasswordForm from "./PasswordForm";
 import { NotificationBell } from "./Notifications";
 import { supabase as sb } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { hookedShows, initialsOf, saveProfile, signOut, useStore } from "@/lib/store";
+import { hookedShows, initialsOf, sameEpisode, saveProfile, signOut, useStore } from "@/lib/store";
 import { Diary, ShowsView, UpNextView } from "./LogViews";
 import { supabase } from "@/lib/supabase/client";
 import { minutes, plural } from "@/lib/format";
@@ -202,7 +202,7 @@ export default function MyLog() {
   const shows = hookedShows(state);
   const logs = state.logs;
   const np = state.nowPlaying;
-  const nowPlayingLogged = np && logs.some((l) => l.id === np.id);
+  const nowPlayingLogged = np && logs.some((l) => sameEpisode(l, np));
   const showCount = new Set(logs.map((l) => l.feedId || l.feedTitle)).size;
   const hookedPct = logs.length ? Math.round((logs.filter((l) => l.hooked).length / logs.length) * 100) : 0;
   const hours = Math.round(logs.reduce((a, l) => a + (l.duration || 0), 0) / 3600);

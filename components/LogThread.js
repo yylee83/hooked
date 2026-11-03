@@ -2,7 +2,7 @@
 // Reactions and replies under one person's log of one episode.
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { addToList, useStore } from "@/lib/store";
+import { addToList, inUpNext, useStore } from "@/lib/store";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
 
 // Small black icons for the reactions. Yours are filled in (and + turns into a check).
@@ -27,9 +27,11 @@ function Icon({ kind, on }) {
   );
 }
 
-export default function LogThread({ logUserId, episodeId, defaultOpen = false, id }) {
+// episodeRef is our episode id (the thread's key); episodeId is the Podcast Index number, when there is one.
+export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpen = false, id }) {
   const state = useStore();
-  const data = useThread(logUserId, episodeId);
+  const ep = { ref: episodeRef, id: episodeId ?? undefined };
+  const data = useThread(logUserId, episodeRef);
   const [open, setOpen] = useState(defaultOpen);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -45,7 +47,7 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
   const holdTimer = useRef(null);
   const held = useRef(false); // a press-and-hold shows the name; it shouldn't also count as a tap
 
-  if (!logUserId || !episodeId || (state && !state.accounts)) return null;
+  if (!logUserId || !episodeRef || (state && !state.accounts)) return null;
 
   const me = state?.user || null;
   const reactions = data?.reactions || [];
@@ -76,11 +78,11 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
       const turningOn = kind === "adding" && !mine.has("adding");
       if (turningOn) flash("Added to queue");
       if (kind === "adding" && !turningOn) flash(null);
-      const on = await toggleReaction(me, logUserId, episodeId, kind);
+      const on = await toggleReaction(me, logUserId, ep, kind);
       // "+" also puts the episode in your queue (Up next).
-      if (kind === "adding" && on && !state?.list?.some((i) => String(i.episodeId) === String(episodeId))) {
-        const ep = await fetch(`/api/episode?id=${episodeId}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-        if (ep) await addToList({ episodeId: ep.id, episodeRef: ep.ref, showRef: ep.showRef, title: ep.title, feedId: ep.feedId, feedTitle: ep.feedTitle, image: ep.image || ep.feedImage, from: "a review" });
+      if (kind === "adding" && on && !inUpNext(state, ep)) {
+        const card = await fetch(`/api/episode?ref=${encodeURIComponent(episodeRef)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        if (card) await addToList({ episodeId: card.id, episodeRef: card.ref || episodeRef, showRef: card.showRef, title: card.title, feedId: card.feedId, feedTitle: card.feedTitle, image: card.image || card.feedImage, from: "a review" });
         else flash(null);
       }
     } catch (e) {
@@ -95,7 +97,7 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
     setBusy(true);
     setError("");
     try {
-      await postComment(me, state.profile, logUserId, episodeId, text);
+      await postComment(me, state.profile, logUserId, ep, text);
       setText("");
     } catch (err) {
       setError(err.message);

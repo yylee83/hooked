@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
-import { getState, removeFromList, setNowPlaying, upNext } from "@/lib/store";
+import { getState, removeFromList, sameEpisode, setNowPlaying, upNext } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
 
@@ -80,12 +80,12 @@ export function PlayerProvider({ children }) {
       const el = audio.current;
       if (!el || !ep?.audio) return;
       const cur = seg();
-      const same = !q.current.meta && cur?.ep.id === ep.id;
+      const same = !q.current.meta && sameEpisode(cur?.ep, ep);
       if (same && src.current === ep.audio) {
         el.paused ? el.play() : el.pause();
         return;
       }
-      playQueue([{ ep, start: 0, end: null }], null, (same && pending.current) || resumeAt(ep.id));
+      playQueue([{ ep, start: 0, end: null }], null, (same && pending.current) || resumeAt(ep));
     },
     [playQueue]
   );
@@ -93,13 +93,14 @@ export function PlayerProvider({ children }) {
   // Play something saved to Up next (those don't store the audio link, so look it up first).
   const playItem = useCallback(
     async (item) => {
-      if (!item?.episodeId) return false;
+      if (!item?.episodeRef && !item?.episodeId) return false;
       try {
-        const res = await fetch(`/api/episode?id=${item.episodeId}`);
+        const q = item.episodeRef ? `ref=${encodeURIComponent(item.episodeRef)}` : `id=${item.episodeId}`;
+        const res = await fetch(`/api/episode?${q}`);
         if (!res.ok) return false;
         const ep = await res.json();
         if (!ep.audio) return false;
-        playQueue([{ ep, start: 0, end: null }], null, resumeAt(ep.id));
+        playQueue([{ ep, start: 0, end: null }], null, resumeAt(ep));
         return true;
       } catch {
         return false;
@@ -112,7 +113,7 @@ export function PlayerProvider({ children }) {
   const advanceUpNext = useCallback(
     async (finished) => {
       const list = upNext(getState());
-      const done = list.find((i) => String(i.episodeId) === String(finished?.id));
+      const done = list.find((i) => sameEpisode({ ref: i.episodeRef, id: i.episodeId }, finished));
       if (!done) return;
       removeFromList(done);
       for (const item of list.filter((i) => i !== done)) {
@@ -127,7 +128,7 @@ export function PlayerProvider({ children }) {
     const el = audio.current;
     // Keep your spot in the episode, but don't bring the player back after a reload.
     const cur = q.current.segs[q.current.i];
-    if (el && cur && !q.current.meta && src.current === cur.ep.audio && el.readyState >= 1) saveProgress(cur.ep.id, el.currentTime, el.duration);
+    if (el && cur && !q.current.meta && src.current === cur.ep.audio && el.readyState >= 1) saveProgress(cur.ep, el.currentTime, el.duration);
     clearLast();
     pending.current = null;
     if (el) {
@@ -151,7 +152,7 @@ export function PlayerProvider({ children }) {
     const cur = seg();
     // Brought back after a reload: load the audio and start from the saved spot.
     if (el && cur && src.current !== cur.ep.audio) {
-      startSeg(q.current.i, pending.current ?? resumeAt(cur.ep.id));
+      startSeg(q.current.i, pending.current ?? resumeAt(cur.ep));
       return;
     }
     if (el) el.paused ? el.play().catch(() => {}) : el.pause();
@@ -162,7 +163,7 @@ export function PlayerProvider({ children }) {
     const ep = loadLast();
     if (!ep || q.current.segs.length) return;
     q.current = { segs: [{ ep, start: 0, end: null }], i: 0, meta: null };
-    const t = resumeAt(ep.id);
+    const t = resumeAt(ep);
     const d = ep.duration || 0;
     pending.current = t;
     setTimes({ elapsed: t, length: d });
@@ -177,7 +178,7 @@ export function PlayerProvider({ children }) {
     const save = () => {
       const cur = q.current.segs[q.current.i];
       if (!cur || q.current.meta || src.current !== cur.ep.audio || el.readyState < 1 || el.seeking) return;
-      saveProgress(cur.ep.id, el.currentTime, el.duration);
+      saveProgress(cur.ep, el.currentTime, el.duration);
       lastSaved.current = el.currentTime;
     };
     const onHide = () => {
@@ -213,7 +214,7 @@ export function PlayerProvider({ children }) {
       else {
         // Finished: next time this episode starts from the top.
         if (!q.current.meta && segs[i]) {
-          clearProgress(segs[i].ep.id);
+          clearProgress(segs[i].ep);
           clearLast();
         }
         el.pause();
@@ -236,7 +237,7 @@ export function PlayerProvider({ children }) {
         setTimes({ elapsed: el.currentTime, length: end || 0 });
         // Save your spot every 5 seconds of listening.
         if (src.current === s.ep.audio && el.readyState >= 1 && !el.seeking && Math.abs(el.currentTime - lastSaved.current) >= 5) {
-          saveProgress(s.ep.id, el.currentTime, el.duration);
+          saveProgress(s.ep, el.currentTime, el.duration);
           lastSaved.current = el.currentTime;
         }
       }
@@ -272,7 +273,7 @@ export function PlayerProvider({ children }) {
       pending.current = t;
       setProgress(f);
       setTimes({ elapsed: t, length: times.length });
-      saveProgress(seg().ep.id, t, times.length);
+      saveProgress(seg().ep, t, times.length);
     } else if (el?.duration) {
       el.currentTime = f * el.duration;
     }
@@ -341,7 +342,7 @@ export function PlayerProvider({ children }) {
   const actions = useRef({});
   actions.current = { toggle, skip, seekTo, startSeg, total };
   const msEp = s?.ep;
-  const msKey = `${msEp?.id || ""}|${q.current.i}|${meta?.title || ""}`;
+  const msKey = `${msEp?.ref || msEp?.id || ""}|${q.current.i}|${meta?.title || ""}`;
 
   // Fill in the Now Playing card. iPhone Safari wipes it every time a new audio file loads,
   // so this runs again once the audio is actually playing (see the listener below).
@@ -579,7 +580,7 @@ function NextIcon() {
 export function PlayButton({ episode }) {
   const p = usePlayer();
   if (!episode.audio) return null;
-  const isThis = !p?.queueMeta && p?.current?.id === episode.id;
+  const isThis = !p?.queueMeta && sameEpisode(p?.current, episode);
   return (
     <button className="btn btn--sm" onClick={() => p.play(episode)}>
       {isThis && p.playing ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
