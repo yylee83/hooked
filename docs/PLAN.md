@@ -30,7 +30,9 @@ just the link). Details of each stage: `docs/DATA_MODEL.md`.
      No feed anywhere: a basic Spotify-only entry ("Listen on Spotify", can't play here). Show pages for these shows list
      our saved episodes; Search lists them too; the daily job re-reads 5 feed shows per run. Test case works: Erin's
      link `https://open.spotify.com/episode/0XYUW3LqZsiOLBzowRkLKw` → "Sensor Sensibility" (show `2e369h3s` on the test
-     database, 255 episodes). No database change.
+     database, 255 episodes). No database change. (Correction: Podcast Index's #223945 isn't a broken copy of the show;
+     it's a different one, "Midnight Snack with Michelle Collins". The old name search accepted it without checking
+     the title; it now has to match.)
    - **3b** (next): hooked shows, show ratings and "Popular on Hooked" keyed by our show id, so those work for feed and
      Spotify-only shows too (their show pages hide them until then). Also For you picks and briefs.
 
