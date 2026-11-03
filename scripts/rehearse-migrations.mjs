@@ -30,6 +30,7 @@ await db.exec(`
     as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   create role anon; create role authenticated; create role service_role bypassrls; create role supabase_auth_admin;
   grant usage on schema public to anon, authenticated;
+  grant usage on schema auth to anon, authenticated; -- as on Supabase, so checks can call auth.uid()
 `);
 for (const f of before) await db.exec(readFileSync(join(dir, f), "utf8"));
 await db.exec(`grant select, insert, update, delete on all tables in schema public to anon, authenticated;

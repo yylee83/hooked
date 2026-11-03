@@ -25,7 +25,7 @@ just the link). Details of each stage: `docs/DATA_MODEL.md`.
    Still keyed by Podcast Index numbers, for part 3: hooked shows (`hooked_shows.feed_id`), show ratings and
    "Popular on Hooked" (`logs.feed_id`), briefs, and the For you picks.
 3. Shows Podcast Index lacks or has broken.
-   - **3a** (branch `stage-c3-feeds`): a pasted Apple or Spotify link that Podcast Index can't match reads the show's own
+   - **3a** (done, PR #21): a pasted Apple or Spotify link that Podcast Index can't match reads the show's own
      feed, found through Apple (`importFeedShow` in `lib/catalog.js`; only feed addresses Apple lists are ever read).
      No feed anywhere: a basic Spotify-only entry ("Listen on Spotify", can't play here). Show pages for these shows list
      our saved episodes; Search lists them too; the daily job re-reads 5 feed shows per run. Test case works: Erin's
@@ -33,8 +33,12 @@ just the link). Details of each stage: `docs/DATA_MODEL.md`.
      database, 255 episodes). No database change. (Correction: Podcast Index's #223945 isn't a broken copy of the show;
      it's a different one, "Midnight Snack with Michelle Collins". The old name search accepted it without checking
      the title; it now has to match.)
-   - **3b** (next): hooked shows, show ratings and "Popular on Hooked" keyed by our show id, so those work for feed and
-     Spotify-only shows too (their show pages hide them until then). Also For you picks and briefs.
+   - **3b** (branch `stage-c3-show-refs`): hooked shows keyed by our show id (migration
+     `20261103120000_show_refs_are_keys.sql`: `show_ref` required, `feed_id` optional); show ratings, "Popular on Hooked",
+     My log's Shows tab and Wrapped's top show group logs by our show id, through each log's episode (no new column).
+     Rehearsed (`scripts/checks/c3-show-refs.sql`) and **applied to the test database** 2026-11-03. **Live:** merge,
+     then `supabase db push` (backup: `~/claude/hooked-backups/live-2026-11-03-before-c3-show-refs.json`).
+     Still on Podcast Index numbers: For you picks and Wrapped's genre breakdown (they read Podcast Index), and briefs.
 
 **Then stage D** (remove the old Podcast Index number columns and copied details) once both of you have used stage C
 live for about a week with nothing missing. Back up first.
@@ -101,7 +105,7 @@ Each step is its own branch and pull request.
 4. ~~Baseline migrations, lint and build checks, safe fetching~~ (done).
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
-7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **In progress: A, B, C1–C2, C3 parts 1–2 done; C3 part 3 (3a in review, 3b next) and D left.**
+7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **In progress: A, B, C1–C2, C3 parts 1, 2 and 3a done; 3b in review; then D.**
 8. Listening progress saved to your account (synced across devices), then better search.
 9. Home split into Everyone and Friends, and friends' ratings on episode and show pages.
 10. Google sign-in.

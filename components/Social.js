@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { addToList, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
+import { addToList, findHookedShow, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
 
 // "+ Up next" / "Not for me" on a friend's recommendation.
 export function RecActions({ item }) {
@@ -68,7 +68,7 @@ export function Reactions({ counts = {} }) {
 // The "I'm hooked on this show" toggle on a show page.
 export function HookShowButton({ show }) {
   const state = useStore();
-  const on = !!state?.shows[show.feedId];
+  const on = !!findHookedShow(state, show);
   return (
     <button
       className={`btn btn--display btn--shadow-sm ${on ? "btn--cobalt" : ""}`}

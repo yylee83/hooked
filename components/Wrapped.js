@@ -132,10 +132,12 @@ export default function Wrapped({ logs }) {
   const rated = logs.filter((l) => l.rating > 0);
   const avg = rated.length ? (rated.reduce((s, l) => s + l.rating, 0) / rated.length).toFixed(1) : null;
 
+  // Counted by show: our show id, or the Podcast Index number for older logs saved on this device.
+  const showOf = (l) => String(l.showRef || l.feedId || "");
   const showCount = {};
-  for (const l of logs) if (l.feedId) showCount[l.feedId] = (showCount[l.feedId] || 0) + 1;
+  for (const l of logs) if (showOf(l)) showCount[showOf(l)] = (showCount[showOf(l)] || 0) + 1;
   const topShowId = Object.entries(showCount).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const topShow = topShowId ? logs.find((l) => String(l.feedId) === topShowId) : null;
+  const topShow = topShowId ? logs.find((l) => showOf(l) === topShowId) : null;
 
   const dayCount = Array(7).fill(0);
   for (const l of logs) dayCount[new Date(l.loggedAt).getDay()]++;

@@ -163,7 +163,7 @@ export default async function SearchPage({ searchParams }) {
           ) : (
             <ol className="pop-list">
               {popular.map((s, i) => (
-                <li key={s.feedId}>
+                <li key={s.showRef || s.feedId}>
                   <Link href={showHref(s.showRef, s.feedId)} className="results__row">
                     <span className="pop-list__rank display">{i + 1}</span>
                     <Art src={s.image} title={s.title} size={60} radius={14} />
