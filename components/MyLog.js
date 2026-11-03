@@ -276,9 +276,9 @@ export default function MyLog() {
           <p className="muted">
             {shows.slice(0, 4).map((s) => s.title).join(" · ")}
             {shows.length > 4 && (
-              <button className="link-btn small" style={{ marginLeft: 8 }} onClick={() => setTab("shows")}>
+              <Link href="/me/hooked" className="link-btn small" style={{ marginLeft: 8 }}>
                 +{shows.length - 4} more
-              </button>
+              </Link>
             )}
           </p>
         </section>
