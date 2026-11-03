@@ -9,11 +9,12 @@ import TopEpisodes from "@/components/TopEpisodes";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
-import { isPodcastLink, resolveLink } from "@/lib/links";
+import { isPodcastLink, linkTarget, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
 import { SignInButton } from "@/components/Account";
-import { episodeRefFor, showRefFor, withRefs, withShowRefs } from "@/lib/catalog";
-import { logHref, showHref } from "@/lib/addresses";
+import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
+import { showHref } from "@/lib/addresses";
+import { norm } from "@/lib/rank";
 
 export const metadata = { title: "Search" };
 
@@ -51,9 +52,8 @@ export default async function SearchPage({ searchParams }) {
   let linkError = null;
   if (query && isPodcastLink(query)) {
     const r = await resolveLink(query);
-    // Straight to our short address (creating a basic entry if needed), so there's no second redirect.
-    if (r.episodeId) redirect(logHref(await episodeRefFor(r.episodeId), r.episodeId));
-    if (r.feedId) redirect(`${showHref(await showRefFor(r.feedId), r.feedId)}${r.note ? `?note=${encodeURIComponent(r.note)}` : ""}`);
+    const go = await linkTarget(r);
+    if (go) redirect(go);
     linkError = r;
   }
 
@@ -73,7 +73,16 @@ export default async function SearchPage({ searchParams }) {
       type === "episodes" ? { data: [] } : safe(searchShows(query, type === "shows" ? max + 1 : 6)),
     ]);
     error = e.error || s.error;
-    [episodes, shows] = await Promise.all([withRefs((e.data || []).map((x) => episodeCard(x))), withShowRefs(s.data || [], "id")]);
+    const [eps, piShows, own] = await Promise.all([
+      withRefs((e.data || []).map((x) => episodeCard(x))),
+      withShowRefs(s.data || [], "id"),
+      type === "episodes" ? [] : searchOwnShows(query, 5),
+    ]);
+    episodes = eps;
+    // Shows we read from their own feed (or Spotify) come first. A Podcast Index entry with the same
+    // title is usually the broken copy that made us read the feed, so ours replaces it.
+    const ownTitles = new Set(own.map((x) => norm(x.title)));
+    shows = [...own.map((x) => ({ ...x, showRef: x.ref })), ...piShows.filter((x) => !ownTitles.has(norm(x.title)))];
   } else {
     [popular, chartEps] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10)]);
   }
@@ -218,7 +227,8 @@ export default async function SearchPage({ searchParams }) {
         </section>
       )}
 
-      {!error && !linkError && query && type !== "episodes" && (
+      {/* Shows we saved ourselves still appear if Podcast Index is down. */}
+      {(!error || shows.length > 0) && !linkError && query && type !== "episodes" && (
         <section>
           <div className="row center" style={{ justifyContent: "space-between" }}>
             <h2 className="label">Shows</h2>
@@ -233,7 +243,7 @@ export default async function SearchPage({ searchParams }) {
           ) : (
             <ul>
               {(type === "all" ? shows.slice(0, 5) : shows).map((s) => (
-                <ShowRow key={s.id} s={s} />
+                <ShowRow key={s.showRef || s.id} s={s} />
               ))}
             </ul>
           )}
