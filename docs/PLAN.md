@@ -2,55 +2,84 @@
 
 Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the shared base. This file records what we decided and the order we're doing the work in. Update it when a decision changes.
 
-## Where we left off (2026-11-02)
+## Where we left off (2026-11-03)
 
 **Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). `~/claude/hooked` is Erin's
 archived first version: don't build from it.
 
-Done and live: steps 1–6, and step 7 stages A, B1, B2, C1 and C2 (PR #17: short addresses, plus "Copy link" copying
-just the link). Details of each stage: `docs/DATA_MODEL.md`.
+**Done and live:** steps 1–6, and step 7 stages A, B and C (all of it). Every migration through
+`20261103120000_show_refs_are_keys.sql` is applied to both databases. Details of each stage: `docs/DATA_MODEL.md`.
 
-**Next: step 7, stage C3**, as separate PRs:
-1. ~~The app's own links use short addresses (`/episode/<ref>`) directly~~ (branch `stage-c3-links`). Links go through
-   `episodeHref` / `showHref` / `logHref` in `lib/addresses.js`, which use the short id when the data has it and the
-   Podcast Index number otherwise (that still redirects). Podcast Index lists get short ids from one lookup
-   (`withRefs` / `withShowRefs` in `lib/catalog.js`); episodes we don't have yet keep their number until opened.
-   Known gap: show links built from logs use the number (logs have no `show_ref`), until part 3.
-2. ~~Logs, Up next, sends, reactions, comments and the player use our episode ids~~ (branch `stage-c3-refs`).
-   Migration `20261103000000_refs_are_keys.sql`: `episode_ref` is required and `episode_id` optional on logs, sends,
-   replies and reactions; replies and reactions attach to a log by `(user, episode_ref)`; Up next is keyed by
-   `episode_ref`; notifications carry it. Rehearsed on a copy of live (`scripts/rehearse-migrations.mjs` with
-   `scripts/checks/c3-part2.sql`) and **applied to the test database** on 2026-11-03. **Live:** merge the PR, then
-   `supabase db push` (live backup taken: `~/claude/hooked-backups/live-2026-11-02-before-c3-part2.json`).
-   Still keyed by Podcast Index numbers, for part 3: hooked shows (`hooked_shows.feed_id`), show ratings and
-   "Popular on Hooked" (`logs.feed_id`), briefs, and the For you picks.
-3. Shows Podcast Index lacks or has broken.
-   - **3a** (done, PR #21): a pasted Apple or Spotify link that Podcast Index can't match reads the show's own
-     feed, found through Apple (`importFeedShow` in `lib/catalog.js`; only feed addresses Apple lists are ever read).
-     No feed anywhere: a basic Spotify-only entry ("Listen on Spotify", can't play here). Show pages for these shows list
-     our saved episodes; Search lists them too; the daily job re-reads 5 feed shows per run. Test case works: Erin's
-     link `https://open.spotify.com/episode/0XYUW3LqZsiOLBzowRkLKw` → "Sensor Sensibility" (show `2e369h3s` on the test
-     database, 255 episodes). No database change. (Correction: Podcast Index's #223945 isn't a broken copy of the show;
-     it's a different one, "Midnight Snack with Michelle Collins". The old name search accepted it without checking
-     the title; it now has to match.)
-   - **3b** (branch `stage-c3-show-refs`): hooked shows keyed by our show id (migration
-     `20261103120000_show_refs_are_keys.sql`: `show_ref` required, `feed_id` optional); show ratings, "Popular on Hooked",
-     My log's Shows tab and Wrapped's top show group logs by our show id, through each log's episode (no new column).
-     Rehearsed (`scripts/checks/c3-show-refs.sql`) and **applied to the test database** 2026-11-03. **Live:** merge,
-     then `supabase db push` (backup: `~/claude/hooked-backups/live-2026-11-03-before-c3-show-refs.json`).
-     Still on Podcast Index numbers: For you picks and Wrapped's genre breakdown (they read Podcast Index), and briefs.
+Stage C, in short (PRs #17–#22):
+- **Short addresses** (`/episode/k3x9q2ab`) everywhere. Links go through `episodeHref` / `showHref` / `logHref` in
+  `lib/addresses.js`; old Podcast Index addresses still redirect.
+- **Our own ids are the keys.** Logs, Up next, sends, replies, reactions, notifications and the player use
+  `episode_ref`; hooked shows use `show_ref`. The Podcast Index numbers (`episode_id`, `feed_id`) are optional and
+  still filled when known. Logs find their show through their episode (`logs.episode_ref → episodes.show_id`).
+  In the app, compare with `sameEpisode` / `findLog` / `inUpNext` / `sameShow` / `findHookedShow` (`lib/store.js`).
+- **Shows Podcast Index lacks** come in from their own feed (found through Apple; only feeds Apple lists are read) or
+  as basic Spotify-only entries (`importFeedShow`, `spotifyEpisode` in `lib/catalog.js`). Erin's Michelle Collins link
+  works. Podcast Index's #223945 was never that show: it's "Midnight Snack with Michelle Collins", which an old name
+  search accepted without checking the title.
 
-**Then stage D** (remove the old Podcast Index number columns and copied details) once both of you have used stage C
-live for about a week with nothing missing. Back up first.
+Smaller changes also live (PRs #20, #23, #24): a **Sign in** button on the Search and Briefs headers when signed out;
+**"+3 more"** under Hooked on (My log) opens `/me/hooked`, a grid of every hooked show; **"Log it"** shows your stars
+("★ 4.5") or "✓ Logged" once you've logged an episode (`LogButton` in `components/Social.js`, used everywhere).
+
+**Waiting on a decision (Erin and YY): what "hooked" means.** Today it's set in two places: every log asks "I'm hooked /
+I'm not hooked" (required, `logs.hooked`), and show pages have an optional "Hooked on this?" toggle (`hooked_shows`).
+Erin finds asking on every log clunky. Options discussed on 2026-11-03:
+- **A (recommended):** keep both, but pre-select "I'm hooked" when logging an episode of a show you're hooked on, with
+  a note ("Pre-picked because you're hooked on …"). Also make the toggle the single source of truth: the first log
+  marked hooked hooks the show; after that only you turn it off. No filters, stats or feeds change.
+- **B:** hooked only at show level; logs get stars and a hook line only. About a day of work, mostly wording: the
+  Diary filter, "is hooked on / wasn't hooked by" feed lines, hooked %, "3 of 5 hooked", Wrapped, For you picks and
+  share text all need new meanings. Small migration (existing hooked logs → hooked shows), nothing deleted.
+
+**Next, once that's decided:** build A or B. Otherwise, the next planned work:
+- **Stage D** (remove the old Podcast Index number columns and copied details) after both of you have used stage C
+  live for about a week with nothing missing, so **not before about 2026-11-10**. Back up first (export, as below),
+  rehearse with `scripts/rehearse-migrations.mjs`, test database, then live.
+- Still on Podcast Index numbers, to move when convenient: **For you** picks and **Wrapped**'s genre breakdown (both
+  read Podcast Index, so they skip shows it lacks), and **briefs** (items carry `episodeRef`/`showRef` but are built
+  from Podcast Index).
+- Step 8: listening progress synced to your account, then better search (our `shows`/`episodes` tables have a
+  `search` column ready; today Search only adds our feed/Spotify shows by title).
 
 **Follow-ups, small:**
-- Check the daily catalog job ran: Vercel → Logs, path `/api/cron/catalog`, 09:00 UTC. Its first run was 2026-11-02.
+- Check the daily catalog job ran: Vercel → Logs, path `/api/cron/catalog`, 09:00 UTC. It now also re-reads 5 feed
+  shows per run (`refreshStale` in `lib/catalog.js`).
 - Turn on Supabase → Authentication → "Leaked password protection".
 - Rotate the Podcast Index API secret (it was shared in chat on 2026-10-31).
 - New code is still JavaScript: TypeScript (decided above) needs its own small setup PR first.
-- Redraw the share images (see Known issues) and tidy the lint warnings over time (86 on main after #18). Most are
-  `react-hooks/refs` in `components/Player.js`: the player reads its queue from a React ref while drawing, and every
-  field read off it counts, so adding one (like `s.ep.ref`) adds warnings without a new kind of problem.
+- Spotify-only shows are matched by title, because Spotify's episode page didn't expose the show's own id. Fine so far.
+- Redraw the share images (see Known issues) and tidy the lint warnings over time: **88** on main, 0 errors. Most are
+  `react-hooks/refs` in `components/Player.js` (the player reads its queue from a React ref while drawing, and each
+  field read counts). To compare warnings between two versions, use `npx eslint -f json .`: the `unix` format isn't
+  available, and an empty comparison once hid two new warnings.
+
+**Testing notes (what worked this session):**
+- **Database changes:** export live first (`scripts/export-live.sql`, see below), then
+  `node scripts/rehearse-migrations.mjs <export.json> <last applied migration> scripts/checks/<file>.sql`. It loads the
+  copy in memory, applies newer migrations, and runs checks written as real saves by signed-in people. Also run the
+  checks **without** the new migration: the ones about the change must fail, or they aren't testing it (one check
+  passed for the wrong reason until this was tried).
+- **Running the app against the test database:** build with the test project's public URL and anon key
+  (`supabase projects api-keys --project-ref wxbpizgeauuomagbmwja`). `NEXT_PUBLIC_*` values are baked in at build time,
+  so rebuild; `.env.local` points at **live**. Add `SUPABASE_SERVICE_ROLE_KEY` (test) at start time when a test needs
+  the server to save shows or episodes. Locally there are no Podcast Index keys, which behaves like "Podcast Index
+  doesn't have it"; Vercel previews do have them.
+- **Signed-in tests:** make a throwaway account on the **test** database only (add its email to `allowed_emails`,
+  create it with the admin API and a password, give it a handle), and delete the account, its rows and the invite
+  afterwards. Copied accounts have no password; previews need an email link.
+- **Signed out,** the app keeps logs and hooked shows in the browser (`localStorage` key `hooked:v1`), which makes
+  quick visual checks easy. Sessions live in a cookie (`sb-<project>-auth-token`): clear it to be truly signed out.
+- **Previews are behind Vercel's login:** fetch them with the Vercel MCP's `web_fetch_vercel_url`, not curl.
+- **Reading the live database** from a session needs Erin's OK (the safety check blocks it). The latest backup, or
+  the public pages (`/u/<handle>`, `/show/…`), usually answer the question instead.
+- **Test database state:** a copy of live from 2026-11-02 plus everything tested since, including The Michelle
+  Collins Show (`2e369h3s`, 255 episodes) and Erin's log of "Sensor Sensibility". Refresh it from live whenever (below).
+- Backups of live: `~/claude/hooked-backups/` (latest `live-2026-11-03-before-c3-show-refs.json`).
 
 **Working with the two databases:**
 - Live: `hooked` (`ltdjzjbqhojhtahewgtd`), linked from this folder. Test (previews): `hooked-test` (`wxbpizgeauuomagbmwja`).
@@ -105,7 +134,7 @@ Each step is its own branch and pull request.
 4. ~~Baseline migrations, lint and build checks, safe fetching~~ (done).
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
-7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **In progress: A, B, C1–C2, C3 parts 1, 2 and 3a done; 3b in review; then D.**
+7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **A, B and C done and live (2026-11-03); D after about a week of C live.**
 8. Listening progress saved to your account (synced across devices), then better search.
 9. Home split into Everyone and Friends, and friends' ratings on episode and show pages.
 10. Google sign-in.

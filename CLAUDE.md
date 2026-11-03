@@ -86,9 +86,16 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   migration: the repo is public.
 - **Shows and episodes** (`shows`, `episodes`, our own 8-character ids): every save that mentions an
   episode fills in `episode_ref` / `show_ref` by itself (triggers in `*_refs_on_save.sql`), creating a basic
-  entry if needed. `lib/catalog.js` upgrades entries from Podcast Index. See `docs/DATA_MODEL.md`.
+  entry if needed. `lib/catalog.js` upgrades entries from Podcast Index, and brings in shows Podcast Index lacks from
+  their own feed (through Apple) or as Spotify-only entries. See `docs/DATA_MODEL.md`.
+- **Our ids are the keys**: logs, Up next, sends, replies, reactions and notifications by `episode_ref`, hooked shows
+  by `show_ref`. The Podcast Index numbers (`episode_id`, `feed_id`) are optional; send them when known, and never send
+  them as empty (the database keeps the stored one). A log's show is `episodes.show_id`, through
+  `episodes!logs_episode_ref_fkey(show_id)`. In the app, compare episodes and shows with `sameEpisode`, `findLog`,
+  `inUpNext`, `sameShow` and `findHookedShow` (`lib/store.js`), and build links with `episodeHref` / `showHref` /
+  `logHref` (`lib/addresses.js`).
 - Tables: `allowed_emails` (the invite list; no app access), `trending_topics` (48 hours of Google Trends; only the server writes), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
-  (one per user+episode), `hooked_shows`, `list_items` (the **Up next** queue), `follows`,
+  (one per user+episode), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
   and `briefs`.
 - **Embeds need explicit foreign-key hints**, because several tables point at `profiles`, e.g.
@@ -101,8 +108,12 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Pages** (`app/`): `/` Home (Up next card, friends' activity, Just logged, Apple top chart),
   `/search` (trending topics, Popular on Hooked on, For you, Top episodes; also paste-a-link),
   `/briefs`, `/briefs/new` and `/briefs/b/[id]` (+ `/edit`), `/me` My log (tabs: Diary, Shows,
-  Up next, Wrapped), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet), `/u/[handle]`,
+  Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet;
+  `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
+- **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
+  ("+ Up next"), `HookShowButton`. Done states are yellow (`btn--butter`). `SignInButton` (`components/Account.js`)
+  sits in page headers when signed out.
 - **API routes** (`app/api/`): `resolve` (paste a link), `episode`, `for-you`, `top-episodes`,
   `genres`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
 - **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
@@ -133,11 +144,13 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 Before pushing, run `npm run lint`, `npm run db:check` and `npm run build`. GitHub runs the same three on every
 pull request (`.github/workflows/check.yml`); a red check means don't merge yet.
 
-External services may not be reachable from a sandbox. The approach that has worked: run small
-local mocks of Podcast Index, Apple and Spotify, plus a fake Supabase REST/auth server, point the
-override env vars at them, and drive the site with Playwright at 390×844. Check pages for console
-errors, and screenshot anything visual. After pushing, confirm the Vercel status:
-`gh api repos/yylee83/hooked/commits/<sha>/status`.
+External services may not be reachable from a sandbox. Two approaches have worked: (1) small local mocks of Podcast
+Index, Apple and Spotify, plus a fake Supabase REST/auth server, with the override env vars pointed at them; (2) a
+local build against the **test** database (see "Testing notes" in `docs/PLAN.md`: build-time keys, throwaway accounts,
+cleaning up). Drive the site with Playwright at 390×844, check pages for console errors, and screenshot anything
+visual. Images load lazily: wait before screenshots. After pushing, confirm the Vercel status:
+`gh api repos/yylee83/hooked/commits/<sha>/status`; previews are behind Vercel's login, so fetch them with the Vercel
+MCP. Never use the live database for tests, and reading it needs Erin's OK.
 
 ## Working with YY
 
