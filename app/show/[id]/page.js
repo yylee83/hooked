@@ -3,10 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
-import { HookShowButton, QueueButton } from "@/components/Social";
+import { HookShowButton, LogButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
 import { REF, loadShow, ownShowEpisodes, showRefFor, withRefs } from "@/lib/catalog";
-import { episodeHref, logHref, withQuery } from "@/lib/addresses";
+import { episodeHref, withQuery } from "@/lib/addresses";
 import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
@@ -87,9 +87,7 @@ export default async function ShowPage({ params, searchParams }) {
             {raw.description && <p className="eps__desc">{plainText(raw.description)}</p>}
             <div className="row gap">
               <PlayButton episode={card} />
-              <Link href={logHref(card.ref, card.id)} className="btn btn--sm btn--cobalt">
-                Log it
-              </Link>
+              <LogButton episode={card} />
               <QueueButton episode={card} />
             </div>
           </li>

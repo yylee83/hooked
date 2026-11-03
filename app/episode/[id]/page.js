@@ -5,14 +5,14 @@ import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
 import { ShareButton } from "@/components/Share";
-import { QueueButton } from "@/components/Social";
+import { LogButton, QueueButton } from "@/components/Social";
 import { JoinNudge } from "@/components/JoinNudge";
 import LogThread from "@/components/LogThread";
 import Stars from "@/components/Stars";
 import { Avatar } from "@/components/Friends";
 import { episodeCard, artOf } from "@/lib/podcastindex";
 import { REF, episodeRefFor, loadEpisode } from "@/lib/catalog";
-import { logHref, showHref, withQuery } from "@/lib/addresses";
+import { showHref, withQuery } from "@/lib/addresses";
 import Notes from "@/components/Notes";
 import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
@@ -113,9 +113,7 @@ export default async function EpisodePage({ params, searchParams }) {
             Listen on Spotify
           </a>
         )}
-        <Link href={logHref(card.ref, card.id)} className="btn btn--sm btn--cobalt btn--shadow-sm">
-          Log it
-        </Link>
+        <LogButton episode={card} shadow />
         <QueueButton episode={card} />
         <ShareButton episode={card} />
       </div>
