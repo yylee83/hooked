@@ -107,6 +107,12 @@ export default async function EpisodePage({ params, searchParams }) {
 
       <div className="row gap wrap" style={{ margin: "20px 0 8px" }}>
         <PlayButton episode={card} />
+        {/* Spotify-only episodes can't play here: send people to Spotify instead. */}
+        {!card.audio && /^https:\/\/open\.spotify\.com\//.test(e.link || "") && (
+          <a href={e.link} className="btn btn--sm btn--shadow-sm" target="_blank" rel="noopener noreferrer">
+            Listen on Spotify
+          </a>
+        )}
         <Link href={logHref(card.ref, card.id)} className="btn btn--sm btn--cobalt btn--shadow-sm">
           Log it
         </Link>

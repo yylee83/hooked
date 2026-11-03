@@ -5,7 +5,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { HookShowButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
-import { REF, loadShow, showRefFor, withRefs } from "@/lib/catalog";
+import { REF, loadShow, ownShowEpisodes, showRefFor, withRefs } from "@/lib/catalog";
 import { episodeHref, logHref, withQuery } from "@/lib/addresses";
 import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
@@ -33,8 +33,12 @@ export default async function ShowPage({ params, searchParams }) {
   if (!show.data) notFound();
   const s = show.data;
 
-  const [eps, community] = await Promise.all([safe(getEpisodes(s.id, 30)), showStats(s.id)]);
-  const raws = eps.data || [];
+  // Shows read from their own feed (or Spotify-only ones) list the episodes we saved; others ask
+  // Podcast Index, falling back to ours if it has nothing.
+  const fromPi = s.id && s.source !== "feed" && s.source !== "spotify";
+  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, 30)) : { data: [] }, s.id ? showStats(s.id) : null]);
+  let raws = eps.data || [];
+  if (!raws.length && s.ref) raws = await ownShowEpisodes(s.ref, 30);
   const cards = await withRefs(raws.map((e) => episodeCard(e, s)));
   const episodes = raws.map((e, i) => ({ raw: e, card: cards[i] }));
   const categories = Object.values(s.categories || {}).slice(0, 2);
@@ -62,15 +66,21 @@ export default async function ShowPage({ params, searchParams }) {
       </p>
       {s.description && <p className="show__desc">{plainText(s.description)}</p>}
 
-      <ShowRatings feedId={s.id} community={community} />
-      <HookShowButton show={{ feedId: s.id, showRef: s.ref, title: s.title, image: artOf(s) }} />
+      {/* Ratings and "Hooked on this?" are keyed by Podcast Index's number for now (until step 7 C3, part 3b). */}
+      {s.id && <ShowRatings feedId={s.id} community={community} />}
+      {s.id && <HookShowButton show={{ feedId: s.id, showRef: s.ref, title: s.title, image: artOf(s) }} />}
+      {s.source === "spotify" && s.link && (
+        <a href={s.link} className="btn btn--sm btn--shadow-sm" target="_blank" rel="noopener noreferrer" style={{ marginTop: 12 }}>
+          Open in Spotify
+        </a>
+      )}
 
       <h2 className="section-title">Latest episodes</h2>
-      <KeysNotice error={eps.error} />
+      {fromPi && <KeysNotice error={eps.error} />}
       {episodes.length === 0 && !eps.error && <p className="muted">No episodes found for this show yet.</p>}
       <ul>
         {episodes.map(({ raw, card }) => (
-          <li key={card.id} className="eps__row">
+          <li key={card.ref || card.id} className="eps__row">
             <p className="eps__meta">{[shortDate(card.date), minutes(card.duration)].filter(Boolean).join(" · ")}</p>
             <Link href={episodeHref(card.ref, card.id)} className="eps__title" style={{ display: "block" }}>
               {card.title}
