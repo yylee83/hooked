@@ -668,3 +668,8 @@ body:has(.mini) .app { padding-bottom: 300px; }
 /* ---------- page headers: title on the left, small actions (Sign in, + New brief) on the right ---------- */
 .page-head { justify-content: space-between; gap: 10px; }
 .page-head__actions { gap: 8px; flex: none; }
+
+/* ---------- Hooked on: every show you're hooked on (/me/hooked) ---------- */
+.hooked-grid { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 14px; }
+.hooked-grid__item { display: flex; flex-direction: column; gap: 8px; }
+.hooked-grid__title { font-weight: 700; font-size: 15px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
