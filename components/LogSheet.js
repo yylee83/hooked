@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
+import { logHref } from "@/lib/addresses";
 import { addLog, sendRecommendation, useStore } from "@/lib/store";
 
 function RatingInput({ value, onChange }) {
@@ -114,7 +115,7 @@ export default function LogSheet({ episode, preset }) {
       </header>
 
       <div className="sheet__ep">
-        <Art src={episode.image} title={episode.feedTitle} size={112} tilt={-3} radius={22} className="art--shadow" episodeId={episode.id} />
+        <Art src={episode.image} title={episode.feedTitle} size={112} tilt={-3} radius={22} className="art--shadow" episodeRef={episode.ref} episodeId={episode.id} />
         <div>
           <h2 className="display sheet__epTitle">{episode.title}</h2>
           <p className="sheet__show">{episode.feedTitle}</p>
@@ -175,7 +176,7 @@ export default function LogSheet({ episode, preset }) {
             </>
           ) : (
             <>
-              <Link href={`/login?next=/log/${episode.id}`} className="u-link">Sign in</Link> to send this to friends.
+              <Link href={`/login?next=${logHref(episode.ref, episode.id)}`} className="u-link">Sign in</Link> to send this to friends.
             </>
           )}
         </p>
@@ -187,7 +188,7 @@ export default function LogSheet({ episode, preset }) {
       {error && <p className="nudge" style={{ marginTop: 14 }}>{error}</p>}
       {state?.accounts && !state.user && (
         <p className="muted small" style={{ marginTop: 14, textAlign: "center" }}>
-          Saved on this device for now. <Link href={`/login?mode=signup&next=/log/${episode.id}`} className="u-link">Make a profile</Link> to keep it everywhere.
+          Saved on this device for now. <Link href={`/login?mode=signup&next=${logHref(episode.ref, episode.id)}`} className="u-link">Make a profile</Link> to keep it everywhere.
         </p>
       )}
     </div>

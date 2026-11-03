@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Art from "./Art";
 import { Avatar } from "./Friends";
 import { useStore } from "@/lib/store";
+import { episodeHref } from "@/lib/addresses";
 import { fetchNotifications, markAllRead, timeAgo, unreadCount, REACTION_WORDS } from "@/lib/social";
 
 // The bell, with a count of unread notifications. Checks every minute while the tab is open.
@@ -47,12 +48,13 @@ export function NotificationBell() {
 function describe(n, myHandle) {
   const who = n.actor?.handle ? `@${n.actor.handle}` : "Someone";
   const ep = n.title ? `“${n.title}”` : "an episode";
-  const thread = (owner) => `/episode/${n.episode_id}?from=${encodeURIComponent(owner || myHandle || "")}#thread`;
+  const page = episodeHref(n.episode_ref, n.episode_id);
+  const thread = (owner) => `${page}?from=${encodeURIComponent(owner || myHandle || "")}#thread`;
   switch (n.type) {
     case "follow":
       return { text: <><b>{who}</b> followed you</>, href: `/u/${n.actor?.handle || ""}` };
     case "rec":
-      return { text: <><b>{who}</b> sent you {ep}</>, quote: n.body, href: `/episode/${n.episode_id}?from=${encodeURIComponent(n.actor?.handle || "")}` };
+      return { text: <><b>{who}</b> sent you {ep}</>, quote: n.body, href: `${page}?from=${encodeURIComponent(n.actor?.handle || "")}` };
     case "comment":
       return { text: <><b>{who}</b> replied to your log of {ep}</>, quote: n.body, href: thread(myHandle) };
     case "reply":

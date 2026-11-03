@@ -8,6 +8,7 @@ import LogThread from "@/components/LogThread";
 import { getProfilePage } from "@/lib/supabase/public";
 import { minutes, plural } from "@/lib/format";
 import { site } from "@/lib/site";
+import { episodeHref, showHref } from "@/lib/addresses";
 
 export const revalidate = 30;
 
@@ -68,7 +69,7 @@ export default async function ProfilePage({ params }) {
           <h2 className="label">Hooked on</h2>
           <div className="hooked-on">
             {shows.slice(0, 4).map((s, i) => (
-              <Link key={s.feed_id} href={`/show/${s.feed_id}`}>
+              <Link key={s.feed_id} href={showHref(s.show_ref, s.feed_id)}>
                 <Art src={s.image} title={s.title || ""} size="100%" tilt={[-2, 1.5, -1, 2][i]} radius={18} className="art--fluid" />
               </Link>
             ))}
@@ -105,9 +106,9 @@ export default async function ProfilePage({ params }) {
               {g.items.map((l) => (
                 <li key={l.episode_id} className="log__row log__row--share">
                   <span className="mono log__day">{new Date(l.logged_at).getDate()}</span>
-                  <Art src={l.image} title={l.feed_title || ""} size={56} radius={12} episodeId={l.episode_id} />
+                  <Art src={l.image} title={l.feed_title || ""} size={56} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                   <div className="min0">
-                    <Link href={`/episode/${l.episode_id}?from=${profile.handle}`} className="title-sm" style={{ display: "block" }}>
+                    <Link href={`${episodeHref(l.episode_ref, l.episode_id)}?from=${profile.handle}`} className="title-sm" style={{ display: "block" }}>
                       {l.title}
                     </Link>
                     <p className="muted small row gap-xs center wrap">
@@ -126,7 +127,7 @@ export default async function ProfilePage({ params }) {
                     <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
                     <ShareButton
                       compact
-                      episode={{ id: l.episode_id, title: l.title, feedId: l.feed_id, feedTitle: l.feed_title, image: l.image, audio: l.audio, duration: l.duration }}
+                      episode={{ id: l.episode_id, ref: l.episode_ref, title: l.title, feedId: l.feed_id, feedTitle: l.feed_title, image: l.image, audio: l.audio, duration: l.duration }}
                     />
                   </div>
                 </li>

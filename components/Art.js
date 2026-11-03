@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { episodeHref, showHref } from "@/lib/addresses";
 
 const tones = ["var(--butter)", "var(--bubblegum)", "var(--cobalt)"];
 
 // Podcast cover art, with a friendly stand-in if the image is missing or broken.
-// Pass episodeId to make the cover open that episode, or feedId to open the show.
-export default function Art({ src, title = "", size = 64, tilt = 0, radius, className = "", feedId, episodeId }) {
+// Pass episodeRef/episodeId to make the cover open that episode, or showRef/feedId to open the show.
+// (Refs are our short ids; the Podcast Index numbers still work and redirect.)
+export default function Art({ src, title = "", size = 64, tilt = 0, radius, className = "", feedId, episodeId, showRef, episodeRef }) {
   const [broken, setBroken] = useState(false);
   const style = {
     width: size,
@@ -30,10 +32,11 @@ export default function Art({ src, title = "", size = 64, tilt = 0, radius, clas
     // eslint-disable-next-line @next/next/no-img-element
     art = <img className={`art ${className}`} style={style} src={src} alt={title} loading="lazy" onError={() => setBroken(true)} />;
   }
-  const href = episodeId ? `/episode/${episodeId}` : feedId ? `/show/${feedId}` : null;
+  const toEpisode = episodeRef || episodeId;
+  const href = toEpisode ? episodeHref(episodeRef, episodeId) : showRef || feedId ? showHref(showRef, feedId) : null;
   if (!href) return art;
   return (
-    <Link href={href} className="art-link" aria-label={episodeId ? "Open episode" : title ? `Go to ${title}` : "Go to show"}>
+    <Link href={href} className="art-link" aria-label={toEpisode ? "Open episode" : title ? `Go to ${title}` : "Go to show"}>
       {art}
     </Link>
   );

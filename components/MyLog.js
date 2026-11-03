@@ -10,6 +10,7 @@ import { hookedShows, initialsOf, saveProfile, signOut, useStore } from "@/lib/s
 import { Diary, ShowsView, UpNextView } from "./LogViews";
 import { supabase } from "@/lib/supabase/client";
 import { minutes, plural } from "@/lib/format";
+import { logHref, showHref } from "@/lib/addresses";
 
 // Weekly email: a Sunday roundup of what friends logged and sent you.
 function DigestToggle({ state }) {
@@ -267,7 +268,7 @@ export default function MyLog() {
           <h2 className="label">Hooked on</h2>
           <div className="hooked-on">
             {shows.slice(0, 4).map((s, i) => (
-              <Link key={s.feedId} href={`/show/${s.feedId}`}>
+              <Link key={s.feedId} href={showHref(s.showRef, s.feedId)}>
                 <Art src={s.image} title={s.title} size="100%" tilt={[-2, 1.5, -1, 2][i]} radius={18} className="art--fluid" />
               </Link>
             ))}
@@ -287,17 +288,17 @@ export default function MyLog() {
         <section className="card np">
           <p className="mono cobalt small">Listening now</p>
           <div className="row gap center">
-            <Art src={np.image} title={np.feedTitle} size={64} radius={12} episodeId={np.id} />
+            <Art src={np.image} title={np.feedTitle} size={64} radius={12} episodeRef={np.ref} episodeId={np.id} />
             <div className="min0">
               <p className="title-md">{np.title}</p>
               <p className="muted">{np.feedTitle}</p>
             </div>
           </div>
           <div className="choice">
-            <Link className="btn btn--display btn--cobalt" href={`/log/${np.id}?hooked=1`}>
+            <Link className="btn btn--display btn--cobalt" href={`${logHref(np.ref, np.id)}?hooked=1`}>
               I'm hooked
             </Link>
-            <Link className="btn btn--display" href={`/log/${np.id}?hooked=0`}>
+            <Link className="btn btn--display" href={`${logHref(np.ref, np.id)}?hooked=0`}>
               I'm not hooked
             </Link>
           </div>

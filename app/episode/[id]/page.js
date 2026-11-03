@@ -12,7 +12,7 @@ import Stars from "@/components/Stars";
 import { Avatar } from "@/components/Friends";
 import { episodeCard, artOf } from "@/lib/podcastindex";
 import { REF, episodeRefFor, loadEpisode } from "@/lib/catalog";
-import { withQuery } from "@/lib/addresses";
+import { logHref, showHref, withQuery } from "@/lib/addresses";
 import Notes from "@/components/Notes";
 import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
@@ -53,13 +53,13 @@ export default async function EpisodePage({ params, searchParams }) {
   if (ep.error) return <KeysNotice error={ep.error} />;
   if (!ep.data) notFound();
   const { episode: e, show } = ep.data;
-  const card = { ...episodeCard(e, show), ref: e.ref };
+  const card = episodeCard(e, show); // includes our short ids (ref, showRef)
   const shared = from ? await getSharedLog(from, card.id) : null;
 
   return (
     <>
-      {card.feedId ? (
-        <Link href={`/show/${card.feedId}`} className="back">
+      {card.showRef || card.feedId ? (
+        <Link href={showHref(card.showRef, card.feedId)} className="back">
           ← {card.feedTitle || "Show"}
         </Link>
       ) : (
@@ -98,8 +98,8 @@ export default async function EpisodePage({ params, searchParams }) {
 
       <p className="eps__meta">{[shortDate(card.date), minutes(card.duration)].filter(Boolean).join(" · ")}</p>
       <h1 className="display ep-title" data-from={ep.from}>{card.title}</h1>
-      {card.feedId && (
-        <Link href={`/show/${card.feedId}`} className="ep-show">
+      {(card.showRef || card.feedId) && (
+        <Link href={showHref(card.showRef, card.feedId)} className="ep-show">
           <Art src={artOf(show) || card.feedImage} title={card.feedTitle} size={36} radius={9} />
           <span>{card.feedTitle}</span>
         </Link>
@@ -107,7 +107,7 @@ export default async function EpisodePage({ params, searchParams }) {
 
       <div className="row gap wrap" style={{ margin: "20px 0 8px" }}>
         <PlayButton episode={card} />
-        <Link href={`/log/${card.id}`} className="btn btn--sm btn--cobalt btn--shadow-sm">
+        <Link href={logHref(card.ref, card.id)} className="btn btn--sm btn--cobalt btn--shadow-sm">
           Log it
         </Link>
         <QueueButton episode={card} />
@@ -116,7 +116,7 @@ export default async function EpisodePage({ params, searchParams }) {
 
       {shared?.profile && <JoinNudge from={shared.profile.handle} />}
 
-      <EpisodeLogs episodeId={card.id} />
+      <EpisodeLogs episodeId={card.id} episodeRef={card.ref} />
 
       {e.description && (
         <section>

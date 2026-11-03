@@ -5,8 +5,8 @@ import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { HookShowButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
-import { REF, loadShow, showRefFor } from "@/lib/catalog";
-import { withQuery } from "@/lib/addresses";
+import { REF, loadShow, showRefFor, withRefs } from "@/lib/catalog";
+import { episodeHref, logHref, withQuery } from "@/lib/addresses";
 import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
@@ -34,7 +34,9 @@ export default async function ShowPage({ params, searchParams }) {
   const s = show.data;
 
   const [eps, community] = await Promise.all([safe(getEpisodes(s.id, 30)), showStats(s.id)]);
-  const episodes = (eps.data || []).map((e) => ({ raw: e, card: episodeCard(e, s) }));
+  const raws = eps.data || [];
+  const cards = await withRefs(raws.map((e) => episodeCard(e, s)));
+  const episodes = raws.map((e, i) => ({ raw: e, card: cards[i] }));
   const categories = Object.values(s.categories || {}).slice(0, 2);
 
   return (
@@ -61,7 +63,7 @@ export default async function ShowPage({ params, searchParams }) {
       {s.description && <p className="show__desc">{plainText(s.description)}</p>}
 
       <ShowRatings feedId={s.id} community={community} />
-      <HookShowButton show={{ feedId: s.id, title: s.title, image: artOf(s) }} />
+      <HookShowButton show={{ feedId: s.id, showRef: s.ref, title: s.title, image: artOf(s) }} />
 
       <h2 className="section-title">Latest episodes</h2>
       <KeysNotice error={eps.error} />
@@ -70,13 +72,13 @@ export default async function ShowPage({ params, searchParams }) {
         {episodes.map(({ raw, card }) => (
           <li key={card.id} className="eps__row">
             <p className="eps__meta">{[shortDate(card.date), minutes(card.duration)].filter(Boolean).join(" · ")}</p>
-            <Link href={`/episode/${card.id}`} className="eps__title" style={{ display: "block" }}>
+            <Link href={episodeHref(card.ref, card.id)} className="eps__title" style={{ display: "block" }}>
               {card.title}
             </Link>
             {raw.description && <p className="eps__desc">{plainText(raw.description)}</p>}
             <div className="row gap">
               <PlayButton episode={card} />
-              <Link href={`/log/${card.id}`} className="btn btn--sm btn--cobalt">
+              <Link href={logHref(card.ref, card.id)} className="btn btn--sm btn--cobalt">
                 Log it
               </Link>
               <QueueButton episode={card} />

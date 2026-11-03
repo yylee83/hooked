@@ -7,6 +7,7 @@ import Stars from "./Stars";
 import { usePlayer } from "./Player";
 import { removeFromList, upNext } from "@/lib/store";
 import { plural } from "@/lib/format";
+import { episodeHref, showHref } from "@/lib/addresses";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -117,9 +118,9 @@ export function Diary({ logs }) {
               {g.items.map((l) => (
                 <li key={l.id} className="diary__row">
                   <span className="mono diary__day">{new Date(l.loggedAt).getDate()}</span>
-                  <Art src={l.image} title={l.feedTitle} size={46} radius={10} episodeId={l.id} />
+                  <Art src={l.image} title={l.feedTitle} size={46} radius={10} episodeRef={l.ref} episodeId={l.id} />
                   <span className="min0 grow">
-                    <Link href={`/episode/${l.id}`} className="diary__title">
+                    <Link href={episodeHref(l.ref, l.id)} className="diary__title">
                       {l.title}
                     </Link>
                     <span className="diary__meta">
@@ -157,7 +158,7 @@ export function showsFromLogs(logs, hooked = {}) {
   const map = new Map();
   for (const l of logs) {
     const k = String(l.feedId || l.feedTitle);
-    if (!map.has(k)) map.set(k, { feedId: l.feedId, title: l.feedTitle, image: l.feedImage || l.image, logs: [], last: 0 });
+    if (!map.has(k)) map.set(k, { feedId: l.feedId, showRef: l.showRef, title: l.feedTitle, image: l.feedImage || l.image, logs: [], last: 0 });
     const s = map.get(k);
     s.logs.push(l);
     s.last = Math.max(s.last, l.loggedAt);
@@ -165,7 +166,8 @@ export function showsFromLogs(logs, hooked = {}) {
   // Shows you're hooked on but haven't logged an episode of yet.
   for (const h of Object.values(hooked)) {
     const k = String(h.feedId);
-    if (!map.has(k)) map.set(k, { feedId: h.feedId, title: h.title, image: h.image, logs: [], last: h.at || 0 });
+    if (!map.has(k)) map.set(k, { feedId: h.feedId, showRef: h.showRef, title: h.title, image: h.image, logs: [], last: h.at || 0 });
+    else if (!map.get(k).showRef) map.get(k).showRef = h.showRef;
   }
   return [...map.values()].map((s) => {
     const rated = s.logs.filter((l) => l.rating > 0);
@@ -235,13 +237,13 @@ export function ShowsView({ logs, hooked }) {
                   {s.logs
                     .sort((a, b) => b.loggedAt - a.loggedAt)
                     .map((l) => (
-                      <Link key={l.id} href={`/episode/${l.id}`} className="shows-list__ep">
+                      <Link key={l.id} href={episodeHref(l.ref, l.id)} className="shows-list__ep">
                         <span className="min0 grow">{l.title}</span>
                         {l.rating > 0 ? <Stars value={l.rating} size={12} /> : <span className="muted small">{l.hooked ? "Hooked" : "Not hooked"}</span>}
                       </Link>
                     ))}
                   {s.feedId && (
-                    <Link href={`/show/${s.feedId}`} className="more-link" style={{ display: "inline-block", marginTop: 8 }}>
+                    <Link href={showHref(s.showRef, s.feedId)} className="more-link" style={{ display: "inline-block", marginTop: 8 }}>
                       Go to the show →
                     </Link>
                   )}
@@ -293,10 +295,10 @@ export function UpNextView({ state }) {
           return (
             <li key={key} className="list__row">
               <span className="mono upnext__n">{n + 1}</span>
-              <Art src={i.image} title={i.feedTitle} size={48} radius={10} episodeId={i.episodeId} feedId={i.feedId} />
+              <Art src={i.image} title={i.feedTitle} size={48} radius={10} episodeRef={i.episodeRef} episodeId={i.episodeId} showRef={i.showRef} feedId={i.feedId} />
               <div className="min0 grow">
                 {i.episodeId ? (
-                  <Link href={`/episode/${i.episodeId}`} className="title-sm">
+                  <Link href={episodeHref(i.episodeRef, i.episodeId)} className="title-sm">
                     {i.title}
                   </Link>
                 ) : (

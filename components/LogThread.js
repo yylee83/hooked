@@ -80,7 +80,7 @@ export default function LogThread({ logUserId, episodeId, defaultOpen = false, i
       // "+" also puts the episode in your queue (Up next).
       if (kind === "adding" && on && !state?.list?.some((i) => String(i.episodeId) === String(episodeId))) {
         const ep = await fetch(`/api/episode?id=${episodeId}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-        if (ep) await addToList({ episodeId: ep.id, title: ep.title, feedId: ep.feedId, feedTitle: ep.feedTitle, image: ep.image || ep.feedImage, from: "a review" });
+        if (ep) await addToList({ episodeId: ep.id, episodeRef: ep.ref, showRef: ep.showRef, title: ep.title, feedId: ep.feedId, feedTitle: ep.feedTitle, image: ep.image || ep.feedImage, from: "a review" });
         else flash(null);
       }
     } catch (e) {

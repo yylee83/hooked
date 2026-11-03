@@ -3,6 +3,7 @@
 import { episodeCard, getEpisodes, safe } from "@/lib/podcastindex";
 import { popularOnHooked, topCharts } from "@/lib/charts";
 import { publicDb } from "@/lib/supabase/public";
+import { withRefs } from "@/lib/catalog";
 import { genreLabel } from "@/lib/genres";
 
 const ids = (a, max) => [...new Set((Array.isArray(a) ? a : []).map(String).filter((x) => /^\d+$/.test(x)))].slice(0, max);
@@ -99,5 +100,5 @@ export async function POST(req) {
     }
   }
 
-  return Response.json({ picks: picks.slice(0, 10) });
+  return Response.json({ picks: await withRefs(picks.slice(0, 10)) }); // our short ids, for links
 }

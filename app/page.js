@@ -7,6 +7,7 @@ import { FriendsFeed } from "@/components/Friends";
 import UpNextHome from "@/components/UpNextHome";
 import { NotificationBell } from "@/components/Notifications";
 import { topCharts } from "@/lib/charts";
+import { showHref } from "@/lib/addresses";
 
 // Refresh the chart every hour (Apple updates it daily).
 export const revalidate = 3600;
@@ -49,7 +50,7 @@ export default async function FriendsPage() {
             {chart.map((s, i) => (
               <Link
                 key={s.itunesId}
-                href={s.feedId ? `/show/${s.feedId}` : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
+                href={s.feedId ? showHref(s.showRef, s.feedId) : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
                 className="trend__item"
               >
                 <span className="trend__rank display">{s.rank}</span>

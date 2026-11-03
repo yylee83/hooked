@@ -85,6 +85,8 @@ export function QueueButton({ episode, from }) {
   const state = useStore();
   const item = {
     episodeId: episode.id,
+    episodeRef: episode.ref,
+    showRef: episode.showRef,
     title: episode.title,
     feedId: episode.feedId,
     feedTitle: episode.feedTitle,

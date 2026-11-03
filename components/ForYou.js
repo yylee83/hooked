@@ -6,6 +6,7 @@ import Art from "./Art";
 import { PlayButton } from "./Player";
 import { QueueButton } from "./Social";
 import { useStore } from "@/lib/store";
+import { episodeHref } from "@/lib/addresses";
 
 function inputsFrom(state) {
   // Ordered: shows you're hooked on first (newest first), then shows you rate highly.
@@ -84,8 +85,8 @@ export default function ForYou({ compact = false }) {
           {picks.map((ep) => (
             <article key={ep.id} className="foryou__card">
               <span className="foryou__why mono">{ep.reason}</span>
-              <Art src={ep.image} title={ep.feedTitle} size="100%" radius={14} className="art--fluid" episodeId={ep.id} />
-              <Link href={`/episode/${ep.id}`} className="foryou__title">
+              <Art src={ep.image} title={ep.feedTitle} size="100%" radius={14} className="art--fluid" episodeRef={ep.ref} episodeId={ep.id} />
+              <Link href={episodeHref(ep.ref, ep.id)} className="foryou__title">
                 {ep.title}
               </Link>
               <p className="muted small foryou__show">{ep.feedTitle}</p>

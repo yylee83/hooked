@@ -22,5 +22,5 @@ export default async function LogPage({ params, searchParams }) {
 
   const preset = hooked === "1" ? true : hooked === "0" ? false : undefined;
   const { episode, show } = ep.data;
-  return <LogSheet episode={{ ...episodeCard(episode, show), ref: episode.ref }} preset={preset} />;
+  return <LogSheet episode={episodeCard(episode, show)} preset={preset} />;
 }

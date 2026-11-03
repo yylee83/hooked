@@ -5,6 +5,7 @@ import { QueueAll, QueueButton } from "./Social";
 import BriefOwner from "./BriefOwner";
 import { briefQueue, briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes } from "@/lib/format";
+import { episodeHref, logHref, showHref } from "@/lib/addresses";
 
 // *word* in a dek becomes italic.
 function Dek({ text = "" }) {
@@ -78,6 +79,8 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
           : it.label || "FULL EPISODE";
         const ep = {
           id: it.episodeId,
+          ref: it.episodeRef, // our short ids, added when the brief is saved
+          showRef: it.showRef,
           title: it.episode,
           feedId: it.feedId,
           feedTitle: it.show,
@@ -89,9 +92,9 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
           <article key={`${it.episodeId || it.episode}-${i}`} className="brief__item">
             <div className="brief__show">
               <div className="row gap center min0">
-                <Art src={it.image} title={it.show} size={52} radius={12} episodeId={it.found !== false ? it.episodeId : undefined} feedId={it.feedId} />
-                {it.feedId ? (
-                  <Link href={`/show/${it.feedId}`} className="muted" style={{ fontSize: 19 }}>
+                <Art src={it.image} title={it.show} size={52} radius={12} episodeRef={it.found !== false ? it.episodeRef : undefined} episodeId={it.found !== false ? it.episodeId : undefined} showRef={it.showRef} feedId={it.feedId} />
+                {it.showRef || it.feedId ? (
+                  <Link href={showHref(it.showRef, it.feedId)} className="muted" style={{ fontSize: 19 }}>
                     {it.show}
                   </Link>
                 ) : (
@@ -102,8 +105,8 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
               </div>
               <span className="brief__label">{label}</span>
             </div>
-            {it.episodeId && it.found !== false ? (
-              <Link href={`/episode/${it.episodeId}`} className="brief__ep" style={{ display: "block" }}>
+            {(it.episodeRef || it.episodeId) && it.found !== false ? (
+              <Link href={episodeHref(it.episodeRef, it.episodeId)} className="brief__ep" style={{ display: "block" }}>
                 {it.episode}
               </Link>
             ) : (
@@ -135,7 +138,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
             {it.episodeId && it.found !== false && (
               <div className="brief__actions">
                 <PlayButton episode={ep} />
-                <Link href={`/log/${it.episodeId}`} className="btn btn--sm btn--cobalt">
+                <Link href={logHref(it.episodeRef, it.episodeId)} className="btn btn--sm btn--cobalt">
                   Log it
                 </Link>
                 <QueueButton episode={ep} from={`${brief.title} brief`} />
