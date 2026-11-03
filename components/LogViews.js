@@ -5,7 +5,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Art from "./Art";
 import Stars from "./Stars";
 import { usePlayer } from "./Player";
-import { removeFromList, upNext } from "@/lib/store";
+import { findHookedShow, removeFromList, sameShow, showKey, upNext } from "@/lib/store";
 import { plural } from "@/lib/format";
 import { episodeHref, showHref } from "@/lib/addresses";
 
@@ -156,8 +156,10 @@ const SORTS = [
 
 export function showsFromLogs(logs, hooked = {}) {
   const map = new Map();
+  // Grouped by show (our id, or the Podcast Index number for older logs saved on this device).
+  const keyFor = (x) => [...map.entries()].find(([, s]) => sameShow(s, x))?.[0] || showKey(x) || String(x.title);
   for (const l of logs) {
-    const k = String(l.feedId || l.feedTitle);
+    const k = keyFor({ showRef: l.showRef, feedId: l.feedId, title: l.feedTitle });
     if (!map.has(k)) map.set(k, { feedId: l.feedId, showRef: l.showRef, title: l.feedTitle, image: l.feedImage || l.image, logs: [], last: 0 });
     const s = map.get(k);
     s.logs.push(l);
@@ -165,9 +167,12 @@ export function showsFromLogs(logs, hooked = {}) {
   }
   // Shows you're hooked on but haven't logged an episode of yet.
   for (const h of Object.values(hooked)) {
-    const k = String(h.feedId);
+    const k = keyFor(h);
     if (!map.has(k)) map.set(k, { feedId: h.feedId, showRef: h.showRef, title: h.title, image: h.image, logs: [], last: h.at || 0 });
-    else if (!map.get(k).showRef) map.get(k).showRef = h.showRef;
+    else {
+      map.get(k).showRef ||= h.showRef;
+      map.get(k).feedId ??= h.feedId;
+    }
   }
   return [...map.values()].map((s) => {
     const rated = s.logs.filter((l) => l.rating > 0);
@@ -175,7 +180,7 @@ export function showsFromLogs(logs, hooked = {}) {
       ...s,
       avg: rated.length ? rated.reduce((a, l) => a + l.rating, 0) / rated.length : 0,
       hookedCount: s.logs.filter((l) => l.hooked).length,
-      isHookedOn: !!hooked[s.feedId],
+      isHookedOn: !!findHookedShow({ shows: hooked }, s),
     };
   });
 }
@@ -207,7 +212,7 @@ export function ShowsView({ logs, hooked }) {
       </p>
       <ul className="shows-list">
         {shows.map((s) => {
-          const k = String(s.feedId || s.title);
+          const k = showKey(s) || String(s.title);
           const isOpen = open === k;
           return (
             <li key={k} className="shows-list__item">

@@ -92,7 +92,7 @@ export async function POST(req) {
 
   // 4) Not much to go on yet? Fill with what's popular here.
   if (picks.length < 4) {
-    const pop = (await popularOnHooked(30, 8)).filter((s) => !knownShows.has(String(s.feedId)));
+    const pop = (await popularOnHooked(30, 8)).filter((s) => s.feedId && !knownShows.has(String(s.feedId))); // For you reads Podcast Index
     for (const s of pop.slice(0, 4)) {
       const { data } = await safe(getEpisodes(s.feedId, 1));
       const x = take(data?.[0], "Popular on Hooked", "popular");

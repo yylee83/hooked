@@ -268,7 +268,7 @@ export default function MyLog() {
           <h2 className="label">Hooked on</h2>
           <div className="hooked-on">
             {shows.slice(0, 4).map((s, i) => (
-              <Link key={s.feedId} href={showHref(s.showRef, s.feedId)}>
+              <Link key={s.showRef || s.feedId} href={showHref(s.showRef, s.feedId)}>
                 <Art src={s.image} title={s.title} size="100%" tilt={[-2, 1.5, -1, 2][i]} radius={18} className="art--fluid" />
               </Link>
             ))}

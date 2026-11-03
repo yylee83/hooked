@@ -36,7 +36,7 @@ export default async function ShowPage({ params, searchParams }) {
   // Shows read from their own feed (or Spotify-only ones) list the episodes we saved; others ask
   // Podcast Index, falling back to ours if it has nothing.
   const fromPi = s.id && s.source !== "feed" && s.source !== "spotify";
-  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, 30)) : { data: [] }, s.id ? showStats(s.id) : null]);
+  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, 30)) : { data: [] }, showStats({ ref: s.ref, feedId: s.id })]);
   let raws = eps.data || [];
   if (!raws.length && s.ref) raws = await ownShowEpisodes(s.ref, 30);
   const cards = await withRefs(raws.map((e) => episodeCard(e, s)));
@@ -66,9 +66,8 @@ export default async function ShowPage({ params, searchParams }) {
       </p>
       {s.description && <p className="show__desc">{plainText(s.description)}</p>}
 
-      {/* Ratings and "Hooked on this?" are keyed by Podcast Index's number for now (until step 7 C3, part 3b). */}
-      {s.id && <ShowRatings feedId={s.id} community={community} />}
-      {s.id && <HookShowButton show={{ feedId: s.id, showRef: s.ref, title: s.title, image: artOf(s) }} />}
+      <ShowRatings show={{ showRef: s.ref, feedId: s.id }} community={community} />
+      <HookShowButton show={{ feedId: s.id ?? undefined, showRef: s.ref, title: s.title, image: artOf(s) }} />
       {s.source === "spotify" && s.link && (
         <a href={s.link} className="btn btn--sm btn--shadow-sm" target="_blank" rel="noopener noreferrer" style={{ marginTop: 12 }}>
           Open in Spotify

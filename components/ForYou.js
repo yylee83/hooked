@@ -12,7 +12,7 @@ function inputsFrom(state) {
   // Ordered: shows you're hooked on first (newest first), then shows you rate highly.
   const loved = {};
   const hooked = Object.values(state.shows || {}).sort((a, b) => (b.at || 0) - (a.at || 0));
-  for (const s of hooked) loved[s.feedId] = "You're hooked on it";
+  for (const s of hooked) if (s.feedId) loved[s.feedId] = "You're hooked on it"; // For you reads Podcast Index, so only shows it has
   // Shows you rated well (average 4★+) count too.
   const by = {};
   for (const l of state.logs) {
@@ -27,7 +27,7 @@ function inputsFrom(state) {
   return {
     loved: Object.entries(loved), // [feedId, reason], in priority order
     logged: state.logs.map((l) => l.id).filter(Boolean),
-    shows: [...new Set([...state.logs.map((l) => l.feedId), ...Object.keys(state.shows || {})])].filter(Boolean),
+    shows: [...new Set([...state.logs.map((l) => l.feedId), ...Object.values(state.shows || {}).map((s) => s.feedId)])].filter(Boolean),
     genres: state.interests || [],
     friends: (state.following || []).map((f) => f.id),
   };

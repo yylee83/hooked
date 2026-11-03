@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Art from "./Art";
 import { GENRES } from "@/lib/genres";
-import { saveInterests, toggleHookedShow, useStore } from "@/lib/store";
+import { findHookedShow, saveInterests, toggleHookedShow, useStore } from "@/lib/store";
 
 export default function TastePicker({ shows }) {
   const state = useStore();
@@ -19,7 +19,7 @@ export default function TastePicker({ shows }) {
 
   // Shows in your topics first, then everything else on the chart.
   const ordered = [...shows.filter((s) => topics.includes(s.genreKey)), ...shows.filter((s) => !topics.includes(s.genreKey))].slice(0, 24);
-  const hookedCount = shows.filter((s) => state?.shows[s.feedId]).length;
+  const hookedCount = shows.filter((s) => findHookedShow(state, s)).length;
 
   async function finish() {
     setBusy(true);
@@ -53,12 +53,12 @@ export default function TastePicker({ shows }) {
           </p>
           <div className="taste__shows">
             {ordered.map((s) => {
-              const on = !!state?.shows[s.feedId];
+              const on = !!findHookedShow(state, s);
               return (
                 <button
                   key={s.feedId}
                   className={`taste__show ${on ? "is-on" : ""}`}
-                  onClick={() => toggleHookedShow({ feedId: s.feedId, title: s.title, image: s.image })}
+                  onClick={() => toggleHookedShow({ feedId: s.feedId, showRef: s.showRef, title: s.title, image: s.image })}
                   aria-pressed={on}
                 >
                   <Art src={s.image} title={s.title} size="100%" radius={16} className="art--fluid" />

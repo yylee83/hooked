@@ -69,7 +69,7 @@ export default async function ProfilePage({ params }) {
           <h2 className="label">Hooked on</h2>
           <div className="hooked-on">
             {shows.slice(0, 4).map((s, i) => (
-              <Link key={s.feed_id} href={showHref(s.show_ref, s.feed_id)}>
+              <Link key={s.show_ref || s.feed_id} href={showHref(s.show_ref, s.feed_id)}>
                 <Art src={s.image} title={s.title || ""} size="100%" tilt={[-2, 1.5, -1, 2][i]} radius={18} className="art--fluid" />
               </Link>
             ))}
