@@ -2,10 +2,41 @@
 
 Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the shared base. This file records what we decided and the order we're doing the work in. Update it when a decision changes.
 
-## Where we left off (2026-11-03)
+## Where we left off (2026-11-07)
 
 **Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). `~/claude/hooked` is Erin's
 archived first version: don't build from it.
+
+**Latest session (2026-11-07): tidying Home and Search.** The aim, agreed by Erin: **Home shows what's happening on
+Hooked** (like Instagram's main feed; Friends | Everyone later) and **Search helps you discover something and log it**
+(like a discover page). Home and Search overlapped: Apple's chart was on both, "Trending" meant two things, and a friend's
+log appeared twice on Home ("From people you follow" and "Just logged").
+- **Live (PR #26):** "Sent to you" is slim rows (two, then "Show all"; + adds to Up next, × is "not for me"), above
+  Listening now. **A send drops off once the episode is in your Up next or you've logged it** (filtered in
+  `FriendsFeed` with `inUpNext` / `findLog`; nothing deleted, so it comes back if you remove it from Up next unlogged).
+  **The + (`adding` reaction) moved out of the thumbs row** to `ReviewAdd` (`components/LogThread.js`), next to the
+  episode in lists of reviews (Home, profiles). Episode pages leave it out (they have their own "+ Up next"). Apple's
+  top shows left Home and joined the top episodes on Search as **"Top on Apple Podcasts"**.
+- **Open (PR #27):** covers (`components/Art.js`) no longer crash on a null title. A log with no show name took down
+  Search through "Popular on Hooked". Erin merges it.
+- **Decisions for Erin and YY, in a doc:** [Hooked: Home and Search decisions](https://claude.ai/artifact/CLGuhPA7uZ96u7NESmvXKZ)
+  (Claude Docs; it has a checklist). Don't build these until they've decided:
+  1. **One feed with a Friends | Everyone switch** replacing "From people you follow" and "Just logged", built now
+     rather than in step 9. Suggested: newest first, no own logs, "You're all caught up with friends" then Everyone,
+     about 10 logs then "See more".
+  2. **How votes on a review look.** The thumbs are Agree / Disagree on the *review* (YY built them on 2026-10-30;
+     votes on replies don't exist and weren't intended), but they read as votes on the episode. Options borrowed from
+     Letterboxd: **C** a "Review by @name" byline with "Agree" / "Disagree" in words (Claude's lean; matches the stored
+     names), or **D** the review tucked under the episode with "Good take?" (needs notification and email wording
+     changed). Earlier A (labeled pills) and B (Reddit arrows with one score; hides 2–2 splits) didn't land. Keep YY's
+     rule: small black icons, no bubbles.
+  3. **"Talked about this week"** at the end of Home: the 3 episodes (not comments) with the most replies and votes in
+     7 days, hidden on quiet weeks. Open: show a preview of the top review, or only counts.
+  4. **The Everyone view holds Hooked activity only;** trending topics, hot episodes and charts go to Search. This
+     changes "Home and Friends" below.
+  5. **The Search layout:** not worked through yet (order, renaming "Trending" topics, whether logging is obvious).
+- The mockups were throwaway pages in a session folder and are gone. Redraw them if YY wants to see them (Claude offered
+  to publish them as a page linked from the doc).
 
 **Done and live:** steps 1–6, and step 7 stages A, B and C (all of it). Every migration through
 `20261103120000_show_refs_are_keys.sql` is applied to both databases. Details of each stage: `docs/DATA_MODEL.md`.
@@ -26,7 +57,7 @@ Smaller changes also live (PRs #20, #23, #24): a **Sign in** button on the Searc
 **"+3 more"** under Hooked on (My log) opens `/me/hooked`, a grid of every hooked show; **"Log it"** shows your stars
 ("★ 4.5") or "✓ Logged" once you've logged an episode (`LogButton` in `components/Social.js`, used everywhere).
 
-**Waiting on a decision (Erin and YY): what "hooked" means.** Today it's set in two places: every log asks "I'm hooked /
+**Also waiting on a decision (Erin and YY): what "hooked" means.** Today it's set in two places: every log asks "I'm hooked /
 I'm not hooked" (required, `logs.hooked`), and show pages have an optional "Hooked on this?" toggle (`hooked_shows`).
 Erin finds asking on every log clunky. Options discussed on 2026-11-03:
 - **A (recommended):** keep both, but pre-select "I'm hooked" when logging an episode of a show you're hooked on, with
@@ -36,7 +67,7 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
   Diary filter, "is hooked on / wasn't hooked by" feed lines, hooked %, "3 of 5 hooked", Wrapped, For you picks and
   share text all need new meanings. Small migration (existing hooked logs → hooked shows), nothing deleted.
 
-**Next, once that's decided:** build A or B. Otherwise, the next planned work:
+**Next:** whatever Erin and YY decide in the Home and Search doc (above), or A or B for "hooked". Otherwise, the next planned work:
 - **Stage D** (remove the old Podcast Index number columns and copied details) after both of you have used stage C
   live for about a week with nothing missing, so **not before about 2026-11-10**. Back up first (export, as below),
   rehearse with `scripts/rehearse-migrations.mjs`, test database, then live.
@@ -53,12 +84,21 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
 - Rotate the Podcast Index API secret (it was shared in chat on 2026-10-31).
 - New code is still JavaScript: TypeScript (decided above) needs its own small setup PR first.
 - Spotify-only shows are matched by title, because Spotify's episode page didn't expose the show's own id. Fine so far.
-- Redraw the share images (see Known issues) and tidy the lint warnings over time: **88** on main, 0 errors. Most are
+- Redraw the share images (see Known issues) and tidy the lint warnings over time: **87** on main, 0 errors. Most are
   `react-hooks/refs` in `components/Player.js` (the player reads its queue from a React ref while drawing, and each
   field read counts). To compare warnings between two versions, use `npx eslint -f json .`: the `unix` format isn't
   available, and an empty comparison once hid two new warnings.
 
-**Testing notes (what worked this session):**
+**Testing notes (what worked):**
+- **Signed-in checks of Home (2026-11-07):** a small script with the test service key made two throwaway accounts
+  (invite, admin create with a password, profile with a handle), gave one some logs, had it send the other four
+  episodes, and made the first follow it. Then build against the test database, `next start`, sign in at 390px with
+  Playwright, and delete the accounts (rows cascade) and invites afterwards. The script lived in the session folder;
+  rewrite it from this note. Rows written by hand must look like the app's: a log with no `feed_title` crashed Search
+  (fixed in #27).
+- `next dev` against the test database gives readable error traces when a production build only shows a digest.
+- The Playwright tool writes `.playwright-mcp/` into the repo folder: delete it before committing.
+- The preview link is in Vercel's comment on the PR: `gh api repos/yylee83/hooked/issues/<pr>/comments`.
 - **Database changes:** export live first (`scripts/export-live.sql`, see below), then
   `node scripts/rehearse-migrations.mjs <export.json> <last applied migration> scripts/checks/<file>.sql`. It loads the
   copy in memory, applies newer migrations, and runs checks written as real saves by signed-in people. Also run the
@@ -111,6 +151,9 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
 
 ### Home and Friends
 
+**Under review (2026-11-07):** the proposal is that Everyone shows only Hooked activity, with trending topics, hot
+episodes and top charts moving to Search. See the Home and Search decisions doc in "Where we left off".
+
 - Home gets a switch at the top: **Everyone | Friends**. It always opens on Everyone.
 - **Everyone** is the whole app's view: trending topics, the most-liked reviews, hot episodes, top charts, new briefs.
 - **Friends** is the view from the people you follow, the ones whose taste you trust:
@@ -136,7 +179,8 @@ Each step is its own branch and pull request.
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
 7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **A, B and C done and live (2026-11-03); D after about a week of C live.**
 8. Listening progress saved to your account (synced across devices), then better search.
-9. Home split into Everyone and Friends, and friends' ratings on episode and show pages.
+9. Home split into Everyone and Friends, and friends' ratings on episode and show pages. (The first part of the Home
+   tidy-up is done in #26; the switch may move earlier, see the decisions doc.)
 10. Google sign-in.
 
 ## Known issues
