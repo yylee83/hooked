@@ -8,8 +8,10 @@ const tones = ["var(--butter)", "var(--bubblegum)", "var(--cobalt)"];
 // Podcast cover art, with a friendly stand-in if the image is missing or broken.
 // Pass episodeRef/episodeId to make the cover open that episode, or showRef/feedId to open the show.
 // (Refs are our short ids; the Podcast Index numbers still work and redirect.)
-export default function Art({ src, title = "", size = 64, tilt = 0, radius, className = "", feedId, episodeId, showRef, episodeRef }) {
+export default function Art({ src, title: rawTitle, size = 64, tilt = 0, radius, className = "", feedId, episodeId, showRef, episodeRef }) {
   const [broken, setBroken] = useState(false);
+  // Saved rows can have no title (null), not just a missing one; never let that break the page.
+  const title = typeof rawTitle === "string" ? rawTitle : "";
   const style = {
     width: size,
     height: size,
