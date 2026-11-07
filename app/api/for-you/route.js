@@ -65,10 +65,12 @@ export async function POST(req) {
 
   // The newest episodes of one show: from Podcast Index when it serves the show, otherwise (or if
   // Podcast Index doesn't answer) the episodes we saved from the show's own feed.
-  const newestOf = async (row, piId, max) => {
+  // Podcast Index's episode list leaves out the show's name, so we pass in the one we know.
+  const newestOf = async (row, piId, max, known = {}) => {
     if (piId) {
       const { data } = await safe(getEpisodes(piId, max));
-      if (data?.length) return withRefs(data.map((e) => episodeCard(e)));
+      const show = { id: piId, title: row?.title || known.title, image: row?.image_url || known.image, ...(row ? { ref: row.id } : {}) };
+      if (data?.length) return withRefs(data.map((e) => episodeCard(e, show)));
     }
     if (!row || row.source === "spotify") return [];
     return (await ownShowEpisodes(row.id, max)).map((e) => episodeCard(e));
@@ -131,7 +133,7 @@ export async function POST(req) {
     await Promise.all(
       inTopics.slice(0, 5).map(async (s) => {
         const { data } = await safe(getEpisodes(s.feedId, 1));
-        return data?.[0] ? [episodeCard(data[0]), `#${s.rank} in ${genreLabel(s.genreKey)}`] : null;
+        return data?.[0] ? [episodeCard(data[0], { id: s.feedId, title: s.title, image: s.image }), `#${s.rank} in ${genreLabel(s.genreKey)}`] : null;
       })
     )
   ).filter(Boolean);
@@ -155,7 +157,7 @@ export async function POST(req) {
     const pop = (await popularOnHooked(30, 8)).filter((s) => (s.feedId || s.showRef) && !isKnownShow(s));
     const popRows = db ? await showRows(db, pop.map((s) => s.showRef).filter(Boolean)) : new Map();
     for (const s of pop.slice(0, 4)) {
-      const eps = await newestOf(popRows.get(s.showRef), s.feedId, 1);
+      const eps = await newestOf(popRows.get(s.showRef), s.feedId, 1, s);
       const x = take(eps[0], "Popular on Hooked", "popular");
       if (x) picks.push(x);
     }
