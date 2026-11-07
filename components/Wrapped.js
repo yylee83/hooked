@@ -5,6 +5,7 @@ import Link from "next/link";
 import Art from "./Art";
 import { genreLabel } from "@/lib/genres";
 import { showHref } from "@/lib/addresses";
+import { showKey } from "@/lib/store";
 
 // Checked for colorblind separation; each slice also has an outline and a labeled legend row.
 const COLORS = ["#2340FF", "#F0559F", "#D9A900", "#11957A", "#E8622E", "#7C4DFF"];
@@ -73,7 +74,8 @@ function Donut({ slices, active, onActive }) {
 export default function Wrapped({ logs }) {
   const [genres, setGenres] = useState(null);
   const [active, setActive] = useState(null);
-  const ids = useMemo(() => [...new Set(logs.map((l) => l.feedId).filter(Boolean))].sort().join(","), [logs]);
+  // Our show id, or the Podcast Index number for older logs saved on this device.
+  const ids = useMemo(() => [...new Set(logs.map(showKey).filter(Boolean))].sort().join(","), [logs]);
 
   useEffect(() => {
     if (logs.length < MIN_LOGS || !ids) return;
@@ -107,7 +109,7 @@ export default function Wrapped({ logs }) {
   if (genres) {
     const byGenre = {};
     for (const l of logs) {
-      const g = genres[String(l.feedId)] || "other";
+      const g = genres[showKey(l)] || "other";
       byGenre[g] = (byGenre[g] || 0) + secs(l);
     }
     const ranked = Object.entries(byGenre)
