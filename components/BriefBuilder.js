@@ -13,6 +13,11 @@ const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
 
 const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+// One key per episode: the Podcast Index number when it has one (so the same episode found by search
+// and by a pasted link match), otherwise our own id (shows read from their own feed).
+const itemKey = (x) => (x.episodeId != null ? `p${x.episodeId}` : x.episodeRef ? `r${x.episodeRef}` : `t${x.episode}`);
+// Drafts saved before this change kept bare Podcast Index numbers.
+const asKey = (k) => (/^\d+$/.test(String(k)) ? `p${k}` : String(k));
 
 export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const router = useRouter();
@@ -35,7 +40,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setTopic(editing.topic || "");
       setMode(editing.mode || "clips");
       setResult({ topic: editing.topic, mode: editing.mode || "clips", items: editing.items || [] });
-      setPicked((editing.items || []).map((x) => x.episodeId));
+      setPicked((editing.items || []).map(itemKey));
       setTitle(editing.title || "");
       setDek(editing.dek || "");
       setColor(editing.color || "cobalt");
@@ -52,7 +57,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         setTopic(d.topic);
         setMode(d.mode);
         setResult(d.result);
-        setPicked(d.picked);
+        setPicked((d.picked || []).map(asKey));
         setTitle(d.title);
         setDek(d.dek);
         setColor(d.color);
@@ -68,7 +73,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     setLoading(true);
     setError("");
     // Keep episodes you've already chosen (from an earlier search or a pasted link).
-    const keep = result ? result.items.filter((x) => picked.includes(x.episodeId)) : [];
+    const keep = result ? result.items.filter((x) => picked.includes(itemKey(x))) : [];
     if (!editing && !keep.length) setResult(null);
     try {
       const res = await fetch(`/api/briefs/draft?${new URLSearchParams({ topic: t, mode: m })}`);
@@ -76,16 +81,16 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       if (editing) {
         // Keep what's already in the brief, and add the new finds below it.
-        const have = new Set(keep.map((x) => String(x.episodeId)));
-        setResult({ ...data, items: [...keep, ...data.items.filter((x) => !have.has(String(x.episodeId)))] });
+        const have = new Set(keep.map(itemKey));
+        setResult({ ...data, items: [...keep, ...data.items.filter((x) => !have.has(itemKey(x)))] });
         return;
       }
-      const have = new Set(keep.map((x) => String(x.episodeId)));
-      const fresh = data.items.filter((x) => !have.has(String(x.episodeId)));
+      const have = new Set(keep.map(itemKey));
+      const fresh = data.items.filter((x) => !have.has(itemKey(x)));
       setResult({ ...data, items: [...keep, ...fresh] });
       const withClips = fresh.filter((x) => x.clips?.length);
       const first = (m === "clips" && withClips.length ? withClips : fresh).slice(0, Math.max(0, (m === "clips" ? 5 : 4) - keep.length));
-      setPicked([...keep.map((x) => x.episodeId), ...first.map((x) => x.episodeId)]);
+      setPicked([...keep.map(itemKey), ...first.map(itemKey)]);
       if (!title) setTitle(titleCase(t));
     } catch (err) {
       setError(err.message);
@@ -97,8 +102,8 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   // The brief plays in the order you picked (and can reorder).
   const chosen = useMemo(() => {
     if (!result) return [];
-    const byId = new Map(result.items.map((x) => [String(x.episodeId), x]));
-    return picked.map((id) => byId.get(String(id))).filter(Boolean);
+    const byKey = new Map(result.items.map((x) => [itemKey(x), x]));
+    return picked.map((k) => byKey.get(k)).filter(Boolean);
   }, [result, picked]);
 
   function move(id, dir) {
@@ -150,10 +155,10 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       const item = data.item;
       setResult((r) => {
         const base = r || { topic: t || item.show, mode: m, items: [] };
-        const rest = base.items.filter((x) => String(x.episodeId) !== String(item.episodeId));
+        const rest = base.items.filter((x) => itemKey(x) !== itemKey(item));
         return { ...base, items: [item, ...rest] };
       });
-      setPicked((p) => (p.includes(item.episodeId) ? p : p.length >= 12 ? p : [...p, item.episodeId]));
+      setPicked((p) => (p.includes(itemKey(item)) ? p : p.length >= 12 ? p : [...p, itemKey(item)]));
       setLink("");
       setLinkMsg(`Added “${item.episode}”.`);
     } catch (err) {
@@ -172,9 +177,12 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     }
     setSaving(true);
     setError("");
+    // Our ids go with each item; the database fills them in for items that have Podcast Index numbers.
     const items = chosen.map((x) => ({
-      episodeId: x.episodeId,
-      feedId: x.feedId,
+      ...(x.episodeRef ? { episodeRef: x.episodeRef } : {}),
+      ...(x.showRef ? { showRef: x.showRef } : {}),
+      ...(x.episodeId != null ? { episodeId: x.episodeId } : {}),
+      ...(x.feedId != null ? { feedId: x.feedId } : {}),
       show: x.show,
       episode: x.episode,
       image: x.image,
@@ -199,7 +207,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
-    for (const it of items) refreshCatalog({ episodeId: it.episodeId });
+    for (const it of items) if (it.episodeId != null) refreshCatalog({ episodeId: it.episodeId });
     try {
       sessionStorage.removeItem(DRAFT);
     } catch {}
@@ -296,12 +304,12 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
           <ul>
             {result.items.map((x) => {
-              const on = picked.includes(x.episodeId);
+              const on = picked.includes(itemKey(x));
               const clips = result.mode === "clips" ? x.clips || [] : [];
               const partial = clips.length > 0 && !clips[0].whole;
               return (
-                <li key={x.episodeId}>
-                  <button type="button" className={`pick ${on ? "is-on" : ""}`} onClick={() => toggle(x.episodeId)} aria-pressed={on}>
+                <li key={itemKey(x)}>
+                  <button type="button" className={`pick ${on ? "is-on" : ""}`} onClick={() => toggle(itemKey(x))} aria-pressed={on}>
                     <span className="pick__box" aria-hidden="true">{on ? "✓" : ""}</span>
                     <Art src={x.image} title={x.show} size={56} radius={12} />
                     <span className="min0 grow">
@@ -329,14 +337,14 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           </p>
           <ol className="order">
             {chosen.map((x, i) => (
-              <li key={x.episodeId} className="order__row">
+              <li key={itemKey(x)} className="order__row">
                 <span className="mono order__n">{i + 1}</span>
                 <Art src={x.image} title={x.show} size={40} radius={9} />
                 <span className="min0 grow order__title">{x.episode}</span>
                 <span className="order__btns">
-                  <button type="button" onClick={() => move(x.episodeId, -1)} disabled={i === 0} aria-label="Move up">↑</button>
-                  <button type="button" onClick={() => move(x.episodeId, 1)} disabled={i === chosen.length - 1} aria-label="Move down">↓</button>
-                  <button type="button" onClick={() => toggle(x.episodeId)} aria-label="Remove from brief">✕</button>
+                  <button type="button" onClick={() => move(itemKey(x), -1)} disabled={i === 0} aria-label="Move up">↑</button>
+                  <button type="button" onClick={() => move(itemKey(x), 1)} disabled={i === chosen.length - 1} aria-label="Move down">↓</button>
+                  <button type="button" onClick={() => toggle(itemKey(x))} aria-label="Remove from brief">✕</button>
                 </span>
               </li>
             ))}
