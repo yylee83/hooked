@@ -5,29 +5,33 @@ import { useEffect, useState } from "react";
 import Art from "./Art";
 import { PlayButton } from "./Player";
 import { QueueButton } from "./Social";
-import { useStore } from "@/lib/store";
+import { showKey, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 
 function inputsFrom(state) {
   // Ordered: shows you're hooked on first (newest first), then shows you rate highly.
+  // Shows go by our id (or the Podcast Index number for older ones saved on this device).
   const loved = {};
   const hooked = Object.values(state.shows || {}).sort((a, b) => (b.at || 0) - (a.at || 0));
-  for (const s of hooked) if (s.feedId) loved[s.feedId] = "You're hooked on it"; // For you reads Podcast Index, so only shows it has
+  for (const s of hooked) if (showKey(s)) loved[showKey(s)] = "You're hooked on it";
   // Shows you rated well (average 4★+) count too.
   const by = {};
   for (const l of state.logs) {
-    if (!l.feedId || !(l.rating > 0)) continue;
-    (by[l.feedId] ||= { title: l.feedTitle, r: [] }).r.push(l.rating);
+    if (!showKey(l) || !(l.rating > 0)) continue;
+    (by[showKey(l)] ||= { r: [] }).r.push(l.rating);
   }
   const rated = Object.entries(by)
     .map(([id, v]) => [id, v.r.reduce((a, b) => a + b, 0) / v.r.length])
     .filter(([, avg]) => avg >= 4)
     .sort((a, b) => b[1] - a[1]);
   for (const [id, avg] of rated) if (!loved[id]) loved[id] = `You rate it ${avg.toFixed(1)}★`;
+  // Both ids where we have them, so the server can match picks from either source.
+  const both = (xs) => [...new Set(xs.flat().filter((x) => x != null && x !== "").map(String))];
+  const shows = [...state.logs, ...Object.values(state.shows || {})];
   return {
-    loved: Object.entries(loved), // [feedId, reason], in priority order
-    logged: state.logs.map((l) => l.id).filter(Boolean),
-    shows: [...new Set([...state.logs.map((l) => l.feedId), ...Object.values(state.shows || {}).map((s) => s.feedId)])].filter(Boolean),
+    loved: Object.entries(loved), // [showId, reason], in priority order
+    logged: both(state.logs.map((l) => [l.ref, l.id])),
+    shows: both(shows.map((s) => [s.showRef, s.feedId])),
     genres: state.interests || [],
     friends: (state.following || []).map((f) => f.id),
   };
@@ -83,7 +87,7 @@ export default function ForYou({ compact = false }) {
       ) : (
         <div className="foryou">
           {picks.map((ep) => (
-            <article key={ep.id} className="foryou__card">
+            <article key={ep.ref || ep.id} className="foryou__card">
               <span className="foryou__why mono">{ep.reason}</span>
               <Art src={ep.image} title={ep.feedTitle} size="100%" radius={14} className="art--fluid" episodeRef={ep.ref} episodeId={ep.id} />
               <Link href={episodeHref(ep.ref, ep.id)} className="foryou__title">
