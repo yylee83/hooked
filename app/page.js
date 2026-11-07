@@ -1,20 +1,13 @@
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
-import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
 import UpNextHome from "@/components/UpNextHome";
 import { NotificationBell } from "@/components/Notifications";
-import { topCharts } from "@/lib/charts";
-import { showHref } from "@/lib/addresses";
 
-// Refresh the chart every hour (Apple updates it daily).
-export const revalidate = 3600;
-
-export default async function FriendsPage() {
-  const chart = await topCharts(9);
-
+// Home: what's happening on Hooked. Apple's chart lives on Search.
+export default function FriendsPage() {
   return (
     <>
       <header className="topbar">
@@ -39,28 +32,6 @@ export default async function FriendsPage() {
       <FriendsFeed />
 
       <FreshLogs />
-
-      {chart.length > 0 && (
-        <>
-          <div className="row center" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
-            <h2 className="section-title">Trending right now</h2>
-          </div>
-          <p className="mono small muted chart-src">Top shows on Apple Podcasts in the US · updated daily</p>
-          <div className="trend">
-            {chart.map((s, i) => (
-              <Link
-                key={s.itunesId}
-                href={s.feedId ? showHref(s.showRef, s.feedId) : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
-                className="trend__item"
-              >
-                <span className="trend__rank display">{s.rank}</span>
-                <Art src={s.image} title={s.title} size="100%" radius={18} tilt={[-1.5, 1, -0.5][i % 3]} className="art--fluid" />
-                <p>{s.title}</p>
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
     </>
   );
 }

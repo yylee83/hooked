@@ -2,6 +2,7 @@
 // Reactions and replies under one person's log of one episode.
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { addToList, inUpNext, useStore } from "@/lib/store";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
 
@@ -36,13 +37,6 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [added, setAdded] = useState(null); // "Added to queue" message after tapping +
-  const addedTimer = useRef(null);
-  const flash = (msg) => {
-    clearTimeout(addedTimer.current);
-    setAdded(msg);
-    if (msg) addedTimer.current = setTimeout(() => setAdded(null), 3500);
-  };
   const [tip, setTip] = useState(null); // reaction name shown while pressing and holding
   const holdTimer = useRef(null);
   const held = useRef(false); // a press-and-hold shows the name; it shouldn't also count as a tap
@@ -55,8 +49,10 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
   const counts = Object.fromEntries(REACTIONS.map((r) => [r.kind, reactions.filter((x) => x.kind === r.kind).length]));
   const mine = new Set(reactions.filter((x) => x.user_id === me?.id).map((x) => x.kind));
   const isOwner = me?.id === logUserId;
-  // Everyone else sees all four; on your own review, only the ones people used.
-  const shown = isOwner ? REACTIONS.filter((r) => counts[r.kind] > 0) : REACTIONS;
+  // Thumbs up and down vote on the review. "+" (add the episode to Up next) is ReviewAdd, next to the episode.
+  const votes = REACTIONS.filter((r) => r.kind !== "adding");
+  // Everyone else sees both; on your own review, only the ones people used.
+  const shown = isOwner ? votes.filter((r) => counts[r.kind] > 0) : votes;
   const hold = (kind) => {
     clearTimeout(holdTimer.current);
     held.current = false;
@@ -75,18 +71,8 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
     setError("");
     if (!me) return setError("signin");
     try {
-      const turningOn = kind === "adding" && !mine.has("adding");
-      if (turningOn) flash("Added to queue");
-      if (kind === "adding" && !turningOn) flash(null);
-      const on = await toggleReaction(me, logUserId, ep, kind);
-      // "+" also puts the episode in your queue (Up next).
-      if (kind === "adding" && on && !inUpNext(state, ep)) {
-        const card = await fetch(`/api/episode?ref=${encodeURIComponent(episodeRef)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-        if (card) await addToList({ episodeId: card.id, episodeRef: card.ref || episodeRef, showRef: card.showRef, title: card.title, feedId: card.feedId, feedTitle: card.feedTitle, image: card.image || card.feedImage, from: "a review" });
-        else flash(null);
-      }
+      await toggleReaction(me, logUserId, ep, kind);
     } catch (e) {
-      flash(null);
       setError(e.message);
     }
   }
@@ -140,14 +126,6 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
         </button>
       </div>
 
-      {added && (
-        <p className="queued-toast" role="status">
-          ✓ {added}
-          <Link href="/me#upnext" className="queued-toast__link">
-            See queue
-          </Link>
-        </p>
-      )}
       {error === "signin" ? (
         <p className="small muted thread__note">
           <Link href={signInHref} className="u-link">
@@ -207,5 +185,65 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
         </div>
       )}
     </div>
+  );
+}
+
+// "+" next to an episode in a list of reviews: adds the episode to your Up next, and counts as this review getting
+// you to listen (the "adding" reaction). Not shown on episode pages, which have their own "+ Up next" button.
+export function ReviewAdd({ logUserId, episodeRef, episodeId }) {
+  const state = useStore();
+  const router = useRouter();
+  const data = useThread(logUserId, episodeRef);
+  const [added, setAdded] = useState(false); // "Added to queue" for a few seconds after tapping
+  const timer = useRef(null);
+  if (!logUserId || !episodeRef || (state && !state.accounts)) return null;
+
+  const me = state?.user || null;
+  const ep = { ref: episodeRef, id: episodeId ?? undefined };
+  const adds = (data?.reactions || []).filter((x) => x.kind === "adding");
+  const on = adds.some((x) => x.user_id === me?.id);
+  const isOwner = me?.id === logUserId;
+  // On your own review, only the count, once someone has used it.
+  if (isOwner && !adds.length) return null;
+
+  async function tap() {
+    if (!me) return router.push(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    clearTimeout(timer.current);
+    setAdded(!on);
+    if (!on) timer.current = setTimeout(() => setAdded(false), 3500);
+    try {
+      const nowOn = await toggleReaction(me, logUserId, ep, "adding");
+      if (nowOn && !inUpNext(state, ep)) {
+        const card = await fetch(`/api/episode?ref=${encodeURIComponent(episodeRef)}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        if (card) await addToList({ episodeId: card.id, episodeRef: card.ref || episodeRef, showRef: card.showRef, title: card.title, feedId: card.feedId, feedTitle: card.feedTitle, image: card.image || card.feedImage, from: "a review" });
+        else setAdded(false);
+      }
+    } catch {
+      setAdded(false);
+    }
+  }
+
+  return (
+    <span className="review-add">
+      <button
+        className={`review-add__btn ${on ? "is-on" : ""}`}
+        onClick={tap}
+        disabled={isOwner}
+        aria-pressed={on}
+        aria-label={isOwner ? `${adds.length} added it to Up next` : on ? "Added to Up next" : "Add to Up next"}
+        title={isOwner ? "Added to Up next from your review" : "Add to Up next"}
+      >
+        <Icon kind="adding" on={on} />
+        {adds.length > 0 && <span className="react__n">{adds.length}</span>}
+      </button>
+      {added && (
+        <span className="queued-toast review-add__toast" role="status">
+          ✓ Added to queue
+          <Link href="/me#upnext" className="queued-toast__link">
+            See queue
+          </Link>
+        </span>
+      )}
+    </span>
   );
 }

@@ -4,7 +4,7 @@ import Art from "@/components/Art";
 import Stars from "@/components/Stars";
 import { Avatar, FollowButton } from "@/components/Friends";
 import { ShareButton } from "@/components/Share";
-import LogThread from "@/components/LogThread";
+import LogThread, { ReviewAdd } from "@/components/LogThread";
 import { getProfilePage } from "@/lib/supabase/public";
 import { minutes, plural } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -125,6 +125,7 @@ export default async function ProfilePage({ params }) {
                   </div>
                   <div className="log__side">
                     <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
+                    <ReviewAdd logUserId={profile.id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                     <ShareButton
                       compact
                       episode={{ id: l.episode_id, ref: l.episode_ref, title: l.title, feedId: l.feed_id, feedTitle: l.feed_title, image: l.image, audio: l.audio, duration: l.duration }}

@@ -6,7 +6,7 @@ import Art from "./Art";
 import Stars from "./Stars";
 import { initialsOf, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
-import LogThread from "./LogThread";
+import LogThread, { ReviewAdd } from "./LogThread";
 import { reviewScore } from "@/lib/social";
 import { episodeHref, logHref } from "@/lib/addresses";
 
@@ -77,6 +77,9 @@ export function FreshLogs() {
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
               <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
+            </div>
+            <div className="fresh__side">
+              <ReviewAdd logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
             </div>
           </li>
         ))}
