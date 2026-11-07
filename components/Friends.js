@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
-import { addToList, dismissRecommendation, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
+import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
-import LogThread from "./LogThread";
+import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
 
@@ -178,6 +178,7 @@ export function PeopleFinder() {
 export function FriendsFeed() {
   const state = useStore();
   const [data, setData] = useState(null);
+  const [allSent, setAllSent] = useState(false);
   const ids = (state?.following || []).map((f) => f.id).sort().join(",");
 
   useEffect(() => {
@@ -236,9 +237,30 @@ export function FriendsFeed() {
   }
 
   const noFollows = !state.following?.length;
+  // A send leaves the list once you've put it in Up next or logged it.
+  const sent = (data?.recs || []).filter((r) => {
+    const ep = { ref: r.episode_ref, id: r.episode_id };
+    return !inUpNext(state, ep) && !findLog(state, ep);
+  });
 
   return (
     <>
+      {sent.length > 0 && (
+        <>
+          <h2 className="section-title">Sent to you</h2>
+          <ul className="sent">
+            {(allSent ? sent : sent.slice(0, 2)).map((r) => (
+              <SentRow key={r.id} r={r} onDismiss={() => setData({ ...data, recs: data.recs.filter((x) => x.id !== r.id) })} />
+            ))}
+          </ul>
+          {sent.length > 2 && (
+            <button className="link-btn small sent__more" onClick={() => setAllSent(!allSent)} aria-expanded={allSent}>
+              {allSent ? "Show fewer" : `Show all ${sent.length}`}
+            </button>
+          )}
+        </>
+      )}
+
       {data?.listening?.length > 0 && (
         <>
           <h2 className="section-title">Listening now</h2>
@@ -251,15 +273,6 @@ export function FriendsFeed() {
               </Link>
             ))}
           </div>
-        </>
-      )}
-
-      {data?.recs?.length > 0 && (
-        <>
-          <h2 className="section-title">Sent to you</h2>
-          {data.recs.map((r) => (
-            <RecCard key={r.id} r={r} onDismiss={() => setData({ ...data, recs: data.recs.filter((x) => x.id !== r.id) })} />
-          ))}
         </>
       )}
 
@@ -303,6 +316,9 @@ export function FriendsFeed() {
                   {l.hook && <p className="log__hook">“{l.hook}”</p>}
                   <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                 </div>
+                <div className="fresh__side">
+                  <ReviewAdd logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
+                </div>
               </li>
             ))}
           </ul>
@@ -312,53 +328,38 @@ export function FriendsFeed() {
   );
 }
 
-function RecCard({ r, onDismiss }) {
-  const state = useStore();
+// One send on Home: who sent it, the episode, their note. + adds it to Up next (and it leaves the list); × is "not for me".
+function SentRow({ r, onDismiss }) {
   const item = { episodeId: r.episode_id, episodeRef: r.episode_ref || undefined, title: r.title, feedId: r.feed_id, feedTitle: r.feed_title, image: r.image, from: r.sender?.handle ? `@${r.sender.handle}` : "a friend" };
-  const saved = inUpNext(state, { ref: r.episode_ref, id: r.episode_id });
+  const note = r.note || r.hook;
   return (
-    <article className="card rec">
-      <div className="rec__head">
-        <p>
-          <Link href={`/u/${r.sender?.handle || ""}`}>
-            <b>@{r.sender?.handle || "a friend"}</b>
-          </Link>{" "}
-          thinks you'd enjoy this
-        </p>
-        {r.hooked && <span className="sticker">Hooked</span>}
-      </div>
-      <div className="rec__body">
-        <Art src={r.image} title={r.feed_title || ""} size={96} radius={16} episodeRef={r.episode_ref} episodeId={r.episode_id} />
-        <div className="min0">
-          <Link href={episodeHref(r.episode_ref, r.episode_id)} className="rec__title">
-            {r.title}
-          </Link>
-          <p className="muted row gap-xs center wrap" style={{ marginTop: 4 }}>
-            {r.feed_title}
-            {r.rating > 0 && (
-              <>
-                <span>·</span>
-                <Stars value={Number(r.rating)} size={18} />
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-      {(r.note || r.hook) && <p className="rec__hook">“{r.note || r.hook}”</p>}
-      <div className="row gap">
-        <button className={`btn btn--shadow-sm ${saved ? "btn--butter" : "btn--cobalt"}`} onClick={() => !saved && addToList(item)}>
-          {saved ? "✓ Up next" : "+ Up next"}
-        </button>
-        <button
-          className="btn"
-          onClick={async () => {
-            onDismiss();
-            await dismissRecommendation(r.id);
-          }}
-        >
-          Not for me
-        </button>
-      </div>
-    </article>
+    <li className="sent__row">
+      <Link href={episodeHref(r.episode_ref, r.episode_id)} className="sent__main">
+        <Art src={r.image} title={r.feed_title || ""} size={48} radius={10} />
+        <span className="min0">
+          <span className="sent__who">
+            <b>@{r.sender?.handle || "a friend"}</b> sent you
+          </span>
+          <span className="sent__title">{r.title}</span>
+          {note && <span className="sent__note">“{note}”</span>}
+        </span>
+      </Link>
+      <button
+        className="sent__x"
+        aria-label={`Not for me: ${r.title}`}
+        title="Not for me"
+        onClick={async () => {
+          onDismiss();
+          await dismissRecommendation(r.id);
+        }}
+      >
+        ×
+      </button>
+      <button className="sent__add" aria-label={`Add ${r.title} to Up next`} title="Add to Up next" onClick={() => addToList(item)}>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
+          <path d="M12 4.5v15M4.5 12h15" />
+        </svg>
+      </button>
+    </li>
   );
 }

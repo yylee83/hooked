@@ -146,10 +146,6 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 .np__who { font-weight: 800; font-size: 18px; margin-top: 12px; }
 .np__show { color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.rec__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 18px; }
-.rec__body { display: flex; gap: 16px; align-items: center; margin: 16px 0 12px; }
-.rec__title { font-size: 23px; font-weight: 700; line-height: 1.15; }
-.rec__hook { font-size: 19px; margin-bottom: 16px; }
 
 .chart-src { margin: -6px 0 14px; }
 .trend__item { position: relative; display: block; }
@@ -673,3 +669,26 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .hooked-grid { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 14px; }
 .hooked-grid__item { display: flex; flex-direction: column; gap: 8px; }
 .hooked-grid__title { font-weight: 700; font-size: 15px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* "+" next to an episode in a list of reviews (ReviewAdd): adds it to Up next. */
+.fresh__side { flex: none; align-self: flex-start; }
+.review-add { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; }
+.review-add__btn { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 38px; height: 38px; padding: 0 8px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--white); color: var(--ink); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); -webkit-tap-highlight-color: transparent; }
+.review-add__btn.is-on { background: var(--butter); }
+.review-add__btn:disabled { cursor: default; box-shadow: none; }
+.review-add__btn:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.review-add__toast { position: absolute; top: 44px; right: 0; z-index: 5; white-space: nowrap; margin: 0; }
+
+/* Sent to you on Home: one slim row per send. */
+.sent { list-style: none; margin: 0; padding: 0; }
+.sent__row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: var(--line); }
+.sent__row:last-child { border-bottom: var(--line); }
+.sent__main { display: flex; gap: 12px; align-items: center; min-width: 0; flex: 1; }
+.sent__who { display: block; font-size: 13px; }
+.sent__title { display: block; font-weight: 800; font-size: 16px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sent__note { display: block; font-size: 13px; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sent__x { flex: none; width: 34px; height: 34px; border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; border-radius: 999px; }
+.sent__x:hover { background: rgba(21, 19, 29, 0.06); }
+.sent__add { flex: none; width: 38px; height: 38px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--cobalt); color: var(--white); display: grid; place-items: center; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); }
+.sent__add:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.sent__more { margin-top: 10px; }

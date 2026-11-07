@@ -8,7 +8,7 @@ import TrendingBar from "@/components/TrendingBar";
 import TopEpisodes from "@/components/TopEpisodes";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
-import { popularOnHooked, topChartEpisodes } from "@/lib/charts";
+import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
 import { isPodcastLink, linkTarget, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
 import { SignInButton } from "@/components/Account";
@@ -64,6 +64,7 @@ export default async function SearchPage({ searchParams }) {
   let topics = [];
   let popular = [];
   let chartEps = { episodes: [], next: null };
+  let chart = [];
 
   if (linkError) {
     // fall through to the message below
@@ -84,7 +85,7 @@ export default async function SearchPage({ searchParams }) {
     const ownTitles = new Set(own.map((x) => norm(x.title)));
     shows = [...own.map((x) => ({ ...x, showRef: x.ref })), ...piShows.filter((x) => !ownTitles.has(norm(x.title)))];
   } else {
-    [popular, chartEps] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10)]);
+    [popular, chartEps, chart] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10), topCharts(9)]);
   }
 
   topics = await topicsPromise;
@@ -190,13 +191,33 @@ export default async function SearchPage({ searchParams }) {
 
       {!query && <ForYou compact />}
 
-      {!query && chartEps.episodes.length > 0 && (
+      {!query && (chart.length > 0 || chartEps.episodes.length > 0) && (
         <section style={{ marginTop: 28 }}>
-          <h2 className="label">Top episodes right now</h2>
-          <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
-            The newest episode from each of the top shows on Apple Podcasts.
+          <h2 className="label">Top on Apple Podcasts</h2>
+          <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
+            The top shows in the US, updated daily.
           </p>
-          <TopEpisodes initial={chartEps.episodes} next={chartEps.next} />
+          {chart.length > 0 && (
+            <div className="trend">
+              {chart.map((s, i) => (
+                <Link
+                  key={s.itunesId}
+                  href={s.feedId ? showHref(s.showRef, s.feedId) : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
+                  className="trend__item"
+                >
+                  <span className="trend__rank display">{s.rank}</span>
+                  <Art src={s.image} title={s.title} size="100%" radius={18} tilt={[-1.5, 1, -0.5][i % 3]} className="art--fluid" />
+                  <p>{s.title}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+          {chartEps.episodes.length > 0 && (
+            <>
+              <h3 className="label" style={{ marginTop: 24 }}>Their newest episodes</h3>
+              <TopEpisodes initial={chartEps.episodes} next={chartEps.next} />
+            </>
+          )}
         </section>
       )}
 

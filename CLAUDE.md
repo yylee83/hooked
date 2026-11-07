@@ -105,8 +105,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home (Up next card, friends' activity, Just logged, Apple top chart),
-  `/search` (trending topics, Popular on Hooked on, For you, Top episodes; also paste-a-link),
+- **Pages** (`app/`): `/` Home (Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged; no Apple chart),
+  `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link),
   `/briefs`, `/briefs/new` and `/briefs/b/[id]` (+ `/edit`), `/me` My log (tabs: Diary, Shows,
   Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet;
   `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
@@ -121,8 +121,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30, speed, drag the playhead,
   auto-advance through Up next).
 - **Reactions** (`lib/social.js`, `components/LogThread.js`): small black icons, no bubbles.
-  Thumbs up (`agree`), thumbs down (`disagree`; the two cancel each other out), and + (`adding`: wants to
-  listen, and adds the episode to Up next). Older "same", "ooh" and "great" all count as thumbs up.
+  Thumbs up (`agree`) and thumbs down (`disagree`; the two cancel each other out) vote on the review, under it
+  (`LogThread`). + (`adding`: wants to listen, and adds the episode to Up next) is `ReviewAdd`, next to the episode
+  in lists of reviews (Home, profiles); episode pages leave it out (they have their own "+ Up next"). Older "same", "ooh" and "great" all count as thumbs up.
   `reviewScore()` ranks reviews on episode pages (adding it > thumbs up > replies > thumbs down). If someone
   who tapped + later logs the episode, the review "got them to listen" (that can be worked out from the data).
 - **Search ranking**: `lib/rank.js`. A result must contain the phrase, or all the words close
