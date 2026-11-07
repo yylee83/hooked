@@ -71,6 +71,22 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
 - **Stage D** (remove the old Podcast Index number columns and copied details) after both of you have used stage C
   live for about a week with nothing missing, so **not before about 2026-11-10**. Back up first (export, as below),
   rehearse with `scripts/rehearse-migrations.mjs`, test database, then live.
+  **Before writing stage D, go through every place that reads the copied columns, one by one.** If code asks
+  the database for a column that's gone, the whole request fails, not just that field, so a page can go blank.
+  First decide which tables lose their copies: certainly `logs` (`episode_id`, `feed_id`, `title`, `image`,
+  `audio`, `duration`, `feed_title`, `feed_image`). Notifications keep theirs (a snapshot). Decide `list_items`
+  and `recommendations`. Then switch each reader to the episode and show through the log's link
+  (`episode:episodes!logs_episode_ref_fkey(..., show:shows(...))`), as #30 did for For you and Popular on Hooked.
+  Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title\|feed_image' app lib components`):
+  - [ ] `lib/store.js`: your own logs, Up next and hooked shows (reads and saves)
+  - [ ] `lib/supabase/public.js`: reviews on episode pages and other public reads (4 queries)
+  - [ ] `app/u/[handle]/page.js`: profile logs
+  - [ ] `components/Friends.js`: friends' activity on Home, and Sent to you
+  - [ ] `components/Account.js`: Just logged (2 queries)
+  - [ ] `app/api/cron/digest/route.js` and `lib/digest.js`: the weekly email
+  - [ ] `lib/social.js`: sends and notifications
+  - [ ] Saves: stop sending the copied columns (`logToDb` and friends in `lib/store.js`)
+  - [ ] Run the grep again just before stage D, in case new code added readers
 - Still on Podcast Index numbers, to move when convenient: **For you** picks and **Wrapped**'s genre breakdown (both
   read Podcast Index, so they skip shows it lacks), and **briefs** (items carry `episodeRef`/`showRef` but are built
   from Podcast Index).
