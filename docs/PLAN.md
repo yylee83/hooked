@@ -29,7 +29,7 @@ Separate, any order: **#36** renames My log's "Diary" tab to **"Episodes"** (the
   are now saved too). For you works from our show ids: feed shows use our saved episodes; friends' picks and Popular on
   Hooked read our tables; picks from Podcast Index now show their show name. Briefs carry our ids, a pasted Apple link to
   a feed show's episode works, and Spotify-only links are refused ("only on Spotify, so it can't play in a brief"). Topic
-  search in briefs stays on Podcast Index until step 8.
+  search in briefs stays on Podcast Index until step 9 (better search).
 - **Brief builder (#32, from Erin's testing):** nothing is ticked for you; your picks stay when you search again and the
   list shows only the new results; the title follows the topic until you type one; 8 results then "Show N more"; a
   sticky **"Your brief · N episodes · time"** bar with "Review ↓" (layout A of three mockups; it sits above the mini
@@ -98,7 +98,8 @@ Options discussed on 2026-11-03:
 - **Stage D step 2, on or after 2026-11-10**, once #33–#38 are merged and have been used live for a couple of days.
   Prep and step 1 are done (checklist below). Back up first (export, as below), rehearse with
   `scripts/rehearse-migrations.mjs`, test database, then Erin pushes it to live.
-- **Or step 8** in the meantime: listening position saved to your account (synced across devices), then better search.
+- **Or step 8** in the meantime: listening sync (where you stopped is saved to your account, across devices). Step 9,
+  better search, comes after it.
 - Small: re-check `/api/catalog/ensure` against the real Podcast Index on a preview or live (local tests used a stand-in).
   **Before writing stage D, go through every place that reads the copied columns, one by one.** If code asks
   the database for a column that's gone, the whole request fails, not just that field, so a page can go blank.
@@ -138,9 +139,9 @@ Options discussed on 2026-11-03:
     stage D too.** Reads switched in prep 4 (`withShow` in `lib/log-episode.js`: My log and profiles). Covers now come from
     our `shows` (the show's own feed), like show pages; the copies were Apple's versions of the same art.
 - ~~Still on Podcast Index numbers: For you, Wrapped's genres, briefs~~ (done 2026-11-07, #29, #30, #32; topic search
-  in briefs stays on Podcast Index until step 8).
-- Step 8: listening progress synced to your account, then better search (our `shows`/`episodes` tables have a
-  `search` column ready; today Search only adds our feed/Spotify shows by title).
+  in briefs stays on Podcast Index until step 9).
+- Step 8: listening sync. Step 9: better search (our `shows`/`episodes` tables have a `search` column ready; today
+  Search only adds our feed/Spotify shows by title).
 
 **Follow-ups, small:**
 - Check the daily catalog job ran: Vercel → Logs, path `/api/cron/catalog`, 09:00 UTC. It now also re-reads 5 feed
@@ -258,15 +259,18 @@ Each step is its own branch and pull request.
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
 7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **A, B and C done and live (2026-11-03). D: prep and step 1 in PRs #33–#38 (2026-11-07); step 2 (the database change) on or after 2026-11-10.**
-8. Listening progress saved to your account (synced across devices), then better search.
-9. Home split into Everyone and Friends, and friends' ratings on episode and show pages. (The first part of the Home
+8. Listening sync: where you stopped in each episode is saved to your account, so you can pick up on another device.
+   Today it's kept only on the device you listened on (step 2).
+9. Better search: search our own `shows` and `episodes` (their `search` column is ready), so results include shows
+   Podcast Index lacks and episodes found by their descriptions. Topic search in briefs moves off Podcast Index too.
+10. Home split into Everyone and Friends, and friends' ratings on episode and show pages. (The first part of the Home
    tidy-up is done in #26; the switch may move earlier, see the decisions doc.)
-10. Google sign-in.
+11. Google sign-in.
 
 ## Known issues
 
 - ~~Preview links use the live database~~ (done 2026-11-01: previews use the `hooked-test` project, a copy of live).
 - The link-preview picture (`app/opengraph-image.png`, `twitter-image.png`) still says "hooked on". It needs redrawing, ideally as code so it follows `site.name`.
 - To sign in on a preview link, use "Email me a sign-in link" or "Forgot password?" (the test database's copied accounts have no password).
-- Search results are weak. This waits for step 7, because better search needs episode descriptions stored in our own database.
+- Search results are weak. This is step 9 (better search), which needed step 7 first, because better search needs episode descriptions stored in our own database.
 - ~~Safe-fetch guard~~ (done: `lib/safe-fetch.js` for pasted Spotify short links, share-image covers and transcripts).
