@@ -73,24 +73,24 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
   rehearse with `scripts/rehearse-migrations.mjs`, test database, then live.
   **Before writing stage D, go through every place that reads the copied columns, one by one.** If code asks
   the database for a column that's gone, the whole request fails, not just that field, so a page can go blank.
-  First decide which tables lose their copies: certainly `logs` (`episode_id`, `feed_id`, `title`, `image`,
-  `audio`, `duration`, `feed_title`, `feed_image`). Notifications keep theirs (a snapshot). Decide `list_items`
-  and `recommendations`. Then switch each reader to the episode and show through the log's link
+  **Decided 2026-11-07 (Erin): `logs`, `recommendations` (sends) and `list_items` (Up next) lose their copies**
+  (`episode_id`, `feed_id`, `title`, `image`, `feed_title`, `feed_image`, and on logs `audio`, `duration`): they
+  all point at our episodes. Notifications keep theirs (a snapshot of that moment). Then switch each reader to the episode and show through the log's link
   (`episode:episodes!logs_episode_ref_fkey(..., show:shows(...))`), as #30 did for For you and Popular on Hooked.
   Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title\|feed_image' app lib components`):
-  - [ ] `lib/store.js`: your own logs, Up next and hooked shows (reads and saves)
-  - [ ] `lib/supabase/public.js`: profile logs, a shared log (`?from=`), show ratings (old `episode_id` / `feed_id` fallbacks)
-  - [ ] `app/u/[handle]/page.js`: profile logs
+  - [x] `lib/store.js`: your own logs (stage D prep 2)
+  - [ ] `lib/store.js`: Up next (`list_items`) reads
+  - [x] `lib/supabase/public.js`: profile logs, a shared log (`?from=`), show ratings (prep 2; old `episode_id` / `feed_id` fallbacks removed)
+  - [x] `app/u/[handle]/page.js`: profile logs (prep 2, through `getProfilePage`)
   - [x] `components/Friends.js`: friends' activity on Home (stage D prep 1, through `lib/log-episode.js`)
   - [ ] `components/Friends.js`: Sent to you (depends on whether `recommendations` keeps its copies)
   - [x] `components/Account.js`: Just logged, and reviews on episode pages (stage D prep 1)
-  - [ ] `app/api/cron/digest/route.js` and `lib/digest.js`: the weekly email
+  - [x] `app/api/cron/digest/route.js` and `lib/digest.js`: friends' logs in the weekly email (prep 2)
   - [ ] `lib/social.js`: sends and notifications
   - [ ] Saves: stop sending the copied columns (`logToDb` and friends in `lib/store.js`)
   - [ ] Run the grep again just before stage D, in case new code added readers
-- Still on Podcast Index numbers, to move when convenient: **For you** picks and **Wrapped**'s genre breakdown (both
-  read Podcast Index, so they skip shows it lacks), and **briefs** (items carry `episodeRef`/`showRef` but are built
-  from Podcast Index).
+- ~~Still on Podcast Index numbers: For you, Wrapped's genres, briefs~~ (done 2026-11-07, #29, #30, #32; topic search
+  in briefs stays on Podcast Index until step 8).
 - Step 8: listening progress synced to your account, then better search (our `shows`/`episodes` tables have a
   `search` column ready; today Search only adds our feed/Spotify shows by title).
 
