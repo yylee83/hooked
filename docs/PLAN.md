@@ -90,12 +90,13 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
   - [x] Search again (prep 3, 2026-11-07): every remaining `feed_title` / `feed_image` is page code fed by `withEpisode`,
     or a save. Wildcard selects (`*`) are only on tables that keep their columns, and don't fail when columns go.
   - [ ] **Stage D itself, in one PR:** a migration that drops the copied columns from `logs`, `recommendations` and
-    `list_items` (and `logs.title`'s required rule with them), plus the saves that stop sending them (`logToDb`,
-    `listToDb`, the send insert in `lib/store.js`). Back up live, compare copies with our tables on the fresh export
+    `list_items` and `hooked_shows` (with their required rules, e.g. `logs.title`, `recommendations.title`, `list_items.title`), plus the saves that
+    stop sending them (`logToDb`, `listToDb`, `hookedToDb`, the send insert in `lib/store.js`). Back up live, compare copies with our tables on the fresh export
     (prep 1 did this: identical), rehearse, test database, then live.
   - [ ] Run the search again just before stage D, in case new code added readers.
-  - [ ] **Open question:** hooked shows (`hooked_shows`) also keep copies (`feed_id`, `title`, `image`), and profiles ask
-    for them by name (`getProfilePage`). Drop them in stage D too (switch those two reads to `shows` first), or keep them?
+  - [x] Hooked shows (`hooked_shows`): **decided 2026-11-07 (Erin), drop their copies (`feed_id`, `title`, `image`) in
+    stage D too.** Reads switched in prep 4 (`withShow` in `lib/log-episode.js`: My log and profiles). Covers now come from
+    our `shows` (the show's own feed), like show pages; the copies were Apple's versions of the same art.
 - ~~Still on Podcast Index numbers: For you, Wrapped's genres, briefs~~ (done 2026-11-07, #29, #30, #32; topic search
   in briefs stays on Podcast Index until step 8).
 - Step 8: listening progress synced to your account, then better search (our `shows`/`episodes` tables have a
