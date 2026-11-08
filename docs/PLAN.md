@@ -14,8 +14,8 @@ then `git checkout main && git pull`. None of them changes the database, so ther
 Podcast Index doesn't stay in results (`lib/search.js`; tapping one opens `/show/apple/<id>`, which brings it in from
 its feed); show ranking treats the name before ":" or "|" as the name, weights Apple's top answers more, ranks other
 languages lower, removes duplicates and drops description-only matches; "All" lists shows first when you typed a show's
-name. **Merged (#42),** plus "Filter results:" pills always under the search box (radio buttons in the search form,
-`components/SearchFilters.js`). **Part 2a (open PR `search-friends`): a "Friends’ episodes" filter**, signed in only:
+name. **Merged (#42),** plus "Filter:" pills always under the search box (radio buttons in the search form,
+`components/SearchFilters.js`). **Part 2a (open PR `search-friends`): a "Friends" filter** (results headed "Friends’ episodes"; labels shortened so the row fits one line at 360px+), signed in only:
 episodes people you follow logged that match your words (title, show, hook line, description), one row per episode with
 each friend's verdict, stars and hook (`components/FriendsResults.js`; runs in the browser, which knows who you follow;
 reads up to 1,000 friends' logs, then ranks with `lib/rank.js`). **Still to do in part 2:** search our own tables for

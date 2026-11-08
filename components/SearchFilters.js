@@ -1,5 +1,5 @@
 "use client";
-// "Filter results:" All / Episodes / Shows (and Friends' episodes when signed in), always under the search box. They belong to the search form
+// "Filter:" All / Episodes / Shows (and Friends, when signed in), always under the search box. They belong to the search form
 // (form="search-form"), so a pick made while typing goes with the search, and a tap after searching
 // re-runs it straight away.
 
@@ -10,7 +10,7 @@ const OPTIONS = [
   ["episodes", "Episodes"],
   ["shows", "Shows"],
 ];
-const FRIENDS = ["friends", "Friends’ episodes"];
+const FRIENDS = ["friends", "Friends"]; // episodes your friends logged (results say "Friends’ episodes")
 
 export default function SearchFilters({ type = "all" }) {
   const signedIn = !!useStore()?.user;
@@ -24,7 +24,7 @@ export default function SearchFilters({ type = "all" }) {
   };
   return (
     <div className="search-filters" role="radiogroup" aria-labelledby="filters-label">
-      <span id="filters-label" className="search-filters__label">Filter results:</span>
+      <span id="filters-label" className="search-filters__label">Filter:</span>
       {options.map(([value, label]) => (
         <label key={value} className="search-filters__pill">
           <input type="radio" name="type" value={value} form="search-form" defaultChecked={type === value} onChange={rerun} />
