@@ -193,10 +193,9 @@ export default async function SearchPage({ searchParams }) {
         </button>
       </form>
 
-      <TrendingBar topics={topics} inSearch />
-
+      {/* Filters for the search, right under the box (above Trending) so it's clear what they filter. */}
       {query && (
-        <div className="tabs" role="tablist">
+        <div className="tabs search__filters" role="tablist" aria-label="Filter results">
           {[
             ["all", "All"],
             ["episodes", "Episodes"],
@@ -208,6 +207,9 @@ export default async function SearchPage({ searchParams }) {
           ))}
         </div>
       )}
+
+      <TrendingBar topics={topics} inSearch />
+
 
       <KeysNotice error={error} />
 
