@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/supabase/admin";
 import { digestEmail, siteUrl } from "@/lib/digest";
+import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -53,7 +54,7 @@ export async function GET(request) {
     const { data: friendLogs } = ids.length
       ? await db
           .from("logs")
-          .select("episode_id, episode_ref, title, feed_title, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
+          .select(`episode_ref, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle), ${LOG_EPISODE}`)
           .in("user_id", ids)
           .gte("logged_at", since)
           .order("logged_at", { ascending: false })
@@ -61,7 +62,7 @@ export async function GET(request) {
       : { data: [] };
 
     if (!notes?.length && !friendLogs?.length) continue; // nothing new: no email
-    const email = digestEmail({ profile, notes: notes || [], friendLogs: friendLogs || [], base });
+    const email = digestEmail({ profile, notes: notes || [], friendLogs: (friendLogs || []).map(withEpisode), base });
     if (dryRun) {
       results.push({ to, subject: email.subject });
       continue;
