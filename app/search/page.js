@@ -6,6 +6,7 @@ import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/pod
 import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import TopEpisodes from "@/components/TopEpisodes";
+import SearchFilters from "@/components/SearchFilters";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
@@ -177,7 +178,7 @@ export default async function SearchPage({ searchParams }) {
         Find an episode or a show. Search a person to see everywhere they've been on.
       </p>
 
-      <form className="search" action="/search" role="search">
+      <form id="search-form" className="search" action="/search" role="search">
         <input
           className="input"
           type="search"
@@ -187,26 +188,13 @@ export default async function SearchPage({ searchParams }) {
           aria-label="Search podcasts"
           autoFocus={!query}
         />
-        {type !== "all" && <input type="hidden" name="type" value={type} />}
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search
         </button>
       </form>
 
-      {/* Filters for the search, right under the box (above Trending) so it's clear what they filter. */}
-      {query && (
-        <div className="tabs search__filters" role="tablist" aria-label="Filter results">
-          {[
-            ["all", "All"],
-            ["episodes", "Episodes"],
-            ["shows", "Shows"],
-          ].map(([k, label]) => (
-            <Link key={k} href={href(query, k === "all" ? "" : k)} className={`tab ${type === k ? "is-on" : ""}`} role="tab" aria-selected={type === k}>
-              {label}
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* Filters for the search, always right under the box so it's clear what they filter. */}
+      <SearchFilters key={type} type={type} />
 
       <TrendingBar topics={topics} inSearch />
 
