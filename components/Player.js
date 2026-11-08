@@ -5,9 +5,10 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
-import { getState, removeFromList, sameEpisode, setNowPlaying, upNext } from "@/lib/store";
+import { getState, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
+import { flushSpots, pullSpots } from "@/lib/progress-sync";
 
 const PlayerContext = createContext(null);
 
@@ -27,6 +28,7 @@ export function PlayerProvider({ children }) {
   const pending = useRef(null);
   const lastSaved = useRef(0);
   const path = usePathname() || "";
+  const userId = useStore()?.user?.id || null;
 
   const seg = () => q.current.segs[q.current.i];
   const segLen = (s) => Math.max(0, (s.end ?? s.ep.duration ?? 0) - s.start);
@@ -123,13 +125,9 @@ export function PlayerProvider({ children }) {
     [playItem]
   );
 
-  // Close the player: stop, unload, hide.
-  const close = useCallback(() => {
+  // Stop, unload and empty the player (without saving anything).
+  const unload = useCallback(() => {
     const el = audio.current;
-    // Keep your spot in the episode, but don't bring the player back after a reload.
-    const cur = q.current.segs[q.current.i];
-    if (el && cur && !q.current.meta && src.current === cur.ep.audio && el.readyState >= 1) saveProgress(cur.ep, el.currentTime, el.duration);
-    clearLast();
     pending.current = null;
     if (el) {
       el.pause();
@@ -144,6 +142,28 @@ export function PlayerProvider({ children }) {
     try {
       navigator.mediaSession.metadata = null;
     } catch {}
+    force((n) => n + 1);
+  }, []);
+
+  // Close the player: stop, unload, hide.
+  const close = useCallback(() => {
+    const el = audio.current;
+    // Keep your spot in the episode, but don't bring the player back after a reload (or on another device).
+    const cur = q.current.segs[q.current.i];
+    if (el && cur && !q.current.meta && src.current === cur.ep.audio && el.readyState >= 1) saveProgress(cur.ep, el.currentTime, el.duration);
+    clearLast();
+    flushSpots();
+    unload();
+  }, [unload]);
+
+  // Put an episode in the player, paused at your spot, without loading its audio yet.
+  const showPaused = useCallback((ep) => {
+    q.current = { segs: [{ ep, start: 0, end: null }], i: 0, meta: null };
+    const t = resumeAt(ep);
+    const d = ep.duration || 0;
+    pending.current = t;
+    setTimes({ elapsed: t, length: d });
+    setProgress(d ? Math.min(1, t / d) : 0);
     force((n) => n + 1);
   }, []);
 
@@ -162,14 +182,43 @@ export function PlayerProvider({ children }) {
   useEffect(() => {
     const ep = loadLast();
     if (!ep || q.current.segs.length) return;
-    q.current = { segs: [{ ep, start: 0, end: null }], i: 0, meta: null };
-    const t = resumeAt(ep);
-    const d = ep.duration || 0;
-    pending.current = t;
-    setTimes({ elapsed: t, length: d });
-    setProgress(d ? Math.min(1, t / d) : 0);
-    force((n) => n + 1);
-  }, []);
+    showPaused(ep);
+  }, [showPaused]);
+
+  // Signed in: when you open Hooked or come back to the tab, show what you played last on any device
+  // (lib/progress-sync.js). Something playing here is never interrupted.
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    const isPlaying = () => audio.current && !audio.current.paused;
+    const sync = async () => {
+      const cur = q.current.segs[q.current.i];
+      const r = await pullSpots(isPlaying() ? cur?.ep || {} : null);
+      if (!alive || !r || isPlaying()) return;
+      if (!r.ep) {
+        if (q.current.segs.length && !q.current.meta) unload();
+        return;
+      }
+      const now = q.current.segs[q.current.i];
+      const el = audio.current;
+      if (now && !q.current.meta && sameEpisode(now.ep, r.ep) && el && src.current === now.ep.audio && el.readyState >= 1) {
+        // Same episode, already loaded here: just move to the newer spot.
+        const t = resumeAt(r.ep);
+        lastSaved.current = t; // came from your account: nothing new to save back
+        el.currentTime = t;
+        return;
+      }
+      if (src.current) unload();
+      showPaused(r.ep);
+    };
+    sync();
+    const onShow = () => document.visibilityState === "visible" && sync();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      alive = false;
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [userId, unload, showPaused]);
 
   // Save your spot when you pause, and when you leave the page or switch apps.
   useEffect(() => {
@@ -180,6 +229,7 @@ export function PlayerProvider({ children }) {
       if (!cur || q.current.meta || src.current !== cur.ep.audio || el.readyState < 1 || el.seeking) return;
       saveProgress(cur.ep, el.currentTime, el.duration);
       lastSaved.current = el.currentTime;
+      flushSpots(); // pausing or leaving sends your spot to your account right away
     };
     const onHide = () => {
       if (document.visibilityState === "hidden") save();
@@ -223,7 +273,8 @@ export function PlayerProvider({ children }) {
     };
     const onTime = () => {
       const s = seg();
-      if (!s) return;
+      // Ignore the audio element while it isn't playing this episode (e.g. just emptied to swap episodes).
+      if (!s || src.current !== s.ep.audio) return;
       const end = s.end ?? el.duration;
       if (s.end && el.currentTime >= s.end) return next();
       if (q.current.meta) {
