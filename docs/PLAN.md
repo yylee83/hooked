@@ -10,6 +10,15 @@ archived first version: don't build from it.
 **First thing next session:** check which of the open PRs below Erin has merged (`gh pr list --repo yylee83/hooked`),
 then `git checkout main && git pull`. None of them changes the database, so there's nothing to `supabase db push`.
 
+**Step 9, better search, part 1 (2026-11-08): open PR `search-ranking`, no database change.** Shows Apple knows but
+Podcast Index doesn't stay in results (`lib/search.js`; tapping one opens `/show/apple/<id>`, which brings it in from
+its feed); show ranking treats the name before ":" or "|" as the name, weights Apple's top answers more, ranks other
+languages lower, removes duplicates and drops description-only matches; "All" lists shows first when you typed a show's
+name. **Next (agreed with Erin):** part 2, search our own tables plus a **Friends** switch (only episodes people you
+follow logged, with their stars and hook line); part 3, topics: guests and AI topic tags (from descriptions and hook
+lines) in new `topics` / `episode_topics` tables. No free-typed tags on the log sheet; suggested topic chips are an idea
+for Erin and YY to decide later.
+
 **Step 8, listening sync (2026-11-08): open PR `listening-sync`, with a migration.** Where you stopped is saved to your
 account (`listening_progress`, `lib/progress-sync.js`). Opening Hooked or switching back to the tab shows what you
 played last on any device, paused 5 seconds early; newest wins; a device that's playing isn't interrupted; closing the

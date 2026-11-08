@@ -6,6 +6,7 @@ import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/pod
 import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import TopEpisodes from "@/components/TopEpisodes";
+import SearchFilters from "@/components/SearchFilters";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
@@ -14,7 +15,8 @@ import { redirect } from "next/navigation";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
 import { showHref } from "@/lib/addresses";
-import { norm } from "@/lib/rank";
+import { exactTitle, norm } from "@/lib/rank";
+import { placeAppleEpisodes, placeAppleShows } from "@/lib/search";
 
 export const metadata = { title: "Search" };
 
@@ -23,7 +25,7 @@ const PAGE = 20;
 function ShowRow({ s }) {
   return (
     <li>
-      <Link href={showHref(s.showRef, s.id)} className="results__row">
+      <Link href={s.href || showHref(s.showRef, s.id)} prefetch={s.href ? false : undefined} className="results__row">
         <Art src={artOf(s)} title={s.title} size={68} radius={14} />
         <div className="min0">
           <p className="title-sm">{s.title}</p>
@@ -75,15 +77,22 @@ export default async function SearchPage({ searchParams }) {
     ]);
     error = e.error || s.error;
     const [eps, piShows, own] = await Promise.all([
-      withRefs((e.data || []).map((x) => episodeCard(x))),
-      withShowRefs(s.data || [], "id"),
+      placeAppleEpisodes(e.data || []).then((items) => withRefs(items.map((x) => episodeCard(x)))),
+      placeAppleShows(s.data || []).then((list) => withShowRefs(list, "id")),
       type === "episodes" ? [] : searchOwnShows(query, 5),
     ]);
     episodes = eps;
     // Shows we read from their own feed (or Spotify) come first. A Podcast Index entry with the same
     // title is usually the broken copy that made us read the feed, so ours replaces it.
     const ownTitles = new Set(own.map((x) => norm(x.title)));
-    shows = [...own.map((x) => ({ ...x, showRef: x.ref })), ...piShows.filter((x) => !ownTitles.has(norm(x.title)))];
+    const ownRefs = new Set(own.map((x) => x.ref));
+    shows = [
+      ...own.map((x) => ({ ...x, showRef: x.ref })),
+      ...piShows.filter((x) => !(x.showRef && ownRefs.has(x.showRef)) && !ownTitles.has(norm(x.title))),
+    ];
+    // Ours first only when it's as good a match: an exact name further down beats a loose match of ours.
+    const exactAt = shows.findIndex((x) => exactTitle(query, x.title));
+    if (exactAt > 0 && !exactTitle(query, shows[0].title)) shows.unshift(...shows.splice(exactAt, 1));
   } else {
     [popular, chartEps, chart] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10), topCharts(9)]);
   }
@@ -93,6 +102,71 @@ export default async function SearchPage({ searchParams }) {
   const moreShows = type === "shows" && shows.length > max;
   if (type === "episodes") episodes = episodes.slice(0, max);
   if (type === "shows") shows = shows.slice(0, max);
+  // Typed a show's name ("smartless", "hit parade"): show it before episodes.
+  const showsFirst = type === "all" && shows.length > 0 && exactTitle(query, shows[0].title);
+
+  const episodesSection = (
+    <>
+      {!error && !linkError && query && type !== "shows" && (
+        <section>
+          <div className="row center" style={{ justifyContent: "space-between" }}>
+            <h2 className="label">Episodes</h2>
+            {type === "all" && episodes.length > 5 && (
+              <Link href={href(query, "episodes")} className="more-link">
+                See all →
+              </Link>
+            )}
+          </div>
+          {episodes.length === 0 ? (
+            <p className="muted">No episodes mention “{query}”.</p>
+          ) : (
+            <ul>
+              {(type === "all" ? episodes.slice(0, 5) : episodes).map((ep) => (
+                <EpisodeRow key={ep.ref || ep.id} ep={ep} />
+              ))}
+            </ul>
+          )}
+          {moreEpisodes && (
+            <Link href={href(query, "episodes", max + PAGE)} className="btn btn--shadow-sm load-more" scroll={false}>
+              Load more episodes
+            </Link>
+          )}
+        </section>
+      )}
+
+    </>
+  );
+  const showsSection = (
+    <>
+      {/* Shows we saved ourselves still appear if Podcast Index is down. */}
+      {(!error || shows.length > 0) && !linkError && query && type !== "episodes" && (
+        <section>
+          <div className="row center" style={{ justifyContent: "space-between" }}>
+            <h2 className="label">Shows</h2>
+            {type === "all" && shows.length > 5 && (
+              <Link href={href(query, "shows")} className="more-link">
+                See all →
+              </Link>
+            )}
+          </div>
+          {shows.length === 0 ? (
+            <p className="muted">No shows match “{query}”.</p>
+          ) : (
+            <ul>
+              {(type === "all" ? shows.slice(0, 5) : shows).map((s) => (
+                <ShowRow key={s.showRef || s.id || `apple-${s.itunesId}`} s={s} />
+              ))}
+            </ul>
+          )}
+          {moreShows && (
+            <Link href={href(query, "shows", max + PAGE)} className="btn btn--shadow-sm load-more" scroll={false}>
+              Load more shows
+            </Link>
+          )}
+        </section>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -104,7 +178,7 @@ export default async function SearchPage({ searchParams }) {
         Find an episode or a show. Search a person to see everywhere they've been on.
       </p>
 
-      <form className="search" action="/search" role="search">
+      <form id="search-form" className="search" action="/search" role="search">
         <input
           className="input"
           type="search"
@@ -114,27 +188,16 @@ export default async function SearchPage({ searchParams }) {
           aria-label="Search podcasts"
           autoFocus={!query}
         />
-        {type !== "all" && <input type="hidden" name="type" value={type} />}
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search
         </button>
       </form>
 
+      {/* Filters for the search, always right under the box so it's clear what they filter. */}
+      <SearchFilters key={type} type={type} />
+
       <TrendingBar topics={topics} inSearch />
 
-      {query && (
-        <div className="tabs" role="tablist">
-          {[
-            ["all", "All"],
-            ["episodes", "Episodes"],
-            ["shows", "Shows"],
-          ].map(([k, label]) => (
-            <Link key={k} href={href(query, k === "all" ? "" : k)} className={`tab ${type === k ? "is-on" : ""}`} role="tab" aria-selected={type === k}>
-              {label}
-            </Link>
-          ))}
-        </div>
-      )}
 
       <KeysNotice error={error} />
 
@@ -221,60 +284,9 @@ export default async function SearchPage({ searchParams }) {
         </section>
       )}
 
-      {!error && !linkError && query && type !== "shows" && (
-        <section>
-          <div className="row center" style={{ justifyContent: "space-between" }}>
-            <h2 className="label">Episodes</h2>
-            {type === "all" && episodes.length > 5 && (
-              <Link href={href(query, "episodes")} className="more-link">
-                See all →
-              </Link>
-            )}
-          </div>
-          {episodes.length === 0 ? (
-            <p className="muted">No episodes mention “{query}”.</p>
-          ) : (
-            <ul>
-              {(type === "all" ? episodes.slice(0, 5) : episodes).map((ep) => (
-                <EpisodeRow key={ep.id} ep={ep} />
-              ))}
-            </ul>
-          )}
-          {moreEpisodes && (
-            <Link href={href(query, "episodes", max + PAGE)} className="btn btn--shadow-sm load-more" scroll={false}>
-              Load more episodes
-            </Link>
-          )}
-        </section>
-      )}
-
-      {/* Shows we saved ourselves still appear if Podcast Index is down. */}
-      {(!error || shows.length > 0) && !linkError && query && type !== "episodes" && (
-        <section>
-          <div className="row center" style={{ justifyContent: "space-between" }}>
-            <h2 className="label">Shows</h2>
-            {type === "all" && shows.length > 5 && (
-              <Link href={href(query, "shows")} className="more-link">
-                See all →
-              </Link>
-            )}
-          </div>
-          {shows.length === 0 ? (
-            <p className="muted">No shows match “{query}”.</p>
-          ) : (
-            <ul>
-              {(type === "all" ? shows.slice(0, 5) : shows).map((s) => (
-                <ShowRow key={s.showRef || s.id} s={s} />
-              ))}
-            </ul>
-          )}
-          {moreShows && (
-            <Link href={href(query, "shows", max + PAGE)} className="btn btn--shadow-sm load-more" scroll={false}>
-              Load more shows
-            </Link>
-          )}
-        </section>
-      )}
+      {showsFirst && showsSection}
+      {episodesSection}
+      {!showsFirst && showsSection}
     </>
   );
 }
