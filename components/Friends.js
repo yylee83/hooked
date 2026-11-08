@@ -8,6 +8,7 @@ import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
+import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
 import { site } from "@/lib/site";
 
 const HOUR = 3600 * 1000;
@@ -204,13 +205,13 @@ export function FriendsFeed() {
       followIds.length
         ? db
             .from("logs")
-            .select("*, who:profiles!logs_user_id_fkey!inner(id, handle, display_name)")
+            .select(`user_id, episode_ref, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(id, handle, display_name), ${LOG_EPISODE}`)
             .in("user_id", followIds)
             .order("logged_at", { ascending: false })
             .limit(30)
         : Promise.resolve({ data: [] }),
     ]).then(([r, n, l]) => {
-      if (live) setData({ recs: r.data || [], listening: (n.data || []).filter((p) => p.now_playing?.id), logs: l.data || [], error: r.error });
+      if (live) setData({ recs: r.data || [], listening: (n.data || []).filter((p) => p.now_playing?.id), logs: (l.data || []).map(withEpisode), error: r.error });
     });
     return () => {
       live = false;

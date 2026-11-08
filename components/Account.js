@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { reviewScore } from "@/lib/social";
 import { episodeHref, logHref } from "@/lib/addresses";
+import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
 
 // Top-right avatar: your initials when signed in, a sign-in prompt when not.
 // "Sign in" for page headers. Shows only when signed out, and brings you back here afterwards.
@@ -42,11 +43,11 @@ export function FreshLogs() {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select("user_id, episode_id, episode_ref, title, feed_id, feed_title, image, feed_image, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
+      .select(`user_id, episode_ref, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle), ${LOG_EPISODE}`)
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
       .limit(8)
-      .then(({ data }) => live && setLogs(data || []));
+      .then(({ data }) => live && setLogs((data || []).map(withEpisode)));
     return () => {
       live = false;
     };
@@ -97,9 +98,10 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
     const db = supabase();
     if (!db) return setLogs([]);
     let live = true;
-    // Matched by our episode id (episodes Podcast Index doesn't have only have that).
-    const col = episodeRef ? "episode_ref" : "episode_id";
-    const key = episodeRef || episodeId;
+    // Matched by our episode id. Every log has one, so an episode we don't have yet has no reviews.
+    if (!episodeRef) return setLogs([]);
+    const col = "episode_ref";
+    const key = episodeRef;
     // Reviews, plus every reaction and reply on them, so the most useful reviews can go first.
     Promise.all([
       db
