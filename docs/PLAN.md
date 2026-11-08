@@ -23,6 +23,12 @@ All / Episodes / Shows; part 3, topics: guests and AI topic tags (from descripti
 lines) in new `topics` / `episode_topics` tables. No free-typed tags on the log sheet; suggested topic chips are an idea
 for Erin and YY to decide later.
 
+**Search: People and Briefs (2026-11-08): open PR `search-people-briefs`, no database change.** Chosen with Erin: no new
+filter pills (the row stays one line); in **All**, a People section (handle or display name; an exact match goes first,
+partial matches after shows and episodes) and a Briefs section (built-in and listener briefs; title, topic, description
+and the episodes inside), each only when something matches, with "See all" views (`type=people` / `type=briefs`, which
+show a pill only while you're on them). `lib/search-community.js`.
+
 **Search speed (2026-11-08): open PR `search-cache`, no database change.** Podcast Index answers were never reused:
 every request carries a fresh signature, and Next counts request headers in its fetch cache key. `call()` in
 `lib/podcastindex.js` now caches by the question (`unstable_cache`): searches 1 hour, Apple-show and episode-id lookups
