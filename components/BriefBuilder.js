@@ -13,6 +13,11 @@ const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
 
 const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+// One key per episode: the Podcast Index number when it has one (so the same episode found by search
+// and by a pasted link match), otherwise our own id (shows read from their own feed).
+const itemKey = (x) => (x.episodeId != null ? `p${x.episodeId}` : x.episodeRef ? `r${x.episodeRef}` : `t${x.episode}`);
+// Drafts saved before this change kept bare Podcast Index numbers.
+const asKey = (k) => (/^\d+$/.test(String(k)) ? `p${k}` : String(k));
 
 export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const router = useRouter();
@@ -21,9 +26,16 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const [mode, setMode] = useState("clips");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState(null); // { topic, mode, items }
+  // The latest search, shown as the list to pick from: { topic, mode, items }.
+  const [result, setResult] = useState(null);
+  // What's in the brief: the order (keys) and each episode's details. Kept separately from the
+  // search, so your picks stay when you search again. Nothing is picked for you.
   const [picked, setPicked] = useState([]);
+  const [pool, setPool] = useState({});
+  const [showAll, setShowAll] = useState(false);
   const [title, setTitle] = useState("");
+  // The title follows the topic until you type your own.
+  const [titleTouched, setTitleTouched] = useState(false);
   const [dek, setDek] = useState("");
   const [color, setColor] = useState("cobalt");
   const [saving, setSaving] = useState(false);
@@ -32,11 +44,14 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   // Bring back a draft (e.g. after signing in to publish), or start from a trending topic.
   useEffect(() => {
     if (editing) {
+      const items = editing.items || [];
       setTopic(editing.topic || "");
       setMode(editing.mode || "clips");
-      setResult({ topic: editing.topic, mode: editing.mode || "clips", items: editing.items || [] });
-      setPicked((editing.items || []).map((x) => x.episodeId));
+      setResult({ topic: editing.topic, mode: editing.mode || "clips", items });
+      setPicked(items.map(itemKey));
+      setPool(Object.fromEntries(items.map((x) => [itemKey(x), x])));
       setTitle(editing.title || "");
+      setTitleTouched(true);
       setDek(editing.dek || "");
       setColor(editing.color || "cobalt");
       return;
@@ -52,8 +67,11 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         setTopic(d.topic);
         setMode(d.mode);
         setResult(d.result);
-        setPicked(d.picked);
+        setPicked((d.picked || []).map(asKey));
+        // Drafts saved before picks were kept separately: their details are in the search results.
+        setPool(d.pool || Object.fromEntries((d.result?.items || []).map((x) => [itemKey(x), x])));
         setTitle(d.title);
+        setTitleTouched(d.titleTouched ?? !!d.title);
         setDek(d.dek);
         setColor(d.color);
       }
@@ -67,26 +85,14 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     if (forceMode) setMode(forceMode);
     setLoading(true);
     setError("");
-    // Keep episodes you've already chosen (from an earlier search or a pasted link).
-    const keep = result ? result.items.filter((x) => picked.includes(x.episodeId)) : [];
-    if (!editing && !keep.length) setResult(null);
     try {
       const res = await fetch(`/api/briefs/draft?${new URLSearchParams({ topic: t, mode: m })}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      if (editing) {
-        // Keep what's already in the brief, and add the new finds below it.
-        const have = new Set(keep.map((x) => String(x.episodeId)));
-        setResult({ ...data, items: [...keep, ...data.items.filter((x) => !have.has(String(x.episodeId)))] });
-        return;
-      }
-      const have = new Set(keep.map((x) => String(x.episodeId)));
-      const fresh = data.items.filter((x) => !have.has(String(x.episodeId)));
-      setResult({ ...data, items: [...keep, ...fresh] });
-      const withClips = fresh.filter((x) => x.clips?.length);
-      const first = (m === "clips" && withClips.length ? withClips : fresh).slice(0, Math.max(0, (m === "clips" ? 5 : 4) - keep.length));
-      setPicked([...keep.map((x) => x.episodeId), ...first.map((x) => x.episodeId)]);
-      if (!title) setTitle(titleCase(t));
+      // The list shows only this search. Your picks stay in the brief.
+      setResult(data);
+      setShowAll(false);
+      if (!titleTouched) setTitle(titleCase(t));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -95,15 +101,13 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   }
 
   // The brief plays in the order you picked (and can reorder).
-  const chosen = useMemo(() => {
-    if (!result) return [];
-    const byId = new Map(result.items.map((x) => [String(x.episodeId), x]));
-    return picked.map((id) => byId.get(String(id))).filter(Boolean);
-  }, [result, picked]);
+  const chosen = useMemo(() => picked.map((k) => pool[k]).filter(Boolean), [picked, pool]);
+  const briefMode = result?.mode || mode;
+  const briefTopic = result?.topic || topic.trim() || chosen[0]?.show || "";
 
-  function move(id, dir) {
+  function move(key, dir) {
     setPicked((p) => {
-      const i = p.indexOf(id);
+      const i = p.indexOf(key);
       const j = i + dir;
       if (i < 0 || j < 0 || j >= p.length) return p;
       const next = [...p];
@@ -124,14 +128,19 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     router.push("/briefs");
     router.refresh();
   }
-  const total = briefSeconds(chosen, result?.mode);
+  const total = briefSeconds(chosen, briefMode);
   const clipCount = result?.mode === "clips" ? result.items.filter((x) => x.clips?.length).length : 0;
 
-  function toggle(id) {
-    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 12 ? p : [...p, id]));
+  // Tick or untick an episode (up to 12 in a brief).
+  function toggle(item) {
+    const k = itemKey(item);
+    if (picked.includes(k)) return setPicked((p) => p.filter((x) => x !== k));
+    if (picked.length >= 12) return;
+    setPool((o) => ({ ...o, [k]: item }));
+    setPicked((p) => [...p, k]);
   }
 
-  // Add one episode by pasting its Apple Podcasts or Spotify link.
+  // Add one episode by pasting its Apple Podcasts or Spotify link. It goes straight into the brief.
   const [link, setLink] = useState("");
   const [adding, setAdding] = useState(false);
   const [linkMsg, setLinkMsg] = useState("");
@@ -142,18 +151,15 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     setAdding(true);
     setLinkMsg("");
     try {
-      const m = result?.mode || mode;
       const t = (result?.topic || topic).trim();
-      const res = await fetch(`/api/briefs/add?${new URLSearchParams({ url, topic: t, mode: m })}`);
+      const res = await fetch(`/api/briefs/add?${new URLSearchParams({ url, topic: t, mode: briefMode })}`);
       const data = await res.json();
       if (!res.ok || !data.item) throw new Error(data.error || "We couldn't find that episode.");
       const item = data.item;
-      setResult((r) => {
-        const base = r || { topic: t || item.show, mode: m, items: [] };
-        const rest = base.items.filter((x) => String(x.episodeId) !== String(item.episodeId));
-        return { ...base, items: [item, ...rest] };
-      });
-      setPicked((p) => (p.includes(item.episodeId) ? p : p.length >= 12 ? p : [...p, item.episodeId]));
+      const k = itemKey(item);
+      if (!picked.includes(k) && picked.length >= 12) throw new Error("A brief can hold 12 episodes. Remove one first.");
+      setPool((o) => ({ ...o, [k]: item }));
+      setPicked((p) => (p.includes(k) ? p : [...p, k]));
       setLink("");
       setLinkMsg(`Added “${item.episode}”.`);
     } catch (err) {
@@ -165,32 +171,35 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   async function publish() {
     if (!state?.user) {
       try {
-        sessionStorage.setItem(DRAFT, JSON.stringify({ topic, mode, result, picked, title, dek, color }));
+        sessionStorage.setItem(DRAFT, JSON.stringify({ topic, mode, result, picked, pool, title, titleTouched, dek, color }));
       } catch {}
       router.push("/login?next=/briefs/new");
       return;
     }
     setSaving(true);
     setError("");
+    // Our ids go with each item; the database fills them in for items that have Podcast Index numbers.
     const items = chosen.map((x) => ({
-      episodeId: x.episodeId,
-      feedId: x.feedId,
+      ...(x.episodeRef ? { episodeRef: x.episodeRef } : {}),
+      ...(x.showRef ? { showRef: x.showRef } : {}),
+      ...(x.episodeId != null ? { episodeId: x.episodeId } : {}),
+      ...(x.feedId != null ? { feedId: x.feedId } : {}),
       show: x.show,
       episode: x.episode,
       image: x.image,
       audio: x.audio,
       duration: x.duration,
       transcript: x.transcript,
-      clips: result.mode === "clips" ? x.clips : null,
+      clips: briefMode === "clips" ? x.clips : null,
     }));
     const row = {
-      title: title.trim().slice(0, 80) || titleCase(result.topic),
+      title: title.trim().slice(0, 80) || titleCase(briefTopic),
       dek: dek.trim() || null,
-      topic: result.topic,
+      topic: briefTopic,
       color,
-      mode: result.mode,
+      mode: briefMode,
       items,
-      total_seconds: Math.round(briefSeconds(items, result.mode)),
+      total_seconds: Math.round(briefSeconds(items, briefMode)),
     };
     const q = editing ? supabase().from("briefs").update(row).eq("id", editing.id) : supabase().from("briefs").insert(row);
     const { data, error: err } = await q.select("id").single();
@@ -199,13 +208,17 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
-    for (const it of items) refreshCatalog({ episodeId: it.episodeId });
+    for (const it of items) if (it.episodeId != null) refreshCatalog({ episodeId: it.episodeId });
     try {
       sessionStorage.removeItem(DRAFT);
     } catch {}
     router.push(`/briefs/b/${data.id}`);
     router.refresh();
   }
+
+  const LIMIT = 8;
+  const shown = result ? (showAll ? result.items : result.items.slice(0, LIMIT)) : [];
+  const scrollToBrief = () => document.getElementById("your-brief")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
     <>
@@ -295,13 +308,13 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           )}
 
           <ul>
-            {result.items.map((x) => {
-              const on = picked.includes(x.episodeId);
+            {shown.map((x) => {
+              const on = picked.includes(itemKey(x));
               const clips = result.mode === "clips" ? x.clips || [] : [];
               const partial = clips.length > 0 && !clips[0].whole;
               return (
-                <li key={x.episodeId}>
-                  <button type="button" className={`pick ${on ? "is-on" : ""}`} onClick={() => toggle(x.episodeId)} aria-pressed={on}>
+                <li key={itemKey(x)}>
+                  <button type="button" className={`pick ${on ? "is-on" : ""}`} onClick={() => toggle(x)} aria-pressed={on}>
                     <span className="pick__box" aria-hidden="true">{on ? "✓" : ""}</span>
                     <Art src={x.image} title={x.show} size={56} radius={12} />
                     <span className="min0 grow">
@@ -319,29 +332,59 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
               );
             })}
           </ul>
+          {result.items.length > shown.length && (
+            <button type="button" className="btn btn--sm brief-more" onClick={() => setShowAll(true)}>
+              Show {result.items.length - shown.length} more
+            </button>
+          )}
+
+          {/* Stays in view while you scroll the results, then settles just above your brief. */}
+          {chosen.length > 0 && (
+            <div className="briefbar" role="status">
+              <span className="briefbar__text">
+                <span className="mono briefbar__label">Your brief</span>
+                <span className="briefbar__sum">
+                  {chosen.length} {chosen.length === 1 ? "episode" : "episodes"} · {briefMode === "clips" ? clock(total) : minutes(total)}
+                </span>
+              </span>
+              <button type="button" className="btn btn--sm btn--butter" onClick={scrollToBrief}>
+                Review ↓
+              </button>
+            </div>
+          )}
         </section>
       )}
 
-      {result && chosen.length > 0 && (
-        <section className="card stack" style={{ marginTop: 26 }}>
+      {chosen.length > 0 && (
+        <section id="your-brief" className="card stack" style={{ marginTop: 26, scrollMarginTop: 20 }}>
+          <h2 className="label" style={{ margin: 0 }}>Your brief</h2>
           <p className="mono">
-            {chosen.length} episodes · {result.mode === "clips" ? clock(total) : minutes(total)} total
+            {chosen.length} {chosen.length === 1 ? "episode" : "episodes"} · {briefMode === "clips" ? clock(total) : minutes(total)} total
           </p>
           <ol className="order">
             {chosen.map((x, i) => (
-              <li key={x.episodeId} className="order__row">
+              <li key={itemKey(x)} className="order__row">
                 <span className="mono order__n">{i + 1}</span>
                 <Art src={x.image} title={x.show} size={40} radius={9} />
                 <span className="min0 grow order__title">{x.episode}</span>
                 <span className="order__btns">
-                  <button type="button" onClick={() => move(x.episodeId, -1)} disabled={i === 0} aria-label="Move up">↑</button>
-                  <button type="button" onClick={() => move(x.episodeId, 1)} disabled={i === chosen.length - 1} aria-label="Move down">↓</button>
-                  <button type="button" onClick={() => toggle(x.episodeId)} aria-label="Remove from brief">✕</button>
+                  <button type="button" onClick={() => move(itemKey(x), -1)} disabled={i === 0} aria-label="Move up">↑</button>
+                  <button type="button" onClick={() => move(itemKey(x), 1)} disabled={i === chosen.length - 1} aria-label="Move down">↓</button>
+                  <button type="button" onClick={() => toggle(x)} aria-label="Remove from brief">✕</button>
                 </span>
               </li>
             ))}
           </ol>
-          <input className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} />
+          <input
+            className="input"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setTitleTouched(true);
+            }}
+            maxLength={80}
+          />
           <textarea
             className="input textarea"
             rows={3}

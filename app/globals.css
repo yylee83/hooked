@@ -326,6 +326,14 @@ li:last-child > .pick { border-bottom: var(--line); }
 .pick__title { display: block; font-weight: 700; font-size: 17px; line-height: 1.22; }
 .pick__meta { display: block; font-size: 12px; margin-top: 4px; color: var(--cobalt); }
 .pick__quote { display: block; font-size: 14px; font-style: italic; color: var(--muted); margin-top: 4px; }
+/* Brief builder: "Your brief" bar, pinned above the bottom nav (and above the mini player when it's open). */
+.brief-more { display: block; margin: 16px auto 0; }
+.briefbar { position: sticky; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 18; margin-top: 18px; display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--cream); border: var(--line); border-radius: 20px; box-shadow: 4px 4px 0 var(--bubblegum); padding: 10px 12px 10px 16px; }
+body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
+.briefbar__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.briefbar__label { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--butter); }
+.briefbar__sum { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.briefbar .btn { flex: none; }
 .swatch { width: 36px; height: 36px; border-radius: 50%; border: var(--line); }
 .swatch.is-on { box-shadow: var(--shadow-sm); transform: translate(-2px, -2px); }
 @media (max-width: 400px) { .mode { grid-template-columns: 1fr; } }

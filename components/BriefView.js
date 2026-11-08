@@ -28,6 +28,8 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
       .join(" · ");
 
   const queue = usable.map((it) => ({
+    ...(it.episodeRef ? { episodeRef: it.episodeRef } : {}),
+    ...(it.showRef ? { showRef: it.showRef } : {}),
     episodeId: it.episodeId,
     title: it.episode,
     feedId: it.feedId,
@@ -135,7 +137,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
               </p>
             )}
 
-            {it.episodeId && it.found !== false && (
+            {(it.episodeRef || it.episodeId) && it.found !== false && (
               <div className="brief__actions">
                 <PlayButton episode={ep} />
                 <LogButton episode={ep} />
