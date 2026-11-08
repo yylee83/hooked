@@ -38,7 +38,7 @@ Everything people do (logs, ratings, reviews, Up next, sends, briefs) points at 
 | `podcastindex_id`, `apple_id`, `spotify_id` | The show's numbers elsewhere, so a link from any source finds the same show |
 | `source` | Where we first got it: `podcastindex`, `feed`, `spotify` or `legacy` (copied from old logs) |
 | `last_fetched_at`, `fetch_error`, `failures` | Keeping it up to date (see "Staying fresh") |
-| `search` | Words for our own search (step 8) |
+| `search` | Words for our own search (step 9) |
 
 ### `episodes`
 | Column | What it holds |
@@ -79,7 +79,7 @@ can plant a fake show.
    match by title through Apple and Podcast Index as today. If nothing has a public feed, save a basic
    Spotify-only entry.
 3. **Search** keeps using Podcast Index and Apple for now. Results are saved only when someone opens
-   one, so the tables hold what people actually use. Step 8 adds search over our own tables.
+   one, so the tables hold what people actually use. Step 9 adds search over our own tables.
 
 **No duplicates:** before saving a show we check `podcast_guid`, then the feed address, then the
 Podcast Index, Apple and Spotify ids. Episodes match on `guid` within their show.
