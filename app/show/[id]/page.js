@@ -11,6 +11,9 @@ import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
 
+const PAGE = 30; // episodes per "Load more"
+const MOST = 1000; // Podcast Index returns at most 1,000 episodes per show
+
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const { data } = await loadShow(id);
@@ -34,11 +37,15 @@ export default async function ShowPage({ params, searchParams }) {
   const s = show.data;
 
   // Shows read from their own feed (or Spotify-only ones) list the episodes we saved; others ask
-  // Podcast Index, falling back to ours if it has nothing.
+  // Podcast Index, falling back to ours if it has nothing. ?max= grows by 30 with each "Load more";
+  // asking for one extra tells us whether there are more to show.
+  const max = Math.min(MOST, Math.max(PAGE, parseInt(query.max) || PAGE));
   const fromPi = s.id && s.source !== "feed" && s.source !== "spotify";
-  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, 30)) : { data: [] }, showStats({ ref: s.ref, feedId: s.id })]);
+  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, max + 1)) : { data: [] }, showStats({ ref: s.ref, feedId: s.id })]);
   let raws = eps.data || [];
-  if (!raws.length && s.ref) raws = await ownShowEpisodes(s.ref, 30);
+  if (!raws.length && s.ref) raws = await ownShowEpisodes(s.ref, max + 1);
+  const more = raws.length > max && max < MOST;
+  raws = raws.slice(0, max);
   const cards = await withRefs(raws.map((e) => episodeCard(e, s)));
   const episodes = raws.map((e, i) => ({ raw: e, card: cards[i] }));
   const categories = Object.values(s.categories || {}).slice(0, 2);
@@ -93,6 +100,11 @@ export default async function ShowPage({ params, searchParams }) {
           </li>
         ))}
       </ul>
+      {more && (
+        <Link href={withQuery(`/show/${id}`, { ...query, note: undefined, max: String(max + PAGE) })} className="btn btn--shadow-sm load-more" scroll={false}>
+          Load more episodes
+        </Link>
+      )}
     </>
   );
 }
