@@ -170,7 +170,7 @@ function MyBriefs({ userId }) {
 }
 
 const TABS = [
-  ["diary", "Diary"],
+  ["diary", "Episodes"], // was "Diary"; the address stays #diary so old links work
   ["shows", "Shows"],
   ["upnext", "Up next"],
   ["stats", "Wrapped"],
