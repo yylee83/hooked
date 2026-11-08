@@ -10,6 +10,14 @@ archived first version: don't build from it.
 **First thing next session:** check which of the open PRs below Erin has merged (`gh pr list --repo yylee83/hooked`),
 then `git checkout main && git pull`. None of them changes the database, so there's nothing to `supabase db push`.
 
+**Step 8, listening sync (2026-11-08): open PR `listening-sync`, with a migration.** Where you stopped is saved to your
+account (`listening_progress`, `lib/progress-sync.js`). Opening Hooked or switching back to the tab shows what you
+played last on any device, paused 5 seconds early; newest wins; a device that's playing isn't interrupted; closing the
+player or finishing an episode empties it everywhere; spots saved while signed out move in on sign-in. Already applied
+to the **test** database. **After merging, Erin runs `supabase db push`** (only `20261108120000_listening_progress.sql`
+should be listed). Tested with two signed-in browser windows (laptop and 390px phone) against the test database:
+10 checks, the script was in the session folder (rewrite from `docs/PLAN.md` testing notes if needed).
+
 **Open PRs, merge in this order** (each builds on the one before, and shows the earlier ones' commits until they merge):
 1. **#33 Stage D prep 1:** Home ("Just logged", friends' activity) and episode-page reviews read episode details from
    our tables. Adds `lib/log-episode.js` (`LOG_EPISODE`, `withEpisode`).
