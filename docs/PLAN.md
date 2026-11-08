@@ -23,6 +23,14 @@ All / Episodes / Shows; part 3, topics: guests and AI topic tags (from descripti
 lines) in new `topics` / `episode_topics` tables. No free-typed tags on the log sheet; suggested topic chips are an idea
 for Erin and YY to decide later.
 
+**Search speed (2026-11-08): open PR `search-cache`, no database change.** Podcast Index answers were never reused:
+every request carries a fresh signature, and Next counts request headers in its fetch cache key. `call()` in
+`lib/podcastindex.js` now caches by the question (`unstable_cache`): searches 1 hour, Apple-show and episode-id lookups
+1 day, everything else 15 minutes (the daily refresh still sees fresh details); failures aren't kept; 8-second timeout.
+With a stand-in Podcast Index: a repeat search went from 20–33 requests to 0; a search seen before still works while
+Podcast Index is down. Also fixed (from #42): Apple-only episodes no longer use up All's few episode slots.
+Still open from the speed idea: saving shows/episodes that searches find into our tables (pairs with search part 2).
+
 **Step 8, listening sync (2026-11-08): open PR `listening-sync`, with a migration.** Where you stopped is saved to your
 account (`listening_progress`, `lib/progress-sync.js`). Opening Hooked or switching back to the tab shows what you
 played last on any device, paused 5 seconds early; newest wins; a device that's playing isn't interrupted; closing the
