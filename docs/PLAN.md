@@ -89,10 +89,21 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
   - [x] `lib/social.js`: nothing to change (sends are saved in `lib/store.js`; notifications keep their copies)
   - [x] Search again (prep 3, 2026-11-07): every remaining `feed_title` / `feed_image` is page code fed by `withEpisode`,
     or a save. Wildcard selects (`*`) are only on tables that keep their columns, and don't fail when columns go.
-  - [ ] **Stage D itself, in one PR:** a migration that drops the copied columns from `logs`, `recommendations` and
-    `list_items` and `hooked_shows` (with their required rules, e.g. `logs.title`, `recommendations.title`, `list_items.title`), plus the saves that
-    stop sending them (`logToDb`, `listToDb`, `hookedToDb`, the send insert in `lib/store.js`). Back up live, compare copies with our tables on the fresh export
-    (prep 1 did this: identical), rehearse, test database, then live.
+  - [x] **Stage D step 1 (2026-11-07): saves always carry our ids.** The copies also had a hidden job: a save without our
+    id made the database create the episode/show from the copied details (`episode_ref_for` / `show_ref_for` in the
+    save triggers). Now the app asks `/api/catalog/ensure` first (`ensureRefs` in `lib/catalog-client.js`, used by
+    `addLog`, `addToList`, `toggleHookedShow`, `sendRecommendation` and the sign-in move in `lib/store.js`): the server
+    finds or creates the entry from Podcast Index and returns our id. If it can't, the old trigger path still works
+    until step 2.
+  - [ ] **Stage D step 2 (on or after 2026-11-10), in one PR:**
+    - a migration that drops the copied columns from `logs`, `recommendations`, `list_items` and `hooked_shows` (with
+      their required rules, e.g. `logs.title`, `recommendations.title`, `list_items.title`), and `episode_id` from
+      `comments` / `reactions` (with the old `(log_user_id, episode_id)` keys);
+    - the save triggers rewritten so they no longer create entries from copies (a save without our id is refused), and
+      the notification triggers taking the title from `episodes`;
+    - the saves that stop sending the copies (`logToDb`, `listToDb`, `hookedToDb`, the send insert in `lib/store.js`).
+    Back up live, compare copies with our tables on the fresh export (prep 1 did this: identical), rehearse with
+    `scripts/rehearse-migrations.mjs`, test database, then live.
   - [ ] Run the search again just before stage D, in case new code added readers.
   - [x] Hooked shows (`hooked_shows`): **decided 2026-11-07 (Erin), drop their copies (`feed_id`, `title`, `image`) in
     stage D too.** Reads switched in prep 4 (`withShow` in `lib/log-episode.js`: My log and profiles). Covers now come from
