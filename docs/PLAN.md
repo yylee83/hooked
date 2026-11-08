@@ -14,8 +14,12 @@ then `git checkout main && git pull`. None of them changes the database, so ther
 Podcast Index doesn't stay in results (`lib/search.js`; tapping one opens `/show/apple/<id>`, which brings it in from
 its feed); show ranking treats the name before ":" or "|" as the name, weights Apple's top answers more, ranks other
 languages lower, removes duplicates and drops description-only matches; "All" lists shows first when you typed a show's
-name. **Next (agreed with Erin):** part 2, search our own tables plus a **Friends** switch (only episodes people you
-follow logged, with their stars and hook line); part 3, topics: guests and AI topic tags (from descriptions and hook
+name. **Merged (#42),** plus "Filter:" pills always under the search box (radio buttons in the search form,
+`components/SearchFilters.js`). **Part 2a (open PR `search-friends`): a "Friends" filter** (results headed "Friends’ episodes"; labels shortened so the row fits one line at 360px+), signed in only:
+episodes people you follow logged that match your words (title, show, hook line, description), one row per episode with
+each friend's verdict, stars and hook (`components/FriendsResults.js`; runs in the browser, which knows who you follow;
+reads up to 1,000 friends' logs, then ranks with `lib/rank.js`). **Still to do in part 2:** search our own tables for
+All / Episodes / Shows; part 3, topics: guests and AI topic tags (from descriptions and hook
 lines) in new `topics` / `episode_topics` tables. No free-typed tags on the log sheet; suggested topic chips are an idea
 for Erin and YY to decide later.
 

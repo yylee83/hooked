@@ -700,12 +700,16 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .sent__add { flex: none; width: 38px; height: 38px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--cobalt); color: var(--white); display: grid; place-items: center; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); }
 .sent__add:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
 .sent__more { margin-top: 10px; }
-/* Search filters: "Filter results:" then pill-shaped choices (radio buttons styled as .tab). One row; scrolls sideways if it ever overflows. */
-.search-filters { display: flex; align-items: center; gap: 8px; margin: 4px 0 16px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
-.search-filters::-webkit-scrollbar { display: none; }
-.search-filters__label { font-size: 14px; font-weight: 600; color: var(--muted); white-space: nowrap; margin-right: 2px; }
+/* Search filters: "Filter:" then pill-shaped choices (radio buttons styled as .tab). Sized to fit one row on a phone
+   (360px and up); wraps rather than hiding a choice on anything narrower. */
+.search-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 4px 0 16px; }
+.search-filters__label { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; margin-right: 2px; }
 .search-filters__pill { position: relative; cursor: pointer; flex: none; }
 .search-filters__pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.search-filters__pill .tab { display: inline-block; padding: 6px 15px; font-size: 15px; }
+.search-filters__pill .tab { display: inline-block; padding: 5px 10px; font-size: 13px; }
 .search-filters__pill input:checked + .tab { background: var(--ink); color: var(--white); }
 .search-filters__pill input:focus-visible + .tab { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+/* Search → Friends' episodes: who logged it, their stars and hook line, under each episode. */
+.friend-takes { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.friend-takes__row { padding-left: 10px; border-left: 3px solid var(--butter); }
+.friend-takes__row .log__hook { margin: 2px 0 0; }

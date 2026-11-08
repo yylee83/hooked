@@ -7,6 +7,7 @@ import { plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import TopEpisodes from "@/components/TopEpisodes";
 import SearchFilters from "@/components/SearchFilters";
+import FriendsResults from "@/components/FriendsResults";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
@@ -47,7 +48,8 @@ function href(q, type, max) {
 export default async function SearchPage({ searchParams }) {
   const sp = await searchParams;
   const query = (sp.q || "").trim();
-  const type = sp.type === "shows" || sp.type === "episodes" ? sp.type : "all";
+  const type = ["shows", "episodes", "friends"].includes(sp.type) ? sp.type : "all";
+  const friends = type === "friends"; // searched in the browser, where we know who you follow (FriendsResults)
   const max = Math.min(200, Math.max(PAGE, parseInt(sp.max) || PAGE));
 
   // Pasted an Apple Podcasts or Spotify link? Go straight to logging it.
@@ -70,7 +72,7 @@ export default async function SearchPage({ searchParams }) {
 
   if (linkError) {
     // fall through to the message below
-  } else if (query) {
+  } else if (query && !friends) {
     const [e, s] = await Promise.all([
       type === "shows" ? { data: [] } : safe(searchEpisodes(query, type === "episodes" ? max + 1 : 6)),
       type === "episodes" ? { data: [] } : safe(searchShows(query, type === "shows" ? max + 1 : 6)),
@@ -284,9 +286,10 @@ export default async function SearchPage({ searchParams }) {
         </section>
       )}
 
-      {showsFirst && showsSection}
-      {episodesSection}
-      {!showsFirst && showsSection}
+      {friends && query && !linkError && <FriendsResults query={query} />}
+      {!friends && showsFirst && showsSection}
+      {!friends && episodesSection}
+      {!friends && !showsFirst && showsSection}
     </>
   );
 }
