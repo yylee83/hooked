@@ -1,5 +1,5 @@
 "use client";
-// The tabs on My log: Diary, Shows, Up next. Built to stay easy to browse at 10 logs or 500.
+// The tabs on My log: Episodes (the diary), Shows, Up next. Built to stay easy to browse at 10 logs or 500.
 import Link from "next/link";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Art from "./Art";
@@ -62,7 +62,7 @@ function Hook({ text }) {
   );
 }
 
-// ---------- Diary: every episode you logged, newest first ----------
+// ---------- Episodes tab (the diary): every episode you logged, newest first ----------
 const FILTERS = [
   ["all", "All"],
   ["hooked", "Hooked"],

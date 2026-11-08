@@ -16,7 +16,7 @@ Find what hooks you. A social podcast log, built with Next.js and the Podcast In
 - **Search**: live search of about 4 million podcasts.
 - **Show pages**: details plus the latest episodes, with Play and Log it.
 - **Log it** (or paste an Apple Podcasts / Spotify link): hooked or not, a star rating (tap a star twice for a half), and "What's the hook?"
-- **My log**: your stats, the shows you're hooked on, and tabs for Diary (searchable, filterable), Shows, Up next and Wrapped.
+- **My log**: your stats, the shows you're hooked on, and tabs for Episodes (your diary: searchable, filterable), Shows, Up next and Wrapped.
 - **Accounts**: email + password or email-link sign-in. Logs, hooked shows, lists and briefs save to your account.
 - **+ button**: log a review, or make a brief.
 - **Trending now** (on Search): today's top US searches from Google Trends, with one tap to hear podcasts on it or make a brief.
