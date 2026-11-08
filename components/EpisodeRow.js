@@ -5,8 +5,9 @@ import { LogButton, QueueButton } from "./Social";
 import { minutes, shortDate } from "@/lib/format";
 import { episodeHref, showHref } from "@/lib/addresses";
 
-// One episode in a list: art, show, title, date and length, Play and Log it.
-export default function EpisodeRow({ ep, showArt = true, desc }) {
+// One episode in a list: art, show, title, date and length, Play and Log it. `children` go under the
+// buttons (e.g. what friends said about it, in Search's Friends' episodes).
+export default function EpisodeRow({ ep, showArt = true, desc, children }) {
   return (
     <li className="eps__row">
       <div className="row gap">
@@ -16,7 +17,7 @@ export default function EpisodeRow({ ep, showArt = true, desc }) {
           <Link href={episodeHref(ep.ref, ep.id)} className="eps__title" style={{ display: "block" }}>
             {ep.title}
           </Link>
-          {showArt && ep.feedId && (
+          {showArt && (ep.feedId || ep.showRef) && (
             <Link href={showHref(ep.showRef, ep.feedId)} className="muted small" style={{ display: "block", marginBottom: 10 }}>
               {ep.feedTitle}
             </Link>
@@ -27,6 +28,7 @@ export default function EpisodeRow({ ep, showArt = true, desc }) {
             <LogButton episode={ep} />
             <QueueButton episode={ep} />
           </div>
+          {children}
         </div>
       </div>
     </li>

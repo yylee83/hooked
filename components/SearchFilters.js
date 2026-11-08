@@ -1,15 +1,21 @@
 "use client";
-// "Filter results:" All / Episodes / Shows, always under the search box. They belong to the search form
+// "Filter results:" All / Episodes / Shows (and Friends' episodes when signed in), always under the search box. They belong to the search form
 // (form="search-form"), so a pick made while typing goes with the search, and a tap after searching
 // re-runs it straight away.
+
+import { useStore } from "@/lib/store";
 
 const OPTIONS = [
   ["all", "All"],
   ["episodes", "Episodes"],
   ["shows", "Shows"],
 ];
+const FRIENDS = ["friends", "Friends’ episodes"];
 
 export default function SearchFilters({ type = "all" }) {
+  const signedIn = !!useStore()?.user;
+  // Signed out, Friends' episodes only shows if the address asks for it (it then says to sign in).
+  const options = signedIn || type === "friends" ? [...OPTIONS, FRIENDS] : OPTIONS;
   const rerun = (e) => {
     const form = document.getElementById("search-form");
     // Only search again if there's something to search for; otherwise the pick waits for the search.
@@ -19,7 +25,7 @@ export default function SearchFilters({ type = "all" }) {
   return (
     <div className="search-filters" role="radiogroup" aria-labelledby="filters-label">
       <span id="filters-label" className="search-filters__label">Filter results:</span>
-      {OPTIONS.map(([value, label]) => (
+      {options.map(([value, label]) => (
         <label key={value} className="search-filters__pill">
           <input type="radio" name="type" value={value} form="search-form" defaultChecked={type === value} onChange={rerun} />
           <span className="tab">{label}</span>
