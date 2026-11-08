@@ -79,10 +79,11 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
   (`episode:episodes!logs_episode_ref_fkey(..., show:shows(...))`), as #30 did for For you and Popular on Hooked.
   Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title\|feed_image' app lib components`):
   - [ ] `lib/store.js`: your own logs, Up next and hooked shows (reads and saves)
-  - [ ] `lib/supabase/public.js`: reviews on episode pages and other public reads (4 queries)
+  - [ ] `lib/supabase/public.js`: profile logs, a shared log (`?from=`), show ratings (old `episode_id` / `feed_id` fallbacks)
   - [ ] `app/u/[handle]/page.js`: profile logs
-  - [ ] `components/Friends.js`: friends' activity on Home, and Sent to you
-  - [ ] `components/Account.js`: Just logged (2 queries)
+  - [x] `components/Friends.js`: friends' activity on Home (stage D prep 1, through `lib/log-episode.js`)
+  - [ ] `components/Friends.js`: Sent to you (depends on whether `recommendations` keeps its copies)
+  - [x] `components/Account.js`: Just logged, and reviews on episode pages (stage D prep 1)
   - [ ] `app/api/cron/digest/route.js` and `lib/digest.js`: the weekly email
   - [ ] `lib/social.js`: sends and notifications
   - [ ] Saves: stop sending the copied columns (`logToDb` and friends in `lib/store.js`)
