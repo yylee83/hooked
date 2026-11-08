@@ -8,7 +8,7 @@ import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
-import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
+import { LOG_EPISODE, episodeOf, withEpisode } from "@/lib/log-episode";
 import { site } from "@/lib/site";
 
 const HOUR = 3600 * 1000;
@@ -190,7 +190,7 @@ export function FriendsFeed() {
     Promise.all([
       db
         .from("recommendations")
-        .select("*, sender:profiles!recommendations_from_id_fkey(id, handle, display_name)")
+        .select(`id, episode_ref, hooked, rating, hook, note, created_at, sender:profiles!recommendations_from_id_fkey(id, handle, display_name), ${episodeOf("recommendations")}`)
         .eq("to_id", state.user.id)
         .order("created_at", { ascending: false })
         .limit(20),
@@ -211,7 +211,7 @@ export function FriendsFeed() {
             .limit(30)
         : Promise.resolve({ data: [] }),
     ]).then(([r, n, l]) => {
-      if (live) setData({ recs: r.data || [], listening: (n.data || []).filter((p) => p.now_playing?.id), logs: (l.data || []).map(withEpisode), error: r.error });
+      if (live) setData({ recs: (r.data || []).map(withEpisode), listening: (n.data || []).filter((p) => p.now_playing?.id), logs: (l.data || []).map(withEpisode), error: r.error });
     });
     return () => {
       live = false;

@@ -79,16 +79,23 @@ Erin finds asking on every log clunky. Options discussed on 2026-11-03:
   (`episode:episodes!logs_episode_ref_fkey(..., show:shows(...))`), as #30 did for For you and Popular on Hooked.
   Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title\|feed_image' app lib components`):
   - [x] `lib/store.js`: your own logs (stage D prep 2)
-  - [ ] `lib/store.js`: Up next (`list_items`) reads
+  - [x] `lib/store.js`: Up next (`list_items`) reads (prep 3)
   - [x] `lib/supabase/public.js`: profile logs, a shared log (`?from=`), show ratings (prep 2; old `episode_id` / `feed_id` fallbacks removed)
   - [x] `app/u/[handle]/page.js`: profile logs (prep 2, through `getProfilePage`)
   - [x] `components/Friends.js`: friends' activity on Home (stage D prep 1, through `lib/log-episode.js`)
-  - [ ] `components/Friends.js`: Sent to you (depends on whether `recommendations` keeps its copies)
+  - [x] `components/Friends.js`: Sent to you (prep 3)
   - [x] `components/Account.js`: Just logged, and reviews on episode pages (stage D prep 1)
   - [x] `app/api/cron/digest/route.js` and `lib/digest.js`: friends' logs in the weekly email (prep 2)
-  - [ ] `lib/social.js`: sends and notifications
-  - [ ] Saves: stop sending the copied columns (`logToDb` and friends in `lib/store.js`)
-  - [ ] Run the grep again just before stage D, in case new code added readers
+  - [x] `lib/social.js`: nothing to change (sends are saved in `lib/store.js`; notifications keep their copies)
+  - [x] Search again (prep 3, 2026-11-07): every remaining `feed_title` / `feed_image` is page code fed by `withEpisode`,
+    or a save. Wildcard selects (`*`) are only on tables that keep their columns, and don't fail when columns go.
+  - [ ] **Stage D itself, in one PR:** a migration that drops the copied columns from `logs`, `recommendations` and
+    `list_items` (and `logs.title`'s required rule with them), plus the saves that stop sending them (`logToDb`,
+    `listToDb`, the send insert in `lib/store.js`). Back up live, compare copies with our tables on the fresh export
+    (prep 1 did this: identical), rehearse, test database, then live.
+  - [ ] Run the search again just before stage D, in case new code added readers.
+  - [ ] **Open question:** hooked shows (`hooked_shows`) also keep copies (`feed_id`, `title`, `image`), and profiles ask
+    for them by name (`getProfilePage`). Drop them in stage D too (switch those two reads to `shows` first), or keep them?
 - ~~Still on Podcast Index numbers: For you, Wrapped's genres, briefs~~ (done 2026-11-07, #29, #30, #32; topic search
   in briefs stays on Podcast Index until step 8).
 - Step 8: listening progress synced to your account, then better search (our `shows`/`episodes` tables have a
