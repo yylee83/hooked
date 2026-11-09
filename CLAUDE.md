@@ -106,8 +106,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 ## Where things are
 
 - **Pages** (`app/`): `/` Home (Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged; no Apple chart),
-  `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link),
-  `/briefs`, `/briefs/new` and `/briefs/b/[id]` (+ `/edit`), `/me` My log (tabs: Episodes, Shows,
+  `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
+  All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
+  `/briefs` (a briefs-only search, "Hooked selects" swipe row of built-in briefs, listener briefs in a grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`), `/me` My log (tabs: Episodes, Shows,
   Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet;
   `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
@@ -130,8 +131,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `reviewScore()` ranks reviews on episode pages (adding it > thumbs up > replies > thumbs down). If someone
   who tapped + later logs the episode, the review "got them to listen" (that can be worked out from the data).
 - **Search ranking**: `lib/rank.js`. A result must contain the phrase, or all the words close
-  together. Exact show names are boosted, and so are Apple popularity and recency. Show nothing
-  rather than unrelated results.
+  together. Exact show names are boosted (the part before ":" or "|" counts as the name), and so are Apple popularity
+  and recency; other languages rank lower. Show nothing rather than unrelated results. Shows only Apple knows:
+  `lib/search.js`. Friends filter: `components/FriendsResults.js`. People and Briefs: `lib/search-community.js`.
+  Podcast Index answers are cached by the question in `call()` (`lib/podcastindex.js`): the signed request headers
+  would otherwise make every request look new.
 
 ## Design rules
 
@@ -140,6 +144,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   variables in `globals.css` (`--display`, `--mono`, `--muted`, `--line`, etc.).
 - Sticker look: 3px ink outlines, hard offset shadows (`4px 4px 0 var(--ink)`), rounded corners,
   slight tilts on cover art. The wordmark is "hooked on" with a pink/yellow playhead bar.
+- **One stylesheet for everything, so class names must be unique.** Before adding a class, check it isn't already used
+  (`grep -rn "classname" app components`), and prefix new ones with their component (`.search-filters`, `.brief-card`).
+  A reused name broke My log's filters and, live, the brief chips on profiles (fixed in #49).
 - Mobile first: test at 390px wide. The bottom nav covers about 90px, so leave room.
 - Copy is short, warm and plain: no jargon, no exclamation-heavy hype.
 
