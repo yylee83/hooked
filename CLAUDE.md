@@ -151,7 +151,8 @@ pull request (`.github/workflows/check.yml`); a red check means don't merge yet.
 External services may not be reachable from a sandbox. Two approaches have worked: (1) small local mocks of Podcast
 Index, Apple and Spotify, plus a fake Supabase REST/auth server, with the override env vars pointed at them; (2) a
 local build against the **test** database (see "Testing notes" in `docs/PLAN.md`: build-time keys, throwaway accounts,
-cleaning up). Drive the site with Playwright at 390×844, check pages for console errors, and screenshot anything
+cleaning up). For a test database full of friends, logs, replies and sends, run `scripts/seed-test-people.mjs` (test
+database only; `--remove` cleans up). Drive the site with Playwright at 390×844, check pages for console errors, and screenshot anything
 visual. Images load lazily: wait before screenshots. After pushing, confirm the Vercel status:
 `gh api repos/yylee83/hooked/commits/<sha>/status`; previews are behind Vercel's login, so fetch them with the Vercel
 MCP. Never use the live database for tests, and reading it needs Erin's OK.
