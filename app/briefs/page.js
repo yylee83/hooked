@@ -4,29 +4,35 @@ import { SignInButton } from "@/components/Account";
 import { BriefCard } from "@/components/BriefCards";
 import { recentBriefs } from "@/lib/supabase/public";
 import { searchBriefs } from "@/lib/search-community";
-import { artOf, findShow, safe } from "@/lib/podcastindex";
+import { curatedSummary } from "@/lib/briefs-server";
 import { minutes, plural } from "@/lib/format";
 
 export const metadata = { title: "Briefs" };
 export const revalidate = 60;
 
-// A listener brief's one line of details: shows, length, just the parts, who made it.
+// Every card's one line of details, the same for built-in and listener briefs:
+// shows · length · "Just the parts" (briefs that play clips) · who made it (@handle, or Hooked).
+const briefMeta = ({ shows, seconds, mode, by }) =>
+  [plural(shows, "show"), seconds ? minutes(seconds) : null, mode === "clips" ? "Just the parts" : null, by].filter(Boolean).join(" · ");
 const listenerMeta = (b) =>
-  [plural(b.shows ?? (b.items || []).length, "show"), (b.seconds ?? b.total_seconds) ? minutes(b.seconds ?? b.total_seconds) : null, b.mode === "clips" ? "Just the parts" : null, b.author ? `@${b.author}` : null]
-    .filter(Boolean)
-    .join(" · ");
+  briefMeta({ shows: b.shows ?? (b.items || []).length, seconds: b.seconds ?? b.total_seconds, mode: b.mode, by: b.author ? `@${b.author}` : null });
 
 export default async function BriefsPage({ searchParams }) {
   const query = String((await searchParams)?.q || "").trim().slice(0, 100);
 
-  // Built-in briefs list shows by name; their covers come from looking each show up (cached).
-  const coversFor = (b) => Promise.all(b.items.slice(0, 3).map(async (it) => artOf((await safe(findShow(it.show))).data) || null));
-  const [community, curatedCovers, found] = await Promise.all([
+  // Built-in briefs list shows and episodes by name: their covers, show count and length are worked out
+  // (and kept for a few hours) by curatedSummary.
+  const [community, summaries, found] = await Promise.all([
     query ? [] : recentBriefs(40),
-    Promise.all(briefs.map(coversFor)),
+    Promise.all(briefs.map((b) => curatedSummary(b.slug).catch(() => null))),
     query ? searchBriefs(query, 60) : null,
   ]);
-  const coversBySlug = Object.fromEntries(briefs.map((b, i) => [b.slug, curatedCovers[i]]));
+  const curated = Object.fromEntries(
+    briefs.map((b, i) => {
+      const s = summaries[i];
+      return [b.slug, { covers: s?.covers || [], meta: briefMeta({ shows: s?.shows || b.items.length, seconds: s?.seconds, mode: b.mode, by: "Hooked" }) }];
+    })
+  );
 
   return (
     <>
@@ -68,7 +74,14 @@ export default async function BriefsPage({ searchParams }) {
           )}
           <div className="brief-grid">
             {found.briefs.map((b) => (
-              <BriefCard key={b.href} href={b.href} title={b.title} color={b.color} covers={b.slug ? coversBySlug[b.slug] : b.covers} meta={b.meta || listenerMeta(b)} />
+              <BriefCard
+                key={b.href}
+                href={b.href}
+                title={b.title}
+                color={b.color}
+                covers={b.slug ? curated[b.slug]?.covers : b.covers}
+                meta={b.slug ? curated[b.slug]?.meta : listenerMeta(b)}
+              />
             ))}
           </div>
         </section>
@@ -76,9 +89,9 @@ export default async function BriefsPage({ searchParams }) {
         <>
           <h2 className="section-title">Hooked selects</h2>
           <div className="selects" role="list">
-            {briefs.map((b, i) => (
+            {briefs.map((b) => (
               <div key={b.slug} role="listitem" className="selects__item">
-                <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={b.color} covers={curatedCovers[i]} meta={b.meta} />
+                <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={b.color} covers={curated[b.slug].covers} meta={curated[b.slug].meta} />
               </div>
             ))}
           </div>
