@@ -12,8 +12,10 @@ const OPTIONS = [
 ];
 const FRIENDS = ["friends", "Friends"]; // episodes your friends logged (results say "Friends’ episodes")
 
-export default function SearchFilters({ type = "all" }) {
-  const signedIn = !!useStore()?.user;
+export default function SearchFilters({ type = "all", signedInHint = false }) {
+  // Until the browser has loaded your account, trust the server's cookie check; then go by the account.
+  const state = useStore();
+  const signedIn = state?.ready ? !!state.user : signedInHint;
   // Signed out, Friends' episodes only shows if the address asks for it (it then says to sign in).
   const options = signedIn || type === "friends" ? [...OPTIONS, FRIENDS] : [...OPTIONS];
   // People and Briefs live in All; their "See all" views get a pill only while you're on them.

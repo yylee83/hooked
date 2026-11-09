@@ -15,6 +15,7 @@ import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
 import { isPodcastLink, linkTarget, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
 import { showHref } from "@/lib/addresses";
@@ -49,6 +50,9 @@ function href(q, type, max) {
 
 export default async function SearchPage({ searchParams }) {
   const sp = await searchParams;
+  // Does this browser have a sign-in cookie? Only a hint (not checked with the database), so the Friends pill
+  // can be drawn from the start instead of popping in once the browser has loaded your account.
+  const signedInHint = (await cookies()).getAll().some((c) => /^sb-.+-auth-token(\.\d+)?$/.test(c.name) && c.value);
   const query = (sp.q || "").trim();
   const type = ["shows", "episodes", "friends", "people", "briefs"].includes(sp.type) ? sp.type : "all";
   const friends = type === "friends"; // searched in the browser, where we know who you follow (FriendsResults)
@@ -262,7 +266,7 @@ export default async function SearchPage({ searchParams }) {
       </form>
 
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
-      <SearchFilters key={type} type={type} />
+      <SearchFilters key={type} type={type} signedInHint={signedInHint} />
 
       <TrendingBar topics={topics} inSearch />
 
