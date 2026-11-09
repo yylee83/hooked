@@ -715,5 +715,5 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .friend-takes__row .log__hook { margin: 2px 0 0; }
 /* Search → Briefs and People sections. A brief without a cover gets a small coloured "Brief" tile. */
 .people-list { list-style: none; margin: 0; padding: 0; }
-.brief-chip { flex: none; width: 68px; height: 68px; border: var(--line); border-radius: 14px; display: grid; place-items: center; font-family: var(--display); font-size: 17px; transform: rotate(-2deg); }
+.search-brief-tile { flex: none; width: 68px; height: 68px; border: var(--line); border-radius: 14px; display: grid; place-items: center; font-family: var(--display); font-size: 17px; transform: rotate(-2deg); }
 .brief-result__dek { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0; }
