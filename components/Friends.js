@@ -55,7 +55,7 @@ export function FollowButton({ person, small = false, label = "Follow" }) {
   );
 }
 
-function PersonRow({ p }) {
+export function PersonRow({ p }) {
   return (
     <li className="person">
       <Link href={`/u/${p.handle}`} className="person__who">

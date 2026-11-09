@@ -15,7 +15,10 @@ const FRIENDS = ["friends", "Friends"]; // episodes your friends logged (results
 export default function SearchFilters({ type = "all" }) {
   const signedIn = !!useStore()?.user;
   // Signed out, Friends' episodes only shows if the address asks for it (it then says to sign in).
-  const options = signedIn || type === "friends" ? [...OPTIONS, FRIENDS] : OPTIONS;
+  const options = signedIn || type === "friends" ? [...OPTIONS, FRIENDS] : [...OPTIONS];
+  // People and Briefs live in All; their "See all" views get a pill only while you're on them.
+  if (type === "people") options.push(["people", "People"]);
+  if (type === "briefs") options.push(["briefs", "Briefs"]);
   const rerun = (e) => {
     const form = document.getElementById("search-form");
     // Only search again if there's something to search for; otherwise the pick waits for the search.

@@ -3,11 +3,13 @@ import Art from "@/components/Art";
 import EpisodeRow from "@/components/EpisodeRow";
 import KeysNotice from "@/components/KeysNotice";
 import { artOf, episodeCard, safe, searchEpisodes, searchShows } from "@/lib/podcastindex";
-import { plural } from "@/lib/format";
+import { minutes as mins, plural } from "@/lib/format";
 import TrendingBar from "@/components/TrendingBar";
 import TopEpisodes from "@/components/TopEpisodes";
 import SearchFilters from "@/components/SearchFilters";
 import FriendsResults from "@/components/FriendsResults";
+import { PersonRow } from "@/components/Friends";
+import { searchBriefs, searchPeople } from "@/lib/search-community";
 import ForYou from "@/components/ForYou";
 import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
@@ -48,8 +50,10 @@ function href(q, type, max) {
 export default async function SearchPage({ searchParams }) {
   const sp = await searchParams;
   const query = (sp.q || "").trim();
-  const type = ["shows", "episodes", "friends"].includes(sp.type) ? sp.type : "all";
+  const type = ["shows", "episodes", "friends", "people", "briefs"].includes(sp.type) ? sp.type : "all";
   const friends = type === "friends"; // searched in the browser, where we know who you follow (FriendsResults)
+  // People and Briefs are sections in All (only when something matches), with "See all" views of their own.
+  const community = type === "people" || type === "briefs";
   const max = Math.min(200, Math.max(PAGE, parseInt(sp.max) || PAGE));
 
   // Pasted an Apple Podcasts or Spotify link? Go straight to logging it.
@@ -62,6 +66,10 @@ export default async function SearchPage({ searchParams }) {
   }
 
   const topicsPromise = trendingTopics(12);
+  const wantPeople = query && !linkError && (type === "all" || type === "people");
+  const wantBriefs = query && !linkError && (type === "all" || type === "briefs");
+  const peoplePromise = wantPeople ? searchPeople(query, type === "people" ? 30 : 3) : null;
+  const briefsPromise = wantBriefs ? searchBriefs(query, type === "briefs" ? 50 : 3) : null;
   let error = null;
   let episodes = [];
   let shows = [];
@@ -72,7 +80,7 @@ export default async function SearchPage({ searchParams }) {
 
   if (linkError) {
     // fall through to the message below
-  } else if (query && !friends) {
+  } else if (query && !friends && !community) {
     const [e, s] = await Promise.all([
       type === "shows" ? { data: [] } : safe(searchEpisodes(query, type === "episodes" ? max + 1 : 6)),
       type === "episodes" ? { data: [] } : safe(searchShows(query, type === "shows" ? max + 1 : 6)),
@@ -100,12 +108,70 @@ export default async function SearchPage({ searchParams }) {
   }
 
   topics = await topicsPromise;
+  const found = { people: [], exact: false, more: false, ...(await peoplePromise) };
+  const foundBriefs = { briefs: [], total: 0, ...(await briefsPromise) };
   const moreEpisodes = type === "episodes" && episodes.length > max;
   const moreShows = type === "shows" && shows.length > max;
   if (type === "episodes") episodes = episodes.slice(0, max);
   if (type === "shows") shows = shows.slice(0, max);
   // Typed a show's name ("smartless", "hit parade"): show it before episodes.
   const showsFirst = type === "all" && shows.length > 0 && exactTitle(query, shows[0].title);
+
+  const peopleSection = found.people.length > 0 && (
+    <section>
+      <div className="row center" style={{ justifyContent: "space-between" }}>
+        <h2 className="label">People</h2>
+        {type === "all" && found.more && (
+          <Link href={href(query, "people")} className="more-link">
+            See all →
+          </Link>
+        )}
+      </div>
+      <ul className="people-list">
+        {found.people.map((p) => (
+          <PersonRow key={p.id} p={p} />
+        ))}
+      </ul>
+    </section>
+  );
+
+  const briefsSection = foundBriefs.briefs.length > 0 && (
+    <section>
+      <div className="row center" style={{ justifyContent: "space-between" }}>
+        <h2 className="label">Briefs</h2>
+        {type === "all" && foundBriefs.total > foundBriefs.briefs.length && (
+          <Link href={href(query, "briefs")} className="more-link">
+            See all {foundBriefs.total} →
+          </Link>
+        )}
+      </div>
+      <ul>
+        {foundBriefs.briefs.map((b) => (
+          <li key={b.href}>
+            <Link href={b.href} className="results__row">
+              {b.image ? (
+                <Art src={b.image} title={b.title} size={68} radius={14} />
+              ) : (
+                <span className={`brief-chip tone-${b.color}`} aria-hidden="true">
+                  Brief
+                </span>
+              )}
+              <div className="min0">
+                <p className="title-sm">{b.title}</p>
+                {b.dek && <p className="muted small brief-result__dek">{b.dek}</p>}
+                <p className="mono small muted">
+                  {b.meta ||
+                    [plural(b.shows, "show"), b.seconds ? mins(b.seconds) : null, b.mode === "clips" ? "Just the parts" : null, b.author ? `@${b.author}` : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                </p>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 
   const episodesSection = (
     <>
@@ -287,9 +353,15 @@ export default async function SearchPage({ searchParams }) {
       )}
 
       {friends && query && !linkError && <FriendsResults query={query} />}
-      {!friends && showsFirst && showsSection}
-      {!friends && episodesSection}
-      {!friends && !showsFirst && showsSection}
+      {type === "people" && (peopleSection || <p className="muted">No one on Hooked matches “{query}”.</p>)}
+      {type === "briefs" && (briefsSection || <p className="muted">No briefs match “{query}”.</p>)}
+      {/* All: someone's exact name goes first; partial name matches come after shows and episodes. */}
+      {type === "all" && found.exact && peopleSection}
+      {!friends && !community && showsFirst && showsSection}
+      {!friends && !community && episodesSection}
+      {!friends && !community && !showsFirst && showsSection}
+      {type === "all" && !found.exact && peopleSection}
+      {type === "all" && briefsSection}
     </>
   );
 }
