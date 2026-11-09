@@ -179,6 +179,11 @@ Options discussed on 2026-11-03:
   Search only adds our feed/Spotify shows by title).
 
 **Follow-ups, small:**
+- **Test people script (before Erin and YY review the Home decisions):** test users go on the **test** database only
+  (fake activity on live shows up in Just logged, Popular on Hooked, friends' feeds, the digest and Wrapped). Write
+  `scripts/seed-test-people.mjs`: ~4 accounts with handles, follows, logs with hook lines, a send or two; refuses to run
+  unless the URL is the test project; re-run after each test refresh (a refresh from live wipes them). Real invitees go
+  on live via `allowed_emails`.
 - Check the daily catalog job ran: Vercel → Logs, path `/api/cron/catalog`, 09:00 UTC. It now also re-reads 5 feed
   shows per run (`refreshStale` in `lib/catalog.js`).
 - Turn on Supabase → Authentication → "Leaked password protection".
