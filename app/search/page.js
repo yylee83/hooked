@@ -156,7 +156,7 @@ export default async function SearchPage({ searchParams }) {
               {b.image ? (
                 <Art src={b.image} title={b.title} size={68} radius={14} />
               ) : (
-                <span className={`brief-chip tone-${b.color}`} aria-hidden="true">
+                <span className={`search-brief-tile tone-${b.color}`} aria-hidden="true">
                   Brief
                 </span>
               )}
