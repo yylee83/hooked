@@ -1,36 +1,32 @@
 import Link from "next/link";
 import { briefs } from "@/lib/briefs";
 import { SignInButton } from "@/components/Account";
+import { BriefCard } from "@/components/BriefCards";
 import { recentBriefs } from "@/lib/supabase/public";
+import { searchBriefs } from "@/lib/search-community";
 import { artOf, findShow, safe } from "@/lib/podcastindex";
-import { minutes } from "@/lib/format";
+import { minutes, plural } from "@/lib/format";
 
 export const metadata = { title: "Briefs" };
 export const revalidate = 60;
 
-// The first few covers, fanned out at the top corner of a brief card. The first show sits on top.
-function CoverFan({ covers }) {
-  const list = covers.filter(Boolean).slice(0, 3);
-  if (!list.length) return null;
-  return (
-    <span className="fan" aria-hidden="true">
-      {list
-        .map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={src} alt="" className={`fan__cover fan__cover--${i}`} loading="lazy" />
-        ))
-        .reverse()}
-    </span>
-  );
-}
+// A listener brief's one line of details: shows, length, just the parts, who made it.
+const listenerMeta = (b) =>
+  [plural(b.shows ?? (b.items || []).length, "show"), (b.seconds ?? b.total_seconds) ? minutes(b.seconds ?? b.total_seconds) : null, b.mode === "clips" ? "Just the parts" : null, b.author ? `@${b.author}` : null]
+    .filter(Boolean)
+    .join(" · ");
 
-export default async function BriefsPage() {
-  const [community, curatedCovers] = await Promise.all([
-    recentBriefs(20),
-    Promise.all(
-      briefs.map((b) => Promise.all(b.items.slice(0, 3).map(async (it) => artOf((await safe(findShow(it.show))).data) || null)))
-    ),
+export default async function BriefsPage({ searchParams }) {
+  const query = String((await searchParams)?.q || "").trim().slice(0, 100);
+
+  // Built-in briefs list shows by name; their covers come from looking each show up (cached).
+  const coversFor = (b) => Promise.all(b.items.slice(0, 3).map(async (it) => artOf((await safe(findShow(it.show))).data) || null));
+  const [community, curatedCovers, found] = await Promise.all([
+    query ? [] : recentBriefs(40),
+    Promise.all(briefs.map(coversFor)),
+    query ? searchBriefs(query, 60) : null,
   ]);
+  const coversBySlug = Object.fromEntries(briefs.map((b, i) => [b.slug, curatedCovers[i]]));
 
   return (
     <>
@@ -43,41 +39,67 @@ export default async function BriefsPage() {
           </Link>
         </div>
       </div>
-      <p className="muted" style={{ margin: "8px 0 24px", fontSize: 19 }}>
-        A topic, the best episodes and sections from several shows, and each show's angle.
+      <p className="muted" style={{ margin: "8px 0 16px", fontSize: 19 }}>
+        A topic, the best episodes and sections from several shows, and each show&rsquo;s angle.
       </p>
-      {briefs.map((b, i) => (
-        <Link key={b.slug} href={`/briefs/${b.slug}`} className={`brief-tile brief-tile--fan tone-${b.color}`}>
-          <CoverFan covers={curatedCovers[i]} />
-          <span className={`sticker ${b.color === "cobalt" ? "" : "sticker--cobalt"}`}>Brief</span>
-          <h2 className="display">{b.title}</h2>
-          <p style={{ fontSize: 18 }}>{b.dek.replace(/\*/g, "")}</p>
-          <p className="mono small" style={{ marginTop: 14 }}>
-            {b.meta}
-          </p>
-        </Link>
-      ))}
 
-      {community.length > 0 && (
-        <>
-          <h2 className="section-title">Made by listeners</h2>
-          {community.map((b) => (
-            <Link key={b.id} href={`/briefs/b/${b.id}`} className={`brief-tile brief-tile--sm brief-tile--fan tone-${b.color}`}>
-              <CoverFan covers={(b.items || []).map((it) => it.image)} />
-              <h2 className="display">{b.title}</h2>
-              {b.dek && <p style={{ fontSize: 17 }}>{b.dek}</p>}
-              <p className="mono small" style={{ marginTop: 12 }}>
-                {[
-                  `${b.items.length} shows`,
-                  b.total_seconds ? minutes(b.total_seconds) : null,
-                  b.mode === "clips" ? "Just the parts" : "Full episodes",
-                  b.author?.handle ? `@${b.author.handle}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
+      {/* Searches briefs only (built-in and listeners'), by title, topic, description and the episodes inside. */}
+      <form className="search briefs-search" action="/briefs" role="search">
+        <input className="input" type="search" name="q" defaultValue={query} placeholder="Search briefs" aria-label="Search briefs" />
+        <button className="btn btn--cobalt btn--shadow-sm" type="submit">
+          Search
+        </button>
+      </form>
+
+      {query ? (
+        <section>
+          <div className="row center" style={{ justifyContent: "space-between" }}>
+            <h2 className="section-title">
+              {found.total ? `${plural(found.total, "brief")} for “${query}”` : `No briefs match “${query}”`}
+            </h2>
+            <Link href="/briefs" className="more-link">
+              Clear
             </Link>
-          ))}
+          </div>
+          {found.total === 0 && (
+            <p className="muted">
+              Try another word, or <Link href={`/briefs/new?topic=${encodeURIComponent(query)}`} className="more-link">make a brief about it</Link>.
+            </p>
+          )}
+          <div className="brief-grid">
+            {found.briefs.map((b) => (
+              <BriefCard key={b.href} href={b.href} title={b.title} color={b.color} covers={b.slug ? coversBySlug[b.slug] : b.covers} meta={b.meta || listenerMeta(b)} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <>
+          <h2 className="section-title">Hooked selects</h2>
+          <div className="selects" role="list">
+            {briefs.map((b, i) => (
+              <div key={b.slug} role="listitem" className="selects__item">
+                <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={b.color} covers={curatedCovers[i]} meta={b.meta} />
+              </div>
+            ))}
+          </div>
+
+          {community.length > 0 && (
+            <>
+              <h2 className="section-title">Made by listeners</h2>
+              <div className="brief-grid">
+                {community.map((b) => (
+                  <BriefCard
+                    key={b.id}
+                    href={`/briefs/b/${b.id}`}
+                    title={b.title}
+                    color={b.color}
+                    covers={(b.items || []).map((it) => it.image)}
+                    meta={listenerMeta({ ...b, author: b.author?.handle })}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
     </>
