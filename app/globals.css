@@ -717,3 +717,24 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .people-list { list-style: none; margin: 0; padding: 0; }
 .brief-chip { flex: none; width: 68px; height: 68px; border: var(--line); border-radius: 14px; display: grid; place-items: center; font-family: var(--display); font-size: 17px; transform: rotate(-2deg); }
 .brief-result__dek { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0; }
+/* ---------- Briefs page: Hooked selects (swipe row) and the listener grid ---------- */
+.briefs-search { margin-top: 4px; }
+.selects { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 6px 16px 2px; margin: 0 -16px 0 0; }
+.selects::-webkit-scrollbar { display: none; }
+.selects__item { flex: none; width: 74%; max-width: 280px; scroll-snap-align: start; }
+.brief-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 8px; }
+.brief-card { display: flex; flex-direction: column; gap: 8px; height: 100%; border: var(--line); border-radius: 22px; box-shadow: 4px 4px 0 var(--ink); padding: 14px; }
+.brief-card--select { min-height: 210px; padding: 16px; }
+.brief-card__title { font-size: 21px; line-height: 1.08; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.brief-card--select .brief-card__title { font-size: 28px; }
+.brief-card__meta { font-size: 11px; line-height: 1.35; text-transform: uppercase; margin-top: auto; opacity: .9; }
+.cover-stack { position: relative; display: block; height: 62px; margin-bottom: 4px; }
+.cover-stack--empty { height: 0; margin: 0; }
+.cover-stack__img { position: absolute; top: 0; width: 56px; height: 56px; object-fit: cover; border: 2.5px solid var(--ink); border-radius: 12px; background: var(--butter); }
+.cover-stack__img--0 { left: 0; transform: rotate(-5deg); z-index: 3; box-shadow: 3px 3px 0 var(--ink); }
+.cover-stack__img--1 { left: 38px; transform: rotate(4deg); z-index: 2; }
+.cover-stack__img--2 { left: 76px; transform: rotate(-2deg); z-index: 1; }
+.brief-card--select .cover-stack { height: 74px; }
+.brief-card--select .cover-stack__img { width: 68px; height: 68px; border-radius: 14px; }
+.brief-card--select .cover-stack__img--1 { left: 48px; }
+.brief-card--select .cover-stack__img--2 { left: 96px; }
