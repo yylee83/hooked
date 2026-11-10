@@ -4,6 +4,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
 import UpNextHome from "@/components/UpNextHome";
+import TrendingConversations from "@/components/TrendingConversations";
 import { NotificationBell } from "@/components/Notifications";
 
 // Home: what's happening on Hooked. Apple's chart lives on Search.
@@ -32,6 +33,8 @@ export default function FriendsPage() {
       <FriendsFeed />
 
       <FreshLogs />
+
+      <TrendingConversations />
     </>
   );
 }

@@ -105,7 +105,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home (Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged; no Apple chart),
+- **Pages** (`app/`): `/` Home (Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
+  `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/briefs` (a briefs-only search, "Hooked selects" swipe row of built-in briefs, listener briefs in a grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`), `/me` My log (tabs: Episodes, Shows,
