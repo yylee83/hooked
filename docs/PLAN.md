@@ -16,7 +16,9 @@ called "Nelson Mandela" instead of Flipping Tables, The History Hour, etc. Three
 name counted on top of its title (now only when the title doesn't already match), possessives were misread
 ("Mandela’s" became "mandelas"), and the exact-show-name boost and "shows first" on All went to any show with that name
 (now it needs 5+ episodes, `namedShow`). Apple's episode order counts more. **All now always lists Shows, then
-Episodes** (Erin, 2026-11-09: the same order for every search). Episode and show ranking moved from
+Episodes** (Erin, 2026-11-09: the same order for every search). Shows with fewer than 5 episodes rank lower (−300), so
+a show with some history leads Shows; a brand-new show still comes first when nothing else matches ("metro with sarah
+koenig"), but drops lower in broader searches ("serial"). Episode and show ranking moved from
 `lib/podcastindex.js` into `rankEpisodes` / `rankShows` in `lib/rank.js` so they can be tested without Podcast Index.
 Checked against Apple's answers for 12 searches (nelson mandela, kara swisher, smartless, hit parade, the daily, michelle
 collins, tradwives, taylor swift, barack obama, serial, the rest is history, mandela effect): same or better. An episode
