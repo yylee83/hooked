@@ -680,6 +680,10 @@ body:has(.mini) .app { padding-bottom: 300px; }
 
 /* "+" next to an episode in a list of reviews (ReviewAdd): adds it to Up next. */
 .fresh__side { flex: none; align-self: flex-start; }
+/* Trending conversations (Home, after Just logged) */
+.trending-convo { display: flex; gap: 14px; padding: 14px 0; border-top: var(--line); }
+.trending-convo:last-child { border-bottom: var(--line); }
+.trending-convo__counts { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 .review-add { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; }
 .review-add__btn { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 38px; height: 38px; padding: 0 8px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--white); color: var(--ink); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); -webkit-tap-highlight-color: transparent; }
 .review-add__btn.is-on { background: var(--butter); }

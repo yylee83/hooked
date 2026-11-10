@@ -25,7 +25,16 @@ collins, tradwives, taylor swift, barack obama, serial, the rest is history, man
 with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
 full-name titles.
 
-**Everything else is merged and live (#33–#50).** In short:
+**Trending conversations on Home (2026-11-09, branch `trending-conversations`, needs `supabase db push` on live after
+merge):** a section after Just logged listing up to 3 episodes people are talking about (Erin's request; answers most of
+Decision 3 in the decisions doc). Ranked by the database function `trending_conversations`
+(`20261109120000_trending_conversations.sql`): reviews with a hook line, replies and sends from the past week, each person
+once per episode, worth half as much every 48 hours, replies to your own review left out, 2+ people needed, one episode
+per show. Each row: episode, show, "4 reviews · 7 replies · 2 sends", and the top review (scored like episode pages).
+Sends are private, so the function returns totals only. Test: `node scripts/check-trending.mjs`. Already applied to the
+**test** database, and the test people were re-made there on 2026-11-09 (new password; Erin has it).
+
+**Everything else is merged and live (#33–#51).** In short:
 - **Stage D prep and step 1 (#33–#38):** every page reads episode and show details from our tables; saves always carry
   our ids (`/api/catalog/ensure`). Step 2, the database change, is next (below).
 - **Step 8, listening sync (#41):** where you stopped is saved to your account (`listening_progress`,
