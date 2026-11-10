@@ -19,7 +19,7 @@ import { cookies } from "next/headers";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
 import { showHref } from "@/lib/addresses";
-import { exactTitle, norm } from "@/lib/rank";
+import { namedShow, norm } from "@/lib/rank";
 import { placeAppleEpisodes, placeAppleShows } from "@/lib/search";
 
 export const metadata = { title: "Search" };
@@ -105,8 +105,8 @@ export default async function SearchPage({ searchParams }) {
       ...piShows.filter((x) => !(x.showRef && ownRefs.has(x.showRef)) && !ownTitles.has(norm(x.title))),
     ];
     // Ours first only when it's as good a match: an exact name further down beats a loose match of ours.
-    const exactAt = shows.findIndex((x) => exactTitle(query, x.title));
-    if (exactAt > 0 && !exactTitle(query, shows[0].title)) shows.unshift(...shows.splice(exactAt, 1));
+    const exactAt = shows.findIndex((x) => namedShow(query, x));
+    if (exactAt > 0 && !namedShow(query, shows[0])) shows.unshift(...shows.splice(exactAt, 1));
   } else {
     [popular, chartEps, chart] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10), topCharts(9)]);
   }
@@ -118,8 +118,9 @@ export default async function SearchPage({ searchParams }) {
   const moreShows = type === "shows" && shows.length > max;
   if (type === "episodes") episodes = episodes.slice(0, max);
   if (type === "shows") shows = shows.slice(0, max);
-  // Typed a show's name ("smartless", "hit parade"): show it before episodes.
-  const showsFirst = type === "all" && shows.length > 0 && exactTitle(query, shows[0].title);
+  // Typed a show's name ("smartless", "hit parade"): show it before episodes. Not for a one-off show that
+  // happens to be called what you typed ("nelson mandela").
+  const showsFirst = type === "all" && shows.length > 0 && namedShow(query, shows[0]);
 
   const peopleSection = found.people.length > 0 && (
     <section>
