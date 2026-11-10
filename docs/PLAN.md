@@ -2,147 +2,93 @@
 
 Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the shared base. This file records what we decided and the order we're doing the work in. Update it when a decision changes.
 
-## Where we left off (2026-11-07, evening)
+## Where we left off (2026-11-09)
 
 **Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). `~/claude/hooked` is Erin's
 archived first version: don't build from it.
 
-**First thing next session:** check which of the open PRs below Erin has merged (`gh pr list --repo yylee83/hooked`),
-then `git checkout main && git pull`. None of them changes the database, so there's nothing to `supabase db push`.
+**First thing next session:** `gh pr list --repo yylee83/hooked`. The only open PR was **#50** (test-people script plus
+this plan update; no app or database change). If Erin has merged it: `git checkout main && git pull`. Nothing is waiting
+for `supabase db push`: every migration through `20261108120000_listening_progress.sql` is on **both** databases.
 
-**Step 9, better search, part 1 (2026-11-08): open PR `search-ranking`, no database change.** Shows Apple knows but
-Podcast Index doesn't stay in results (`lib/search.js`; tapping one opens `/show/apple/<id>`, which brings it in from
-its feed); show ranking treats the name before ":" or "|" as the name, weights Apple's top answers more, ranks other
-languages lower, removes duplicates and drops description-only matches; "All" lists shows first when you typed a show's
-name. **Merged (#42),** plus "Filter:" pills always under the search box (radio buttons in the search form,
-`components/SearchFilters.js`). **Part 2a (open PR `search-friends`): a "Friends" filter** (results headed "Friends’ episodes"; labels shortened so the row fits one line at 360px+), signed in only:
-episodes people you follow logged that match your words (title, show, hook line, description), one row per episode with
-each friend's verdict, stars and hook (`components/FriendsResults.js`; runs in the browser, which knows who you follow;
-reads up to 1,000 friends' logs, then ranks with `lib/rank.js`). **Still to do in part 2:** search our own tables for
-All / Episodes / Shows; part 3, topics: guests and AI topic tags (from descriptions and hook
-lines) in new `topics` / `episode_topics` tables. No free-typed tags on the log sheet; suggested topic chips are an idea
-for Erin and YY to decide later.
+**Everything else is merged and live (#33–#49).** In short:
+- **Stage D prep and step 1 (#33–#38):** every page reads episode and show details from our tables; saves always carry
+  our ids (`/api/catalog/ensure`). Step 2, the database change, is next (below).
+- **Step 8, listening sync (#41):** where you stopped is saved to your account (`listening_progress`,
+  `lib/progress-sync.js`). Opening Hooked or switching back to the tab shows what you played last on any device, paused
+  5 seconds early; newest wins; a device that's playing isn't interrupted.
+- **Step 9, better search, part 1 and part of 2 (#42–#47):**
+  - Shows Apple knows but Podcast Index doesn't stay in results (`lib/search.js`; tapping opens `/show/apple/<id>`).
+  - Show ranking: the name before ":" or "|" counts as the name, Apple's top answers weigh more, other languages rank
+    lower, duplicates go, description-only matches are dropped; "All" puts shows first when you typed a show's name.
+  - **"Filter:"** pills always under the search box (`components/SearchFilters.js`): All · Episodes · Shows · Friends
+    (Friends only when signed in; the server guesses from the sign-in cookie so the pill doesn't pop in, #47).
+  - **Friends** = episodes people you follow logged that match your words (`components/FriendsResults.js`).
+  - **People and Briefs sections in All** (no extra pills; `lib/search-community.js`), with "See all" views.
+  - **Speed (#45):** Podcast Index answers are cached by the question (`unstable_cache` in `call()`,
+    `lib/podcastindex.js`): repeat searches make 0 requests; 8-second timeout.
+- **Show pages: "Load more" episodes (#44)**, 30 at a time.
+- **Briefs page (#48, #49):** a search bar (briefs only, `/briefs?q=`), built-in briefs as a **"Hooked selects"** swipe
+  row, listener briefs in a 2-column grid, and every card shows the same details: shows · run time · (Just the parts) ·
+  who made it ("Hooked" for built-in). `components/BriefCards.js`; built-in card details come from `curatedSummary`
+  (`lib/briefs-server.js`, kept 6 hours).
+- **#49 fixed a live CSS clash:** a new `.brief-chip` rule squashed the brief chips on profiles and My log. `globals.css`
+  is one shared file, so check a class name isn't used before adding it (`grep -rn "name" app components`), and prefix
+  new ones with their component (`.search-filters`, `.brief-card`). It happened twice this session.
 
-**Search: People and Briefs (2026-11-08): open PR `search-people-briefs`, no database change.** Chosen with Erin: no new
-filter pills (the row stays one line); in **All**, a People section (handle or display name; an exact match goes first,
-partial matches after shows and episodes) and a Briefs section (built-in and listener briefs; title, topic, description
-and the episodes inside), each only when something matches, with "See all" views (`type=people` / `type=briefs`, which
-show a pill only while you're on them). `lib/search-community.js`.
+**Waiting on Erin and YY (don't build until they decide).** All in the decisions doc,
+[Hooked: Home and Search decisions](https://claude.ai/artifact/CLGuhPA7uZ96u7NESmvXKZ) (Claude Docs), which got a new
+section on 2026-11-08, "Update, November 8: what's built since", and two new checklist items:
+  1. **One feed with a Friends | Everyone switch** on Home (would match the Friends filter on Search).
+  2. **How votes on a review look** (Claude's lean: C, a "Review by @name" byline with "Agree" / "Disagree" in words).
+  3. **"Talked about this week"** at the end of Home.
+  4. **The Everyone view holds Hooked activity only;** trending, hot episodes and charts on Search (fits what's built).
+  5. **The Search layout:** now mostly answered by what's built.
+  6. **New: what goes in Hooked selects,** and refreshing the two built-in briefs (Podcast Index now finds only 2 of 4
+     episodes for The Midterms and 3 of 4 for Tradwives). A "featured" switch so they can pick selects is an idea.
+  7. **New: the search results line** (e.g. "4.5★ from 12 on Hooked · 3 friends"): needed before search #1 below.
+  8. **What "hooked" means** (options A and B below; Erin chose to wait for YY).
 
-**Search speed (2026-11-08): open PR `search-cache`, no database change.** Podcast Index answers were never reused:
-every request carries a fresh signature, and Next counts request headers in its fetch cache key. `call()` in
-`lib/podcastindex.js` now caches by the question (`unstable_cache`): searches 1 hour, Apple-show and episode-id lookups
-1 day, everything else 15 minutes (the daily refresh still sees fresh details); failures aren't kept; 8-second timeout.
-With a stand-in Podcast Index: a repeat search went from 20–33 requests to 0; a search seen before still works while
-Podcast Index is down. Also fixed (from #42): Apple-only episodes no longer use up All's few episode slots.
-Still open from the speed idea: saving shows/episodes that searches find into our tables (pairs with search part 2).
+**Before the review with YY:** Erin runs `TEST_PEOPLE_PASSWORD='…' node scripts/seed-test-people.mjs --friends-with erin`
+(once #50 is merged) so previews have friends, logs, replies and sends. Test database only; `--remove` cleans up. The
+test database currently has **no** test people. Real people Erin invites go on **live** through `allowed_emails`.
 
-**Step 8, listening sync (2026-11-08): open PR `listening-sync`, with a migration.** Where you stopped is saved to your
-account (`listening_progress`, `lib/progress-sync.js`). Opening Hooked or switching back to the tab shows what you
-played last on any device, paused 5 seconds early; newest wins; a device that's playing isn't interrupted; closing the
-player or finishing an episode empties it everywhere; spots saved while signed out move in on sign-in. Already applied
-to the **test** database. **After merging, Erin runs `supabase db push`** (only `20261108120000_listening_progress.sql`
-should be listed). Tested with two signed-in browser windows (laptop and 390px phone) against the test database:
-10 checks, the script was in the session folder (rewrite from `docs/PLAN.md` testing notes if needed).
+**Next, in Claude's suggested order:**
+1. **Stage D step 2, on or after 2026-11-10** (the checklist below): one PR with the migration that drops the copied
+   columns. Back up live first, rehearse with `scripts/rehearse-migrations.mjs`, test database, then Erin pushes.
+2. **Search #1, Hooked data in results** (our ratings and friends next to each result), once the results-line wording
+   is decided (item 7).
+3. **Search, still open:** search our own `shows` / `episodes` tables for All / Episodes / Shows (their `search` column
+   is ready), and save what searches find into them; **#3 topics** (guests and AI topic tags from descriptions and hook
+   lines, in new `topics` / `episode_topics` tables; no free-typed tags on the log sheet); **#5 suggestions as you type**.
+4. Whatever Erin and YY decide in the doc; step 10 (Home Everyone | Friends) depends on it.
 
-**Open PRs, merge in this order** (each builds on the one before, and shows the earlier ones' commits until they merge):
-1. **#33 Stage D prep 1:** Home ("Just logged", friends' activity) and episode-page reviews read episode details from
-   our tables. Adds `lib/log-episode.js` (`LOG_EPISODE`, `withEpisode`).
-2. **#34 prep 2:** profiles, show ratings, My log and the weekly email. Shared links and show ratings match by our ids
-   only (the old `episode_id` / `feed_id` fallbacks are gone).
-3. **#35 prep 3:** "Sent to you" and Up next (`episodeOf(table)`).
-4. **#37 prep 4:** hooked shows' names and covers from `shows` (`HOOKED_SHOW`, `withShow`).
-5. **#38 Stage D step 1:** saves always carry our ids. New `/api/catalog/ensure` (`ensureRefs` in
-   `lib/catalog-client.js`): before saving something it only knows by Podcast Index numbers, the app asks the server,
-   which finds or creates the entry from Podcast Index and returns our id.
-6. **#39 this plan update.**
-
-Separate, any order: **#36** renames My log's "Diary" tab to **"Episodes"** (the address stays `#diary`).
-
-**Live today (merged):**
-- **Off Podcast Index numbers (#29, #30, #32).** Wrapped's genres come from `shows.categories` (feeds' Apple categories
-  are now saved too). For you works from our show ids: feed shows use our saved episodes; friends' picks and Popular on
-  Hooked read our tables; picks from Podcast Index now show their show name. Briefs carry our ids, a pasted Apple link to
-  a feed show's episode works, and Spotify-only links are refused ("only on Spotify, so it can't play in a brief"). Topic
-  search in briefs stays on Podcast Index until step 9 (better search).
-- **Brief builder (#32, from Erin's testing):** nothing is ticked for you; your picks stay when you search again and the
-  list shows only the new results; the title follows the topic until you type one; 8 results then "Show N more"; a
-  sticky **"Your brief · N episodes · time"** bar with "Review ↓" (layout A of three mockups; it sits above the mini
-  player when one is open).
-- **#31:** the stage D checklist (below, under Next).
-
-**Decided today (Erin):**
+**Decided earlier, still true:**
 - Stage D drops the copied details from **logs, sends, Up next and hooked shows**; **notifications keep theirs** (a
-  snapshot). Also drop `episode_id` from replies and reactions.
-- **Stage D is two steps.** Step 1 (#38, above). **Step 2 on or after 2026-11-10:** the database change. Spelled out
-  under Next. Why the split: the copies had a hidden job (a save without our id made the database create the
-  episode/show from them), so creating entries had to move to the server first. Erin asked for this explained simply;
-  the walkthrough "today the database builds the record from what your phone sends; after, the server builds it from
-  Podcast Index, one step earlier" worked.
-- **"What hooked means": wait for YY** (see below; Erin hit it on her profile today).
+  snapshot). Also drop `episode_id` from replies and reactions. Stage D is two steps because the copies had a hidden
+  job (a save without our id made the database create the entry from them); step 1 moved that to the server.
+  Walkthrough that worked for Erin: "today the database builds the record from what your phone sends; after, the server
+  builds it from Podcast Index, one step earlier."
 
-**Test database changes today:** The Michelle Collins Show (`2e369h3s`) was re-read from its feed (now has categories)
-and its Apple id restored (`1242084389`; a manual test re-read had blanked it). Every throwaway account, brief and
-made-up `999…` show/episode created for tests was deleted.
-
-**Still open from the morning session (Home and Search):** the decisions doc,
-[Hooked: Home and Search decisions](https://claude.ai/artifact/CLGuhPA7uZ96u7NESmvXKZ) (Claude Docs; it has a
-checklist). Don't build these until Erin and YY have decided:
-  1. **One feed with a Friends | Everyone switch** replacing "From people you follow" and "Just logged".
-  2. **How votes on a review look** (Claude's lean: **C**, a "Review by @name" byline with "Agree" / "Disagree" in words;
-     or **D**, "Good take?" under the episode). Keep YY's rule: small black icons, no bubbles.
-  3. **"Talked about this week"** at the end of Home (3 episodes with the most replies and votes in 7 days).
-  4. **The Everyone view holds Hooked activity only;** trending topics, hot episodes and charts go to Search.
-  5. **The Search layout:** not worked through yet.
-  The morning's PRs (#26 slim "Sent to you", + next to the episode, Apple chart to Search; #27 covers survive a missing
-  title) are live.
-
-**Done and live:** steps 1–6, and step 7 stages A, B and C (all of it). Every migration through
-`20261103120000_show_refs_are_keys.sql` is applied to both databases. Details of each stage: `docs/DATA_MODEL.md`.
-
-Stage C, in short (PRs #17–#22):
-- **Short addresses** (`/episode/k3x9q2ab`) everywhere. Links go through `episodeHref` / `showHref` / `logHref` in
-  `lib/addresses.js`; old Podcast Index addresses still redirect.
-- **Our own ids are the keys.** Logs, Up next, sends, replies, reactions, notifications and the player use
-  `episode_ref`; hooked shows use `show_ref`. The Podcast Index numbers (`episode_id`, `feed_id`) are optional and
-  still filled when known. Logs find their show through their episode (`logs.episode_ref → episodes.show_id`).
-  In the app, compare with `sameEpisode` / `findLog` / `inUpNext` / `sameShow` / `findHookedShow` (`lib/store.js`).
-- **Shows Podcast Index lacks** come in from their own feed (found through Apple; only feeds Apple lists are read) or
-  as basic Spotify-only entries (`importFeedShow`, `spotifyEpisode` in `lib/catalog.js`). Erin's Michelle Collins link
-  works. Podcast Index's #223945 was never that show: it's "Midnight Snack with Michelle Collins", which an old name
-  search accepted without checking the title.
-
-Smaller changes also live (PRs #20, #23, #24): a **Sign in** button on the Search and Briefs headers when signed out;
-**"+3 more"** under Hooked on (My log) opens `/me/hooked`, a grid of every hooked show; **"Log it"** shows your stars
-("★ 4.5") or "✓ Logged" once you've logged an episode (`LogButton` in `components/Social.js`, used everywhere).
-
-**Also waiting on a decision (Erin and YY): what "hooked" means.** Today it's set in two places: every log asks "I'm hooked /
-I'm not hooked" (required, `logs.hooked`), and show pages have an optional "Hooked on this?" toggle (`hooked_shows`).
-Erin finds asking on every log clunky. **On 2026-11-07 she noticed her profile's "Hooked on" lists only 2 shows (the
-ones she toggled) next to "9 hooked" (hooked logs, from 7 shows).** Not a bug: nothing links the two. Option A below,
-with a one-time catch-up (add the show of every hooked log, nothing deleted), would fix it. Erin chose to wait for YY.
-Options discussed on 2026-11-03:
+**What "hooked" means (waiting on YY).** Today it's set in two places: every log asks "I'm hooked / I'm not hooked"
+(required, `logs.hooked`), and show pages have an optional "Hooked on this?" toggle (`hooked_shows`). Erin finds asking
+on every log clunky, and on 2026-11-07 noticed her profile's "Hooked on" lists only 2 shows (the ones she toggled) next
+to "9 hooked" (hooked logs, from 7 shows). Not a bug: nothing links the two. Options (2026-11-03):
 - **A (recommended):** keep both, but pre-select "I'm hooked" when logging an episode of a show you're hooked on, with
-  a note ("Pre-picked because you're hooked on …"). Also make the toggle the single source of truth: the first log
-  marked hooked hooks the show; after that only you turn it off. No filters, stats or feeds change.
-- **B:** hooked only at show level; logs get stars and a hook line only. About a day of work, mostly wording: the
-  Episodes-tab (diary) filter, "is hooked on / wasn't hooked by" feed lines, hooked %, "3 of 5 hooked", Wrapped, For you picks and
-  share text all need new meanings. Small migration (existing hooked logs → hooked shows), nothing deleted.
+  a note. The toggle becomes the single source of truth: the first log marked hooked hooks the show; after that only
+  you turn it off. A one-time catch-up adds the show of every hooked log (nothing deleted).
+- **B:** hooked only at show level; logs get stars and a hook line only. About a day of work, mostly wording (the
+  Episodes-tab filter, feed lines, hooked %, Wrapped, For you, share text). Small migration, nothing deleted.
 
-**Next:** whatever Erin and YY decide in the Home and Search doc (above), or A or B for "hooked". Otherwise:
-- **Stage D step 2, on or after 2026-11-10**, once #33–#38 are merged and have been used live for a couple of days.
-  Prep and step 1 are done (checklist below). Back up first (export, as below), rehearse with
-  `scripts/rehearse-migrations.mjs`, test database, then Erin pushes it to live.
-- **Or step 8** in the meantime: listening sync (where you stopped is saved to your account, across devices). Step 9,
-  better search, comes after it.
-- Small: re-check `/api/catalog/ensure` against the real Podcast Index on a preview or live (local tests used a stand-in).
-  **Before writing stage D, go through every place that reads the copied columns, one by one.** If code asks
-  the database for a column that's gone, the whole request fails, not just that field, so a page can go blank.
-  **Decided 2026-11-07 (Erin): `logs`, `recommendations` (sends) and `list_items` (Up next) lose their copies**
-  (`episode_id`, `feed_id`, `title`, `image`, `feed_title`, `feed_image`, and on logs `audio`, `duration`): they
-  all point at our episodes. Notifications keep theirs (a snapshot of that moment). Then switch each reader to the episode and show through the log's link
-  (`episode:episodes!logs_episode_ref_fkey(..., show:shows(...))`), as #30 did for For you and Popular on Hooked.
-  Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title\|feed_image' app lib components`):
+### Stage D checklist
+
+**Before writing stage D, go through every place that reads the copied columns, one by one.** If code asks
+the database for a column that's gone, the whole request fails, not just that field, so a page can go blank.
+**Decided 2026-11-07 (Erin): `logs`, `recommendations` (sends) and `list_items` (Up next) lose their copies**
+(`episode_id`, `feed_id`, `title`, `image`, `feed_title`, `feed_image`, and on logs `audio`, `duration`): they
+all point at our episodes. Notifications keep theirs (a snapshot of that moment). Then switch each reader to the episode and show through the log's link
+(`episode:episodes!logs_episode_ref_fkey(..., show:shows(...))`), as #30 did for For you and Popular on Hooked.
+Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title\|feed_image' app lib components`):
   - [x] `lib/store.js`: your own logs (stage D prep 2)
   - [x] `lib/store.js`: Up next (`list_items`) reads (prep 3)
   - [x] `lib/supabase/public.js`: profile logs, a shared log (`?from=`), show ratings (prep 2; old `episode_id` / `feed_id` fallbacks removed)
@@ -169,33 +115,43 @@ Options discussed on 2026-11-03:
     - the saves that stop sending the copies (`logToDb`, `listToDb`, `hookedToDb`, the send insert in `lib/store.js`).
     Back up live, compare copies with our tables on the fresh export (prep 1 did this: identical), rehearse with
     `scripts/rehearse-migrations.mjs`, test database, then live.
-  - [ ] Run the search again just before stage D, in case new code added readers.
+  - [ ] Run the search again just before stage D, in case new code added readers. Added since 2026-11-07:
+    `components/FriendsResults.js` (reads logs through `withEpisode`, fine) and `scripts/seed-test-people.mjs` (tries
+    without the copies first; its `copies` fallback can go after step 2).
   - [x] Hooked shows (`hooked_shows`): **decided 2026-11-07 (Erin), drop their copies (`feed_id`, `title`, `image`) in
     stage D too.** Reads switched in prep 4 (`withShow` in `lib/log-episode.js`: My log and profiles). Covers now come from
     our `shows` (the show's own feed), like show pages; the copies were Apple's versions of the same art.
-- ~~Still on Podcast Index numbers: For you, Wrapped's genres, briefs~~ (done 2026-11-07, #29, #30, #32; topic search
-  in briefs stays on Podcast Index until step 9).
-- Step 8: listening sync. Step 9: better search (our `shows`/`episodes` tables have a `search` column ready; today
-  Search only adds our feed/Spotify shows by title).
 
 **Follow-ups, small:**
-- **Test people script (before Erin and YY review the Home decisions):** test users go on the **test** database only
-  (fake activity on live shows up in Just logged, Popular on Hooked, friends' feeds, the digest and Wrapped). Write
-  `scripts/seed-test-people.mjs`: ~4 accounts with handles, follows, logs with hook lines, a send or two; refuses to run
-  unless the URL is the test project; re-run after each test refresh (a refresh from live wipes them). Real invitees go
-  on live via `allowed_emails`.
+- Re-check `/api/catalog/ensure` against the real Podcast Index on a preview or live (local tests used a stand-in).
+- **Test people (written 2026-11-08, `scripts/seed-test-people.mjs`):** test users go on the **test** database only
+  (fake activity on live shows up in Just logged, Popular on Hooked, friends' feeds, the digest and Wrapped). Run
+  `TEST_PEOPLE_PASSWORD='…' node scripts/seed-test-people.mjs --friends-with erin` before the Home review and after
+  each test refresh (a refresh from live wipes them): 5 people (`maya.test` … `theo.test`, @example.com emails), ~24 logs
+  over 10 days, votes, replies, 4 sends to @erin. `--remove` deletes them. It only ever talks to `hooked-test`, and
+  gets the key from the Supabase CLI. Real invitees go on live via `allowed_emails`.
 - Check the daily catalog job ran: Vercel → Logs, path `/api/cron/catalog`, 09:00 UTC. It now also re-reads 5 feed
   shows per run (`refreshStale` in `lib/catalog.js`).
 - Turn on Supabase → Authentication → "Leaked password protection".
 - Rotate the Podcast Index API secret (it was shared in chat on 2026-10-31).
 - New code is still JavaScript: TypeScript (decided above) needs its own small setup PR first.
 - Spotify-only shows are matched by title, because Spotify's episode page didn't expose the show's own id. Fine so far.
-- Redraw the share images (see Known issues) and tidy the lint warnings over time: **87** on main, 0 errors. Most are
+- Redraw the share images (see Known issues) and tidy the lint warnings over time: **86** on main (2026-11-09), 0 errors. Most are
   `react-hooks/refs` in `components/Player.js` (the player reads its queue from a React ref while drawing, and each
   field read counts). To compare warnings between two versions, use `npx eslint -f json .`: the `unix` format isn't
   available, and an empty comparison once hid two new warnings.
 
 **Testing notes (what worked):**
+- **Test people for signed-in checks (2026-11-08):** `scripts/seed-test-people.mjs` (test database only) replaces the
+  hand-written throwaway-account scripts. Sign in as `sam.test@example.com` with the password you gave it.
+- **Playwright (2026-11-08):** `playwright-core@1.58.0` installed in the session folder, launched with `executablePath`
+  pointing at the browser already downloaded in `~/Library/Caches/ms-playwright/chromium-1217/` (newer Playwright
+  versions want a browser that isn't there). Check at 390×844.
+- **Counting Podcast Index requests:** the stand-in Podcast Index (below) can count requests; that's how the search
+  cache was proven (a repeat search went from 20–33 requests to 0, and still worked with the stand-in turned off).
+- **Previews from a script:** the Vercel MCP's `get_access_to_vercel_url` gives a share link that Playwright can open
+  without Vercel's login.
+- **Proving a fix:** turn the fix off and check the test fails (done for the Friends pill, #47).
 - **Signed-in checks of Home (2026-11-07):** a small script with the test service key made two throwaway accounts
   (invite, admin create with a password, profile with a handle), gave one some logs, had it send the other four
   episodes, and made the first follow it. Then build against the test database, `next start`, sign in at 390px with
@@ -299,9 +255,10 @@ Each step is its own branch and pull request.
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
 7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **A, B and C done and live (2026-11-03). D: prep and step 1 in PRs #33–#38 (2026-11-07); step 2 (the database change) on or after 2026-11-10.**
-8. Listening sync: where you stopped in each episode is saved to your account, so you can pick up on another device.
-   Today it's kept only on the device you listened on (step 2).
-9. Better search: search our own `shows` and `episodes` (their `search` column is ready), so results include shows
+8. ~~Listening sync: where you stopped in each episode is saved to your account, so you can pick up on another device~~
+   (done 2026-11-08, #41).
+9. Better search (**in progress**: part 1, the filters, Friends, People and Briefs, and caching are done, #42–#47; see
+   "Where we left off" for what's open): search our own `shows` and `episodes` (their `search` column is ready), so results include shows
    Podcast Index lacks and episodes found by their descriptions. Topic search in briefs moves off Podcast Index too.
 10. Home split into Everyone and Friends, and friends' ratings on episode and show pages. (The first part of the Home
    tidy-up is done in #26; the switch may move earlier, see the decisions doc.)
@@ -312,5 +269,6 @@ Each step is its own branch and pull request.
 - ~~Preview links use the live database~~ (done 2026-11-01: previews use the `hooked-test` project, a copy of live).
 - The link-preview picture (`app/opengraph-image.png`, `twitter-image.png`) still says "hooked on". It needs redrawing, ideally as code so it follows `site.name`.
 - To sign in on a preview link, use "Email me a sign-in link" or "Forgot password?" (the test database's copied accounts have no password).
-- Search results are weak. This is step 9 (better search), which needed step 7 first, because better search needs episode descriptions stored in our own database.
+- ~~Search results are weak~~ (much better since #42–#47; searching our own tables is still to do, step 9).
+- The two built-in briefs (The Midterms, Tradwives) now find only some of their episodes on Podcast Index: refresh them.
 - ~~Safe-fetch guard~~ (done: `lib/safe-fetch.js` for pasted Spotify short links, share-image covers and transcripts).
