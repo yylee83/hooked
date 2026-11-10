@@ -118,9 +118,6 @@ export default async function SearchPage({ searchParams }) {
   const moreShows = type === "shows" && shows.length > max;
   if (type === "episodes") episodes = episodes.slice(0, max);
   if (type === "shows") shows = shows.slice(0, max);
-  // Typed a show's name ("smartless", "hit parade"): show it before episodes. Not for a one-off show that
-  // happens to be called what you typed ("nelson mandela").
-  const showsFirst = type === "all" && shows.length > 0 && namedShow(query, shows[0]);
 
   const peopleSection = found.people.length > 0 && (
     <section>
@@ -362,9 +359,9 @@ export default async function SearchPage({ searchParams }) {
       {type === "briefs" && (briefsSection || <p className="muted">No briefs match “{query}”.</p>)}
       {/* All: someone's exact name goes first; partial name matches come after shows and episodes. */}
       {type === "all" && found.exact && peopleSection}
-      {!friends && !community && showsFirst && showsSection}
+      {/* Always shows, then episodes, so the page looks the same for every search. */}
+      {!friends && !community && showsSection}
       {!friends && !community && episodesSection}
-      {!friends && !community && !showsFirst && showsSection}
       {type === "all" && !found.exact && peopleSection}
       {type === "all" && briefsSection}
     </>
