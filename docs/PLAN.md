@@ -11,7 +11,21 @@ archived first version: don't build from it.
 this plan update; no app or database change). If Erin has merged it: `git checkout main && git pull`. Nothing is waiting
 for `supabase db push`: every migration through `20261108120000_listening_progress.sql` is on **both** databases.
 
-**Everything else is merged and live (#33–#49).** In short:
+**Search ranking fix (2026-11-09, branch `fix-search-ranking`):** "nelson mandela" showed one-episode school-project shows
+called "Nelson Mandela" instead of Flipping Tables, The History Hour, etc. Three causes in `lib/rank.js`: an episode's show
+name counted on top of its title (now only when the title doesn't already match), possessives were misread
+("Mandela’s" became "mandelas"), and the exact-show-name boost and "shows first" on All went to any show with that name
+(now it needs 10+ episodes, `MIN_EPISODES` and `namedShow`; Erin chose 10 over 5). Apple's episode order counts more. **All now always lists Shows, then
+Episodes** (Erin, 2026-11-09: the same order for every search). Shows with fewer than 10 episodes rank lower (−300), so
+a show with some history leads Shows; a brand-new show still comes first when nothing else matches ("metro with sarah
+koenig"), and finished short series still lead for their own name (S-Town, 9 episodes), but both drop lower in broader searches ("serial"). Episode and show ranking moved from
+`lib/podcastindex.js` into `rankEpisodes` / `rankShows` in `lib/rank.js` so they can be tested without Podcast Index.
+Checked against Apple's answers for 12 searches (nelson mandela, kara swisher, smartless, hit parade, the daily, michelle
+collins, tradwives, taylor swift, barack obama, serial, the rest is history, mandela effect): same or better. An episode
+with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
+full-name titles.
+
+**Everything else is merged and live (#33–#50).** In short:
 - **Stage D prep and step 1 (#33–#38):** every page reads episode and show details from our tables; saves always carry
   our ids (`/api/catalog/ensure`). Step 2, the database change, is next (below).
 - **Step 8, listening sync (#41):** where you stopped is saved to your account (`listening_progress`,
@@ -54,7 +68,7 @@ section on 2026-11-08, "Update, November 8: what's built since", and two new che
 test database currently has **no** test people. Real people Erin invites go on **live** through `allowed_emails`.
 
 **Next, in Claude's suggested order:**
-1. **Stage D step 2, on or after 2026-11-10** (the checklist below): one PR with the migration that drops the copied
+1. **Stage D step 2, on or after 2026-11-17** (moved from 11-10 by Erin on 2026-11-09; the checklist below): one PR with the migration that drops the copied
    columns. Back up live first, rehearse with `scripts/rehearse-migrations.mjs`, test database, then Erin pushes.
 2. **Search #1, Hooked data in results** (our ratings and friends next to each result), once the results-line wording
    is decided (item 7).
@@ -106,7 +120,7 @@ Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title
     `addLog`, `addToList`, `toggleHookedShow`, `sendRecommendation` and the sign-in move in `lib/store.js`): the server
     finds or creates the entry from Podcast Index and returns our id. If it can't, the old trigger path still works
     until step 2.
-  - [ ] **Stage D step 2 (on or after 2026-11-10), in one PR:**
+  - [ ] **Stage D step 2 (on or after 2026-11-17), in one PR:**
     - a migration that drops the copied columns from `logs`, `recommendations`, `list_items` and `hooked_shows` (with
       their required rules, e.g. `logs.title`, `recommendations.title`, `list_items.title`), and `episode_id` from
       `comments` / `reactions` (with the old `(log_user_id, episode_id)` keys);
@@ -254,7 +268,7 @@ Each step is its own branch and pull request.
 4. ~~Baseline migrations, lint and build checks, safe fetching~~ (done).
 5. ~~Invite-only sign-up~~ (done: `allowed_emails`, the `hook_invite_gate` check, a friendly message for uninvited emails).
 6. ~~Trending topics over 48 hours~~ (done; needs `SUPABASE_SERVICE_ROLE_KEY` in Vercel): save each Google Trends fetch and show the topics that came up most over the last two days. (Google's feed ignores time windows, so we keep our own memory.)
-7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **A, B and C done and live (2026-11-03). D: prep and step 1 in PRs #33–#38 (2026-11-07); step 2 (the database change) on or after 2026-11-10.**
+7. New data model: our own `shows` and `episodes`, switched over in four stages (add, write both, switch, tidy). Design: `docs/DATA_MODEL.md`. **A, B and C done and live (2026-11-03). D: prep and step 1 in PRs #33–#38 (2026-11-07); step 2 (the database change) on or after 2026-11-17.**
 8. ~~Listening sync: where you stopped in each episode is saved to your account, so you can pick up on another device~~
    (done 2026-11-08, #41).
 9. Better search (**in progress**: part 1, the filters, Friends, People and Briefs, and caching are done, #42–#47; see
