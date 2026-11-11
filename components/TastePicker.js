@@ -2,6 +2,7 @@
 // First-run taste picker: topics you like, then a few shows you're already hooked on.
 // Powers "For you" on Home until your log can speak for itself.
 import { useState } from "react";
+import HistoryNote from "./HistoryNote";
 import { useRouter } from "next/navigation";
 import Art from "./Art";
 import { GENRES } from "@/lib/genres";
@@ -44,6 +45,7 @@ export default function TastePicker({ shows }) {
           <button className="btn btn--big btn--display btn--cobalt btn--shadow-sm taste__next" disabled={!topics.length} onClick={() => setStep(2)}>
             {topics.length ? "Next" : "Pick at least one"}
           </button>
+          <HistoryNote style={{ marginTop: 14 }} />
         </>
       ) : (
         <>

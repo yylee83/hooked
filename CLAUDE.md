@@ -98,7 +98,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   (one per user+episode), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
   `listening_progress` (where you stopped in each episode; private), `finished_episodes` (finished in the player, not
-  logged yet; private), and `briefs`.
+  logged yet; private), `briefs`, and the team-only history: `listening_sessions` and `search_events` (see below).
 - **Embeds need explicit foreign-key hints**, because several tables point at `profiles`, e.g.
   `profiles!logs_user_id_fkey(...)`, `profiles!comments_author_id_fkey(...)`. A missing hint
   silently breaks reviews on episode pages (this has happened before).
@@ -137,6 +137,13 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   in lists of reviews (Home, profiles); episode pages leave it out (they have their own "+ Up next"). Older "same", "ooh" and "great" all count as thumbs up.
   `reviewScore()` ranks reviews on episode pages (adding it > thumbs up > replies > thumbs down). If someone
   who tapped + later logs the episode, the review "got them to listen" (that can be worked out from the data).
+- **Listening and search history (team only)**: `lib/history.js` records each play in the player (where it started from,
+  how far, skips, finished) and each search with the first result tapped (`components/SearchRecorder.js`, results inside
+  `[data-search-results]`). Signed-in people only, written through `record_listen` / `record_search` / `record_search_tap`;
+  the app can't read any of it back. Erin and YY read the `insights_*` views in Supabase (finish rate, drop-off, listening
+  trend, top searches, search misses, brief ideas). Kept a year (`prune_history`, daily job). Notice: `components/HistoryNote.js`.
+  Matching between people uses public logs only. New functions: revoke from `anon, authenticated` too, not just `public`
+  (Supabase grants them by default; `scripts/check-history.mjs` mimics that).
 - **Search ranking**: `lib/rank.js`. A result must contain the phrase, or all the words close
   together. Exact show names are boosted (the part before ":" or "|" counts as the name), and so are Apple popularity
   and recency; other languages rank lower. Show nothing rather than unrelated results. Shows only Apple knows:
