@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
@@ -7,7 +7,8 @@ import { STAR_PATH } from "./Stars";
 import { logHref } from "@/lib/addresses";
 import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
 
-function RatingInput({ value, onChange }) {
+export function RatingInput({ value, onChange, size = 52 }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // two pickers on a page each need their own gradient ids
   // Tap the left half of a star for a half star, the right half for a full star.
   // Tapping your current rating again clears it. Arrow keys move by half a star.
   const pick = (n, e) => {
@@ -40,14 +41,14 @@ function RatingInput({ value, onChange }) {
               aria-label={on && value === n - 0.5 ? `${n - 0.5} stars` : `${n} star${n === 1 ? "" : "s"}`}
               onClick={(e) => pick(n, e)}
             >
-              <svg viewBox="0 0 24 24" width="52" height="52" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
                 <defs>
-                  <linearGradient id={`g${n}`}>
+                  <linearGradient id={`${uid}g${n}`}>
                     <stop offset={fill} stopColor="#2340FF" />
                     <stop offset={fill} stopColor="transparent" />
                   </linearGradient>
                 </defs>
-                <path d={STAR_PATH} fill={`url(#g${n})`} stroke="#2340FF" strokeWidth="1.4" strokeLinejoin="round" />
+                <path d={STAR_PATH} fill={`url(#${uid}g${n})`} stroke="#2340FF" strokeWidth="1.4" strokeLinejoin="round" />
               </svg>
             </button>
           );

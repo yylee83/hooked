@@ -105,7 +105,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home (Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
+- **Pages** (`app/`): `/` Home (Finished, not logged, Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
   `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
@@ -125,6 +125,10 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
   saved it; something playing is never interrupted.
+- **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
+  finished. If you're looking, the player turns into "✓ Finished · log it?" (`components/FinishPrompt.js`: optional stars,
+  Hooked / Not hooked saves); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of Home
+  (`components/FinishedNotLogged.js`) for 3 days, where Skip ends it. Logged episodes are never asked about. This device only.
 - **Reactions** (`lib/social.js`, `components/LogThread.js`): small black icons, no bubbles.
   Thumbs up (`agree`) and thumbs down (`disagree`; the two cancel each other out) vote on the review, under it
   (`LogThread`). + (`adding`: wants to listen, and adds the episode to Up next) is `ReviewAdd`, next to the episode

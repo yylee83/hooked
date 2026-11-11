@@ -4,6 +4,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
 import UpNextHome from "@/components/UpNextHome";
+import FinishedNotLogged from "@/components/FinishedNotLogged";
 import TrendingConversations from "@/components/TrendingConversations";
 import { NotificationBell } from "@/components/Notifications";
 
@@ -27,6 +28,8 @@ export default function FriendsPage() {
       </header>
 
       <KeysNotice />
+
+      <FinishedNotLogged />
 
       <UpNextHome />
 
