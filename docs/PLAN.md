@@ -2,16 +2,27 @@
 
 Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the shared base. This file records what we decided and the order we're doing the work in. Update it when a decision changes.
 
-## Where we left off (2026-11-09)
+## Where we left off (2026-11-11)
 
 **Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). `~/claude/hooked` is Erin's
 archived first version: don't build from it.
 
-**First thing next session:** `gh pr list --repo yylee83/hooked`. The only open PR was **#50** (test-people script plus
-this plan update; no app or database change). If Erin has merged it: `git checkout main && git pull`. Nothing is waiting
-for `supabase db push`: every migration through `20261108120000_listening_progress.sql` is on **both** databases.
+**First thing next session:** `gh pr list --repo yylee83/hooked`, then `git checkout main && git pull`. As of
+2026-11-11 nothing was open (#51–#54 merged) and nothing is waiting for `supabase db push`: every migration through
+`20261111120000_finished_episodes.sql` is on **both** databases.
 
-**Search ranking fix (2026-11-09, branch `fix-search-ranking`):** "nelson mandela" showed one-episode school-project shows
+**Decided 2026-11-11 (Erin):**
+- **Searching our own tables is on hold** until Erin and YY have used search longer and have real misses to test
+  against. When it's built: our tables only fill gaps (shows and episodes Podcast Index lacks, show-note matches), ranked
+  by exactly the same rules; **being on Hooked never boosts a result** (search is for discovering inside and outside
+  Hooked, not for pushing what we already have). Ship only if a before/after set of searches is the same or better.
+- **Future user matching** ("people with your listening themes"): built on **public logs only** (what people log:
+  episode, hooked, stars, hook line, when, and the show). Not private listening, unlogged finishes or searches. So no
+  listening-history table is needed for it. Keep saving show categories and episode descriptions and transcripts:
+  topics and similarity can be worked out from them later. Matching may say what two people share ("you both love
+  narrative history"), built from those public logs.
+
+**Search ranking fix (2026-11-09, #51, live):** "nelson mandela" showed one-episode school-project shows
 called "Nelson Mandela" instead of Flipping Tables, The History Hour, etc. Three causes in `lib/rank.js`: an episode's show
 name counted on top of its title (now only when the title doesn't already match), possessives were misread
 ("Mandela’s" became "mandelas"), and the exact-show-name boost and "shows first" on All went to any show with that name
@@ -25,15 +36,14 @@ collins, tradwives, taylor swift, barack obama, serial, the rest is history, man
 with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
 full-name titles.
 
-**"Log it?" after listening (2026-11-11, branch `finish-log-prompt`, needs `supabase db push` on live after merge):**
+**"Log it?" after listening (2026-11-11, #54, live):**
 Erin's request. Reaching the last minute in Hooked's player asks to log the episode in the player itself (stars + Hooked /
 Not hooked); ✕ or finishing with the screen off moves it to "Finished, not logged" at the top of My log's Episodes tab
 (3 days; Skip ends it). Signed in, that list syncs across devices (`20261111120000_finished_episodes.sql`). "Within a minute of the end" also became the rule for starting over instead of resuming, and stopping there now
 takes the episode out of the player (before, it came back at 0:00 on reopening or signing in; Erin noticed it live).
 Stars are in the prompt because hooked may move to show-level later; then Hooked / Not hooked becomes one "Log it" button.
 
-**Trending conversations on Home (2026-11-09, branch `trending-conversations`, needs `supabase db push` on live after
-merge):** a section after Just logged listing up to 3 episodes people are talking about (Erin's request; answers most of
+**Trending conversations on Home (2026-11-09, #52, live):** a section after Just logged listing up to 3 episodes people are talking about (Erin's request; answers most of
 Decision 3 in the decisions doc). Ranked by the database function `trending_conversations`
 (`20261109120000_trending_conversations.sql`): reviews with a hook line, replies and sends from the past week, each person
 once per episode, worth half as much every 48 hours, replies to your own review left out, 2+ people needed, one episode
@@ -41,7 +51,7 @@ per show. Each row: episode, show, "4 reviews · 7 replies · 2 sends", and the 
 Sends are private, so the function returns totals only. Test: `node scripts/check-trending.mjs`. Already applied to the
 **test** database, and the test people were re-made there on 2026-11-09 (new password; Erin has it).
 
-**Everything else is merged and live (#33–#51).** In short:
+**Everything else is merged and live (#33–#54).** Also #53: Search's "Their newest episodes" is now "Latest from the top shows". In short:
 - **Stage D prep and step 1 (#33–#38):** every page reads episode and show details from our tables; saves always carry
   our ids (`/api/catalog/ensure`). Step 2, the database change, is next (below).
 - **Step 8, listening sync (#41):** where you stopped is saved to your account (`listening_progress`,
@@ -89,7 +99,7 @@ test database currently has **no** test people. Real people Erin invites go on *
 2. **Search #1, Hooked data in results** (our ratings and friends next to each result), once the results-line wording
    is decided (item 7).
 3. **Search, still open:** search our own `shows` / `episodes` tables for All / Episodes / Shows (their `search` column
-   is ready), and save what searches find into them; **#3 topics** (guests and AI topic tags from descriptions and hook
+   is ready), and save what searches find into them (**on hold**, see "Decided 2026-11-11"); **#3 topics** (guests and AI topic tags from descriptions and hook
    lines, in new `topics` / `episode_topics` tables; no free-typed tags on the log sheet); **#5 suggestions as you type**.
 4. Whatever Erin and YY decide in the doc; step 10 (Home Everyone | Friends) depends on it.
 
@@ -293,6 +303,13 @@ Each step is its own branch and pull request.
 10. Home split into Everyone and Friends, and friends' ratings on episode and show pages. (The first part of the Home
    tidy-up is done in #26; the switch may move earlier, see the decisions doc.)
 11. Google sign-in.
+12. Later: user matching (find people with your listening themes) from public logs only; see "Decided 2026-11-11".
+13. **When invites go out: make Hooked installable** (a PWA: app manifest, icons, Home Screen setup) so testers get an
+   app icon and full-screen Hooked. Days of work. Later, for the App Store and Play Store: wrap the site in an app shell
+   (Capacitor) with a native audio player and push notifications (weeks); fully native (React Native / Expo) only if car
+   listening (CarPlay / Android Auto) and downloads turn out to matter. Store requirements to plan for either way:
+   in-app account deletion, Sign in with Apple (if Google sign-in ships), a reviewer login for invite-only, privacy
+   labels, a push service, developer accounts (Apple $99/yr, Google $25 once). Discussed 2026-11-11; not started.
 
 ## Known issues
 
