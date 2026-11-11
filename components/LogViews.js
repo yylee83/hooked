@@ -88,6 +88,8 @@ export function Diary({ logs }) {
     });
   }, [logs, q, filter]);
 
+  const monthTotals = useMemo(() => new Map(groupByMonth(list).map((g) => [g.label, g.items.length])), [list]);
+
   return (
     <>
       <input
@@ -112,7 +114,8 @@ export function Diary({ logs }) {
         groupByMonth(list.slice(0, shown)).map((g) => (
           <section key={g.label} className="diary">
             <h2 className="diary__month">
-              {g.label} <span className="mono muted">{g.items.length}</span>
+              {/* The month's whole count (not just the rows shown so far), with a word so it doesn't read as a date. */}
+              {g.label} <span className="mono muted">{plural(monthTotals.get(g.label) || g.items.length, "episode")}</span>
             </h2>
             <ul className="diary__list">
               {g.items.map((l) => (
