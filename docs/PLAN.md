@@ -28,7 +28,8 @@ full-name titles.
 **"Log it?" after listening (2026-11-11, branch `finish-log-prompt`, needs `supabase db push` on live after merge):**
 Erin's request. Reaching the last minute in Hooked's player asks to log the episode in the player itself (stars + Hooked /
 Not hooked); ✕ or finishing with the screen off moves it to "Finished, not logged" at the top of My log's Episodes tab
-(3 days; Skip ends it). Signed in, that list syncs across devices (`20261111120000_finished_episodes.sql`). "Within a minute of the end" also became the rule for starting over instead of resuming.
+(3 days; Skip ends it). Signed in, that list syncs across devices (`20261111120000_finished_episodes.sql`). "Within a minute of the end" also became the rule for starting over instead of resuming, and stopping there now
+takes the episode out of the player (before, it came back at 0:00 on reopening or signing in; Erin noticed it live).
 Stars are in the prompt because hooked may move to show-level later; then Hooked / Not hooked becomes one "Log it" button.
 
 **Trending conversations on Home (2026-11-09, branch `trending-conversations`, needs `supabase db push` on live after

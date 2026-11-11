@@ -248,6 +248,9 @@ export function PlayerProvider({ children }) {
       if (!cur || q.current.meta || src.current !== cur.ep.audio || el.readyState < 1 || el.seeking) return;
       saveProgress(cur.ep, el.currentTime, el.duration);
       lastSaved.current = el.currentTime;
+      // Stopped in the last minute: that's finished, same as playing to the very end, so don't bring the episode
+      // back (at 0:00) next time you open Hooked, here or on another device.
+      if (el.duration > FINISH && el.currentTime >= el.duration - FINISH) clearLast();
       flushSpots(); // pausing or leaving sends your spot to your account right away
     };
     const onHide = () => {
