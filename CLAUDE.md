@@ -97,7 +97,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - Tables: `allowed_emails` (the invite list; no app access), `trending_topics` (48 hours of Google Trends; only the server writes), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
   (one per user+episode), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
-  `listening_progress` (where you stopped in each episode; private), and `briefs`.
+  `listening_progress` (where you stopped in each episode; private), `finished_episodes` (finished in the player, not
+  logged yet; private), and `briefs`.
 - **Embeds need explicit foreign-key hints**, because several tables point at `profiles`, e.g.
   `profiles!logs_user_id_fkey(...)`, `profiles!comments_author_id_fkey(...)`. A missing hint
   silently breaks reviews on episode pages (this has happened before).
@@ -125,6 +126,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
   saved it; something playing is never interrupted.
+- **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
+  finished. If you're looking, the player turns into "✓ Finished · log it?" (`components/FinishPrompt.js`: optional stars,
+  Hooked / Not hooked saves); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's
+  Episodes tab (`components/FinishedNotLogged.js`) for 3 days, where Skip ends it. Logged episodes are never asked about.
+  Signed in, the list syncs across devices through `finished_episodes` (`lib/finished-sync.js`; private, own rows only).
 - **Reactions** (`lib/social.js`, `components/LogThread.js`): small black icons, no bubbles.
   Thumbs up (`agree`) and thumbs down (`disagree`; the two cancel each other out) vote on the review, under it
   (`LogThread`). + (`adding`: wants to listen, and adds the episode to Up next) is `ReviewAdd`, next to the episode

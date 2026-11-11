@@ -742,3 +742,21 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .brief-card--select .cover-stack__img { width: 68px; height: 68px; border-radius: 14px; }
 .brief-card--select .cover-stack__img--1 { left: 48px; }
 .brief-card--select .cover-stack__img--2 { left: 96px; }
+
+/* "✓ Finished · log it?" in the player's place (components/FinishPrompt.js) */
+.finish-prompt__head { display: flex; justify-content: space-between; align-items: center; }
+.finish-prompt__label { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cobalt); font-weight: 700; }
+.finish-prompt__stars { display: flex; justify-content: center; }
+.finish-prompt__stars .rating { gap: 4px; }
+.finish-prompt__choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.finish-prompt__choice .btn { justify-content: center; padding: 9px 10px; font-size: 15px; }
+.finish-prompt__more { text-align: center; font-size: 13px; font-weight: 600; color: var(--cobalt); }
+.finish-prompt__error { color: var(--ink); text-align: center; }
+
+/* My log: finished in the player, not logged yet (components/FinishedNotLogged.js) */
+.finished-list { margin: 16px 0 8px; }
+.finished-list__head { margin-bottom: 4px; }
+.finished-list__row { display: flex; gap: 12px; padding: 12px 0; border-top: var(--line); }
+.finished-list__row:last-child { border-bottom: var(--line); }
+.finished-list__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.finished-list__btns { display: flex; gap: 8px; margin-top: 8px; }

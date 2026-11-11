@@ -5,10 +5,25 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
-import { getState, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
+import FinishPrompt from "./FinishPrompt";
+import { findLog, getState, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
 import { flushSpots, pullSpots } from "@/lib/progress-sync";
+import { markFinished, useFinished } from "@/lib/finished";
+import { pullFinished } from "@/lib/finished-sync";
+
+const FINISH = 60; // the last minute of an episode counts as finished
+
+// Finished an episode (not a brief's clip) you haven't logged: ask "Log it?" (lib/finished.js).
+// The player checks several times a second near the end, so each episode is handled once per visit.
+const marked = new Set();
+const finished = (ep) => {
+  const key = ep?.ref || ep?.id;
+  if (!key || marked.has(key)) return;
+  marked.add(key);
+  if (!findLog(getState(), ep)) markFinished(ep);
+};
 
 const PlayerContext = createContext(null);
 
@@ -28,7 +43,10 @@ export function PlayerProvider({ children }) {
   const pending = useRef(null);
   const lastSaved = useRef(0);
   const path = usePathname() || "";
-  const userId = useStore()?.user?.id || null;
+  const store = useStore();
+  const userId = store?.user?.id || null;
+  // The newest finished, unlogged episode still being asked about in the player.
+  const asking = useFinished().find((f) => f.stage === "prompt" && !findLog(store, f.ep));
 
   const seg = () => q.current.segs[q.current.i];
   const segLen = (s) => Math.max(0, (s.end ?? s.ep.duration ?? 0) - s.start);
@@ -193,6 +211,7 @@ export function PlayerProvider({ children }) {
     const isPlaying = () => audio.current && !audio.current.paused;
     const sync = async () => {
       const cur = q.current.segs[q.current.i];
+      pullFinished(); // "Finished, not logged" from your other devices
       const r = await pullSpots(isPlaying() ? cur?.ep || {} : null);
       if (!alive || !r || isPlaying()) return;
       if (!r.ep) {
@@ -229,6 +248,9 @@ export function PlayerProvider({ children }) {
       if (!cur || q.current.meta || src.current !== cur.ep.audio || el.readyState < 1 || el.seeking) return;
       saveProgress(cur.ep, el.currentTime, el.duration);
       lastSaved.current = el.currentTime;
+      // Stopped in the last minute: that's finished, same as playing to the very end, so don't bring the episode
+      // back (at 0:00) next time you open Hooked, here or on another device.
+      if (el.duration > FINISH && el.currentTime >= el.duration - FINISH) clearLast();
       flushSpots(); // pausing or leaving sends your spot to your account right away
     };
     const onHide = () => {
@@ -264,6 +286,7 @@ export function PlayerProvider({ children }) {
       else {
         // Finished: next time this episode starts from the top.
         if (!q.current.meta && segs[i]) {
+          finished(segs[i].ep);
           clearProgress(segs[i].ep);
           clearLast();
         }
@@ -286,6 +309,7 @@ export function PlayerProvider({ children }) {
       } else {
         setProgress(end ? el.currentTime / end : 0);
         setTimes({ elapsed: el.currentTime, length: end || 0 });
+        if (end > FINISH && !el.paused && !el.seeking && el.currentTime >= end - FINISH) finished(s.ep);
         // Save your spot every 5 seconds of listening.
         if (src.current === s.ep.audio && el.readyState >= 1 && !el.seeking && Math.abs(el.currentTime - lastSaved.current) >= 5) {
           saveProgress(s.ep, el.currentTime, el.duration);
@@ -491,7 +515,8 @@ export function PlayerProvider({ children }) {
     <PlayerContext.Provider value={{ play, playQueue, playItem, toggle, close, current: s?.ep || null, playing, queueMeta: meta }}>
       {children}
       <audio ref={audio} preload="none" />
-      {!hidden && (
+      {asking && !path.startsWith("/log/") && <FinishPrompt key={asking.at} entry={asking} current={s?.ep || null} />}
+      {!hidden && !asking && (
         <div className="mini">
           <div className="mini__inner">
             <div className="mini__top">
