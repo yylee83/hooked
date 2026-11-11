@@ -2,14 +2,37 @@
 
 Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the shared base. This file records what we decided and the order we're doing the work in. Update it when a decision changes.
 
-## Where we left off (2026-11-11)
+## Where we left off (2026-11-11, evening)
 
 **Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). `~/claude/hooked` is Erin's
 archived first version: don't build from it.
 
-**First thing next session:** `gh pr list --repo yylee83/hooked`, then `git checkout main && git pull`. As of
-2026-11-11 nothing was open (#51–#54 merged) and nothing is waiting for `supabase db push`: every migration through
-`20261111120000_finished_episodes.sql` is on **both** databases.
+**First thing next session:** `gh pr list --repo yylee83/hooked`, then `git checkout main && git pull`. As of the
+evening of 2026-11-11 nothing was open: #51–#58 are merged. **Check that live has #56's two migrations**
+(`20261112120000_listening_search_history.sql`, `20261112130000_history_function_grants.sql`): Erin runs
+`supabase db push` from this folder (linked to live); "up to date" means it's done. Both are on the test database.
+Without them the site works but records no listening or search history.
+
+**Supabase keys were replaced on 2026-11-11.** Claude accidentally printed both projects' old service-role keys in a
+session (a zsh word-splitting mistake), so Erin moved both projects to Supabase's new keys and **disabled the legacy
+JWT keys** on `hooked` and `hooked-test`. Vercel's variable names didn't change: `NEXT_PUBLIC_SUPABASE_ANON_KEY` now holds
+the **publishable** key (`sb_publishable_…`) and `SUPABASE_SERVICE_ROLE_KEY` the **secret** key (`sb_secret_…`), each
+project's in its own environment (Production = `hooked`, Preview = `hooked-test`). Checked afterwards: live pages,
+previews, and the server saving new episodes all work. Things to know:
+- `NEXT_PUBLIC_` values are baked in when Vercel builds, so **after any key change, every deployment must be rebuilt**
+  (production redeploy; previews by a new commit or Redeploy on the newest preview of each branch).
+- `.env.local` on Erin's computer still has the old live key, so local runs against live fail. Local checks should
+  use the **test** project's publishable key anyway (Supabase → `hooked-test` → API Keys), passed as env overrides.
+- Never print keys: keep them in env vars or files and only ever show a key's prefix. The shell is **zsh**, which
+  doesn't split `$var` into words like bash does.
+
+**Decision 6 (proposed 2026-11-11, waiting on YY):** stars rate episodes, "hooked" moves to shows. Written up in full in
+the decisions doc ("Decision 6: Stars rate episodes, hooked is for shows"): the log sheet becomes stars → what's the
+hook → "Are you hooked on [show]?" (pre-selected if already hooked, otherwise asked fresh every time; No isn't
+remembered); a table of every screen that changes; % hooked = people hooked on a show ÷ unique people who logged any
+episode of it (Popular on Hooked keeps it next to average stars); Wrapped = average stars, episodes logged, and shows
+hooked ÷ unique shows logged. Build in three steps once YY agrees: log sheet + "Log it?" prompt + catch-up (hooked
+shows from hooked logs) + `logs.hooked` optional; then the screens; then drop the column.
 
 **Decided 2026-11-11 (Erin):**
 - **Searching our own tables is on hold** until Erin and YY have used search longer and have real misses to test
@@ -36,8 +59,7 @@ collins, tradwives, taylor swift, barack obama, serial, the rest is history, man
 with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
 full-name titles.
 
-**Listening and search history (2026-11-12, branch `listening-search-history`, needs `supabase db push` on live after
-merge):** Erin's request, for the team only ("mainly for us"). Every play in Hooked's player (`listening_sessions`: start,
+**Listening and search history (2026-11-11, #56, merged; live needs the `db push` above):** Erin's request, for the team only ("mainly for us"). Every play in Hooked's player (`listening_sessions`: start,
 stop, furthest, heard, skipped, finished, where it was started from) and every search with the first result tapped
 (`search_events`). Signed-in only; the app can add but never read. Six `insights_*` views in Supabase answer: what people
 finish or drop, where they stop, who's drifting away, top searches, searches that missed, and brief ideas (searched
@@ -61,7 +83,13 @@ per show. Each row: episode, show, "4 reviews · 7 replies · 2 sends", and the 
 Sends are private, so the function returns totals only. Test: `node scripts/check-trending.mjs`. Already applied to the
 **test** database, and the test people were re-made there on 2026-11-09 (new password; Erin has it).
 
-**Everything else is merged and live (#33–#54).** Also #53: Search's "Their newest episodes" is now "Latest from the top shows". In short:
+**Smaller things merged 2026-11-11:** #53, Search's "Their newest episodes" is now "Latest from the top shows". #57, My
+log's month headers say "November 3 episodes" (the bare number read as a date) and count the whole month. #58, saving a
+new episode no longer logs "episode not created … no row" when it worked: the check after saving repeated the check
+before it, and Next.js hands back the earlier answer for an identical request within one page request; each save step
+now logs its own error, and a missing secret key logs a warning instead of skipping saves silently.
+
+**Everything else is merged and live (#33–#58).** In short:
 - **Stage D prep and step 1 (#33–#38):** every page reads episode and show details from our tables; saves always carry
   our ids (`/api/catalog/ensure`). Step 2, the database change, is next (below).
 - **Step 8, listening sync (#41):** where you stopped is saved to your account (`listening_progress`,
@@ -87,31 +115,41 @@ Sends are private, so the function returns totals only. Test: `node scripts/chec
   new ones with their component (`.search-filters`, `.brief-card`). It happened twice this session.
 
 **Waiting on Erin and YY (don't build until they decide).** All in the decisions doc,
-[Hooked: Home and Search decisions](https://claude.ai/artifact/CLGuhPA7uZ96u7NESmvXKZ) (Claude Docs), which got a new
-section on 2026-11-08, "Update, November 8: what's built since", and two new checklist items:
+[Hooked: Home and Search decisions](https://claude.ai/artifact/CLGuhPA7uZ96u7NESmvXKZ) (Claude Docs; its checklist at the
+end is where they tick things off):
   1. **One feed with a Friends | Everyone switch** on Home (would match the Friends filter on Search).
-  2. **How votes on a review look** (Claude's lean: C, a "Review by @name" byline with "Agree" / "Disagree" in words).
-  3. **"Talked about this week"** at the end of Home.
+  2. **How votes on a review look** (Claude's lean: C, a "Review by @name" byline with "Agree" / "Disagree" in words), and
+     the label for the "+" count on your own review.
+  3. ~~"Talked about this week"~~: built as **Trending conversations** (#52); YY to tick it after trying it.
   4. **The Everyone view holds Hooked activity only;** trending, hot episodes and charts on Search (fits what's built).
   5. **The Search layout:** now mostly answered by what's built.
-  6. **New: what goes in Hooked selects,** and refreshing the two built-in briefs (Podcast Index now finds only 2 of 4
+  6. **What goes in Hooked selects,** and refreshing the two built-in briefs (Podcast Index now finds only 2 of 4
      episodes for The Midterms and 3 of 4 for Tradwives). A "featured" switch so they can pick selects is an idea.
-  7. **New: the search results line** (e.g. "4.5★ from 12 on Hooked · 3 friends"): needed before search #1 below.
-  8. **What "hooked" means** (options A and B below; Erin chose to wait for YY).
+  7. **The search results line** (e.g. "4.5★ from 12 on Hooked · 3 friends").
+  8. **Decision 6, what "hooked" means:** Erin's proposal is written up (above); YY to agree.
 
 **Before the review with YY:** Erin runs `TEST_PEOPLE_PASSWORD='…' node scripts/seed-test-people.mjs --friends-with erin`
 (once #50 is merged) so previews have friends, logs, replies and sends. Test database only; `--remove` cleans up. The
 test database currently has **no** test people. Real people Erin invites go on **live** through `allowed_emails`.
 
-**Next, in Claude's suggested order:**
-1. **Stage D step 2, on or after 2026-11-17** (moved from 11-10 by Erin on 2026-11-09; the checklist below): one PR with the migration that drops the copied
+**Next (agreed with Erin 2026-11-11):**
+1. **Stage D step 2, on or after 2026-11-17** (the checklist below): one PR with the migration that drops the copied
    columns. Back up live first, rehearse with `scripts/rehearse-migrations.mjs`, test database, then Erin pushes.
-2. **Search #1, Hooked data in results** (our ratings and friends next to each result), once the results-line wording
-   is decided (item 7).
-3. **Search, still open:** search our own `shows` / `episodes` tables for All / Episodes / Shows (their `search` column
-   is ready), and save what searches find into them (**on hold**, see "Decided 2026-11-11"); **#3 topics** (guests and AI topic tags from descriptions and hook
-   lines, in new `topics` / `episode_topics` tables; no free-typed tags on the log sheet); **#5 suggestions as you type**.
-4. Whatever Erin and YY decide in the doc; step 10 (Home Everyone | Friends) depends on it.
+2. **While YY reviews the decisions, get ready to invite people** (none of this waits on a decision; start here):
+   - **Account deletion** in settings: removes the person and everything tied to them (most tables already cascade from
+     `profiles`, including the history tables; check the rest). Also an App Store requirement later.
+   - **Installable app** (step 13): manifest, icons, Home Screen setup.
+   - **Google sign-in** (step 11); Sign in with Apple only if Hooked goes to the stores.
+   - **Weekly digest email:** built, dormant until `RESEND_API_KEY` / `DIGEST_FROM` are set in Vercel.
+   - Known issues: the link-preview image still says "hooked on"; refresh or replace the two built-in briefs.
+3. **Build what the decisions settle:** Decision 6 (three steps, above); Home's Friends | Everyone switch and friends'
+   ratings on episode and show pages (step 10); the search results line.
+4. **Learn from testers:** after a few weeks, read the `insights_*` views in Supabase (finish rate, drop-off, listening
+   trend, top searches, search misses, brief ideas). Then **search our own tables** (on hold until there are real misses
+   to test with; see "Decided 2026-11-11"), **topics** (guests and topic tags from descriptions and hook lines, in new
+   `topics` / `episode_topics` tables), and **suggestions as you type**.
+5. **Later:** user matching from public logs (step 12); App Store / Play Store versions (an app shell with a native
+   player and push notifications; fully native only if car listening and downloads matter).
 
 **Decided earlier, still true:**
 - Stage D drops the copied details from **logs, sends, Up next and hooked shows**; **notifications keep theirs** (a
@@ -120,7 +158,7 @@ test database currently has **no** test people. Real people Erin invites go on *
   Walkthrough that worked for Erin: "today the database builds the record from what your phone sends; after, the server
   builds it from Podcast Index, one step earlier."
 
-**What "hooked" means (waiting on YY).** Today it's set in two places: every log asks "I'm hooked / I'm not hooked"
+**What "hooked" means (superseded 2026-11-11 by Decision 6 above; kept for the history).** Today it's set in two places: every log asks "I'm hooked / I'm not hooked"
 (required, `logs.hooked`), and show pages have an optional "Hooked on this?" toggle (`hooked_shows`). Erin finds asking
 on every log clunky, and on 2026-11-07 noticed her profile's "Hooked on" lists only 2 shows (the ones she toggled) next
 to "9 hooked" (hooked logs, from 7 shows). Not a bug: nothing links the two. Options (2026-11-03):
@@ -192,6 +230,19 @@ Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title
   available, and an empty comparison once hid two new warnings.
 
 **Testing notes (what worked):**
+- **Local checks against the test database (2026-11-11):** `next dev -p 3123` with `NEXT_PUBLIC_SUPABASE_URL` /
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY` set to `hooked-test`'s URL and **publishable** key as env overrides (`.env.local`
+  points at live). There are no Podcast Index keys locally, so show and episode search is empty; people search, episode
+  pages from our tables, logging and the player all work. Sign in as `jo.test@example.com` (test people's password:
+  Erin has it).
+- **Is a new episode really saved?** `/api/episode?id=<number>` is cached for an hour by Vercel, so add a throwaway
+  `&t=<now>` when checking; a `ref` in the answer = saved. Server logs: the Vercel MCP's `get_runtime_logs` /
+  `get_runtime_errors` (project `prj_UV9GmyCeHLHKhrri1GPYKeA9FO4o`, team `team_XQThrn8SGwIJADfwPQqHzZdY`).
+- **Which key a page sends:** watch Supabase requests in Playwright and print only the `apikey` header's prefix
+  (`sb_publishable_` vs the old `eyJ…`), never the key.
+- **Database tests in memory** must copy Supabase's default grants (`alter default privileges in schema public grant
+  execute on functions to anon, authenticated, service_role`), as `scripts/check-history.mjs` does; without that,
+  a function that's callable on Supabase looks locked down in the test.
 - **Test people for signed-in checks (2026-11-08):** `scripts/seed-test-people.mjs` (test database only) replaces the
   hand-written throwaway-account scripts. Sign in as `sam.test@example.com` with the password you gave it.
 - **Playwright (2026-11-08):** `playwright-core@1.58.0` installed in the session folder, launched with `executablePath`
@@ -314,6 +365,8 @@ Each step is its own branch and pull request.
    tidy-up is done in #26; the switch may move earlier, see the decisions doc.)
 11. Google sign-in.
 12. Later: user matching (find people with your listening themes) from public logs only; see "Decided 2026-11-11".
+    Before it, the "Next" list in "Where we left off" sets the order: invite readiness, then the decisions, then
+    learning from testers.
 13. **When invites go out: make Hooked installable** (a PWA: app manifest, icons, Home Screen setup) so testers get an
    app icon and full-screen Hooked. Days of work. Later, for the App Store and Play Store: wrap the site in an app shell
    (Capacitor) with a native audio player and push notifications (weeks); fully native (React Native / Expo) only if car
