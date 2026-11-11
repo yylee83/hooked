@@ -304,6 +304,12 @@ Each step is its own branch and pull request.
    tidy-up is done in #26; the switch may move earlier, see the decisions doc.)
 11. Google sign-in.
 12. Later: user matching (find people with your listening themes) from public logs only; see "Decided 2026-11-11".
+13. **When invites go out: make Hooked installable** (a PWA: app manifest, icons, Home Screen setup) so testers get an
+   app icon and full-screen Hooked. Days of work. Later, for the App Store and Play Store: wrap the site in an app shell
+   (Capacitor) with a native audio player and push notifications (weeks); fully native (React Native / Expo) only if car
+   listening (CarPlay / Android Auto) and downloads turn out to matter. Store requirements to plan for either way:
+   in-app account deletion, Sign in with Apple (if Google sign-in ships), a reviewer login for invite-only, privacy
+   labels, a push service, developer accounts (Apple $99/yr, Google $25 once). Discussed 2026-11-11; not started.
 
 ## Known issues
 
