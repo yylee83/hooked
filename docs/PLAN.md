@@ -36,6 +36,16 @@ collins, tradwives, taylor swift, barack obama, serial, the rest is history, man
 with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
 full-name titles.
 
+**Listening and search history (2026-11-12, branch `listening-search-history`, needs `supabase db push` on live after
+merge):** Erin's request, for the team only ("mainly for us"). Every play in Hooked's player (`listening_sessions`: start,
+stop, furthest, heard, skipped, finished, where it was started from) and every search with the first result tapped
+(`search_events`). Signed-in only; the app can add but never read. Six `insights_*` views in Supabase answer: what people
+finish or drop, where they stop, who's drifting away, top searches, searches that missed, and brief ideas (searched
+topics with no brief). Kept a year. A notice on the welcome screen and in profile settings; no off switch for now (Erin).
+Migrations `20261112120000_listening_search_history.sql` and `20261112130000_history_function_grants.sql` (the second
+closes a gap the first left: Supabase lets the app's roles run new functions unless revoked from them by name).
+Test: `node scripts/check-history.mjs`. Both are on the test database.
+
 **"Log it?" after listening (2026-11-11, #54, live):**
 Erin's request. Reaching the last minute in Hooked's player asks to log the episode in the player itself (stars + Hooked /
 Not hooked); ✕ or finishing with the screen off moves it to "Finished, not logged" at the top of My log's Episodes tab

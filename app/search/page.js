@@ -18,6 +18,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
+import SearchRecorder from "@/components/SearchRecorder";
 import { showHref } from "@/lib/addresses";
 import { namedShow, norm } from "@/lib/rank";
 import { placeAppleEpisodes, placeAppleShows } from "@/lib/search";
@@ -354,16 +355,21 @@ export default async function SearchPage({ searchParams }) {
         </section>
       )}
 
-      {friends && query && !linkError && <FriendsResults query={query} />}
-      {type === "people" && (peopleSection || <p className="muted">No one on Hooked matches “{query}”.</p>)}
-      {type === "briefs" && (briefsSection || <p className="muted">No briefs match “{query}”.</p>)}
-      {/* All: someone's exact name goes first; partial name matches come after shows and episodes. */}
-      {type === "all" && found.exact && peopleSection}
-      {/* Always shows, then episodes, so the page looks the same for every search. */}
-      {!friends && !community && showsSection}
-      {!friends && !community && episodesSection}
-      {type === "all" && !found.exact && peopleSection}
-      {type === "all" && briefsSection}
+      {query && !linkError && (
+        <SearchRecorder query={query} filter={type} shows={shows.length} episodes={episodes.length} people={found.people.length} briefs={foundBriefs.briefs.length} />
+      )}
+      <div data-search-results>
+        {friends && query && !linkError && <FriendsResults query={query} />}
+        {type === "people" && (peopleSection || <p className="muted">No one on Hooked matches “{query}”.</p>)}
+        {type === "briefs" && (briefsSection || <p className="muted">No briefs match “{query}”.</p>)}
+        {/* All: someone's exact name goes first; partial name matches come after shows and episodes. */}
+        {type === "all" && found.exact && peopleSection}
+        {/* Always shows, then episodes, so the page looks the same for every search. */}
+        {!friends && !community && showsSection}
+        {!friends && !community && episodesSection}
+        {type === "all" && !found.exact && peopleSection}
+        {type === "all" && briefsSection}
+      </div>
     </>
   );
 }

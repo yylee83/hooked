@@ -12,6 +12,7 @@ import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } 
 import { flushSpots, pullSpots } from "@/lib/progress-sync";
 import { markFinished, useFinished } from "@/lib/finished";
 import { pullFinished } from "@/lib/finished-sync";
+import { listenPlay, listenSave, listenTick } from "@/lib/history";
 
 const FINISH = 60; // the last minute of an episode counts as finished
 
@@ -24,6 +25,15 @@ const finished = (ep) => {
   marked.add(key);
   if (!findLog(getState(), ep)) markFinished(ep);
 };
+
+// Where a play started, for listening history (lib/history.js): the page you were on.
+function sourceOf(path) {
+  if (path === "/") return "home";
+  for (const [start, source] of [["/search", "search"], ["/episode", "episode"], ["/show", "show"], ["/briefs", "brief"], ["/u/", "profile"], ["/me", "my_log"]]) {
+    if (path.startsWith(start)) return source;
+  }
+  return "other";
+}
 
 const PlayerContext = createContext(null);
 
@@ -43,6 +53,11 @@ export function PlayerProvider({ children }) {
   const pending = useRef(null);
   const lastSaved = useRef(0);
   const path = usePathname() || "";
+  const pathRef = useRef(path);
+  const source = useRef("other"); // where the episode now playing was started from (listening history)
+  useEffect(() => {
+    pathRef.current = path;
+  }, [path]);
   const store = useStore();
   const userId = store?.user?.id || null;
   // The newest finished, unlogged episode still being asked about in the player.
@@ -105,6 +120,7 @@ export function PlayerProvider({ children }) {
         el.paused ? el.play() : el.pause();
         return;
       }
+      source.current = same && pending.current ? "resume" : sourceOf(pathRef.current);
       playQueue([{ ep, start: 0, end: null }], null, (same && pending.current) || resumeAt(ep));
     },
     [playQueue]
@@ -120,6 +136,7 @@ export function PlayerProvider({ children }) {
         if (!res.ok) return false;
         const ep = await res.json();
         if (!ep.audio) return false;
+        source.current = "up_next";
         playQueue([{ ep, start: 0, end: null }], null, resumeAt(ep));
         return true;
       } catch {
@@ -190,6 +207,7 @@ export function PlayerProvider({ children }) {
     const cur = seg();
     // Brought back after a reload: load the audio and start from the saved spot.
     if (el && cur && src.current !== cur.ep.audio) {
+      source.current = "resume";
       startSeg(q.current.i, pending.current ?? resumeAt(cur.ep));
       return;
     }
@@ -252,6 +270,7 @@ export function PlayerProvider({ children }) {
       // back (at 0:00) next time you open Hooked, here or on another device.
       if (el.duration > FINISH && el.currentTime >= el.duration - FINISH) clearLast();
       flushSpots(); // pausing or leaving sends your spot to your account right away
+      listenSave();
     };
     const onHide = () => {
       if (document.visibilityState === "hidden") save();
@@ -310,6 +329,7 @@ export function PlayerProvider({ children }) {
         setProgress(end ? el.currentTime / end : 0);
         setTimes({ elapsed: el.currentTime, length: end || 0 });
         if (end > FINISH && !el.paused && !el.seeking && el.currentTime >= end - FINISH) finished(s.ep);
+        if (!el.paused && !el.seeking) listenTick(s.ep, el.currentTime, el.duration);
         // Save your spot every 5 seconds of listening.
         if (src.current === s.ep.audio && el.readyState >= 1 && !el.seeking && Math.abs(el.currentTime - lastSaved.current) >= 5) {
           saveProgress(s.ep, el.currentTime, el.duration);
@@ -317,7 +337,11 @@ export function PlayerProvider({ children }) {
         }
       }
     };
-    const on = () => setPlaying(true);
+    const on = () => {
+      setPlaying(true);
+      const s = seg();
+      if (s && !q.current.meta && src.current === s.ep.audio) listenPlay(s.ep, el.currentTime, el.duration, source.current);
+    };
     const off = () => setPlaying(false);
     el.addEventListener("timeupdate", onTime);
     el.addEventListener("play", on);

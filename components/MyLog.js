@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import FinishedNotLogged from "./FinishedNotLogged";
+import HistoryNote from "./HistoryNote";
 import Art from "./Art";
 import Wrapped from "./Wrapped";
 import PasswordForm from "./PasswordForm";
@@ -91,6 +92,7 @@ function ProfilePanel({ state }) {
         </button>
       </div>
       <DigestToggle state={state} />
+      <HistoryNote style={{ marginTop: 10 }} />
       {pwOpen && (
         <div className="card" style={{ marginTop: 16 }}>
           <p className="label" style={{ marginTop: 0 }}>Set a password</p>
