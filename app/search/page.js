@@ -347,7 +347,7 @@ export default async function SearchPage({ searchParams }) {
           )}
           {chartEps.episodes.length > 0 && (
             <>
-              <h3 className="label" style={{ marginTop: 24 }}>Their newest episodes</h3>
+              <h3 className="label" style={{ marginTop: 24 }}>Latest from the top shows</h3>
               <TopEpisodes initial={chartEps.episodes} next={chartEps.next} />
             </>
           )}
