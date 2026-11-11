@@ -11,6 +11,7 @@ import { episodeHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
 import { flushSpots, pullSpots } from "@/lib/progress-sync";
 import { markFinished, useFinished } from "@/lib/finished";
+import { pullFinished } from "@/lib/finished-sync";
 
 const FINISH = 60; // the last minute of an episode counts as finished
 
@@ -210,6 +211,7 @@ export function PlayerProvider({ children }) {
     const isPlaying = () => audio.current && !audio.current.paused;
     const sync = async () => {
       const cur = q.current.segs[q.current.i];
+      pullFinished(); // "Finished, not logged" from your other devices
       const r = await pullSpots(isPlaying() ? cur?.ep || {} : null);
       if (!alive || !r || isPlaying()) return;
       if (!r.ep) {

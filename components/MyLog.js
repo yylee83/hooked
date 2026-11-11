@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import FinishedNotLogged from "./FinishedNotLogged";
 import Art from "./Art";
 import Wrapped from "./Wrapped";
 import PasswordForm from "./PasswordForm";
@@ -313,6 +314,8 @@ export default function MyLog() {
           </button>
         ))}
       </div>
+
+      {tab === "diary" && <FinishedNotLogged />}
 
       {tab === "upnext" ? (
         <UpNextView state={state} />

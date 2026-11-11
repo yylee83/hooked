@@ -25,10 +25,10 @@ collins, tradwives, taylor swift, barack obama, serial, the rest is history, man
 with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
 full-name titles.
 
-**"Log it?" after listening (2026-11-11, branch `finish-log-prompt`, no database change):** Erin's request. Reaching the
-last minute in Hooked's player asks to log the episode in the player itself (stars + Hooked / Not hooked); ✕ or finishing
-with the screen off moves it to "Finished, not logged" at the top of Home (3 days; Skip ends it). Kept on the device
-(localStorage), not synced. "Within a minute of the end" also became the rule for starting over instead of resuming.
+**"Log it?" after listening (2026-11-11, branch `finish-log-prompt`, needs `supabase db push` on live after merge):**
+Erin's request. Reaching the last minute in Hooked's player asks to log the episode in the player itself (stars + Hooked /
+Not hooked); ✕ or finishing with the screen off moves it to "Finished, not logged" at the top of My log's Episodes tab
+(3 days; Skip ends it). Signed in, that list syncs across devices (`20261111120000_finished_episodes.sql`). "Within a minute of the end" also became the rule for starting over instead of resuming.
 Stars are in the prompt because hooked may move to show-level later; then Hooked / Not hooked becomes one "Log it" button.
 
 **Trending conversations on Home (2026-11-09, branch `trending-conversations`, needs `supabase db push` on live after

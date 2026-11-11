@@ -753,10 +753,10 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .finish-prompt__more { text-align: center; font-size: 13px; font-weight: 600; color: var(--cobalt); }
 .finish-prompt__error { color: var(--ink); text-align: center; }
 
-/* Home: finished in the player, not logged yet (components/FinishedNotLogged.js) */
-.finished-home { margin: 18px 0 8px; }
-.finished-home__head { margin-bottom: 4px; }
-.finished-home__row { display: flex; gap: 12px; padding: 12px 0; border-top: var(--line); }
-.finished-home__row:last-child { border-bottom: var(--line); }
-.finished-home__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.finished-home__btns { display: flex; gap: 8px; margin-top: 8px; }
+/* My log: finished in the player, not logged yet (components/FinishedNotLogged.js) */
+.finished-list { margin: 16px 0 8px; }
+.finished-list__head { margin-bottom: 4px; }
+.finished-list__row { display: flex; gap: 12px; padding: 12px 0; border-top: var(--line); }
+.finished-list__row:last-child { border-bottom: var(--line); }
+.finished-list__title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.finished-list__btns { display: flex; gap: 8px; margin-top: 8px; }
