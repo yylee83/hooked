@@ -136,6 +136,11 @@ test database currently has **no** test people. Real people Erin invites go on *
 1. **Stage D step 2, on or after 2026-11-17** (the checklist below): one PR with the migration that drops the copied
    columns. Back up live first, rehearse with `scripts/rehearse-migrations.mjs`, test database, then Erin pushes.
 2. **While YY reviews the decisions, get ready to invite people** (none of this waits on a decision; start here):
+   - **First: the real domain** (Erin and YY already own one; added 2026-11-12). Do it before the installable app and
+     Google sign-in, which are tied to the address. Vercel → Domains: add it, set the DNS records, make it primary
+     (`hooked-nu.vercel.app` then forwards to it); set `NEXT_PUBLIC_SITE_URL` and redeploy; Supabase (`hooked`) →
+     Authentication → URL configuration: Site URL + redirect URLs on the new domain (else sign-in links go back to the
+     old address); later, verify it with Resend for the digest's sender address and use it for Google sign-in.
    - **Account deletion** in settings: removes the person and everything tied to them (most tables already cascade from
      `profiles`, including the history tables; check the rest). Also an App Store requirement later.
    - **Installable app** (step 13): manifest, icons, Home Screen setup.
