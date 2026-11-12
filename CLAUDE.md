@@ -49,8 +49,12 @@ off Home).
 ### Environment variables
 
 - `PODCASTINDEX_API_KEY`, `PODCASTINDEX_API_SECRET`: required, server-only
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: required (the anon key is safe for the browser)
-- `SUPABASE_SERVICE_ROLE_KEY`: server-only. Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: required. Since 2026-11-11 the "anon key" variable holds
+  Supabase's **publishable** key (`sb_publishable_…`, safe for the browser); the legacy JWT keys are disabled on both
+  projects. `NEXT_PUBLIC_` values are baked in at build time: after changing one, redeploy production and rebuild
+  previews.
+- `SUPABASE_SERVICE_ROLE_KEY`: server-only, holds the **secret** key (`sb_secret_…`). Never print it, even in a test
+  command's output: show a key's prefix at most (the shell is zsh, which doesn't word-split `$var`). Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
   Trending shows only what Google lists right now. Also used by the weekly digest.
 - `CRON_SECRET`: protects the scheduled jobs (daily catalog refresh, weekly digest). Vercel sends it automatically.
 - `RESEND_API_KEY`, `DIGEST_FROM`: only for the weekly digest (not set yet)
@@ -176,7 +180,8 @@ cleaning up). For a test database full of friends, logs, replies and sends, run 
 database only; `--remove` cleans up). Drive the site with Playwright at 390×844, check pages for console errors, and screenshot anything
 visual. Images load lazily: wait before screenshots. After pushing, confirm the Vercel status:
 `gh api repos/yylee83/hooked/commits/<sha>/status`; previews are behind Vercel's login, so fetch them with the Vercel
-MCP. Never use the live database for tests, and reading it needs Erin's OK.
+MCP. Never use the live database for tests, and reading it needs Erin's OK. For local runs against the test database, pass its URL and
+publishable key as env overrides (`.env.local` points at live); see "Testing notes" in `docs/PLAN.md`.
 
 ## Working with YY
 
