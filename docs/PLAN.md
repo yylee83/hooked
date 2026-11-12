@@ -8,10 +8,9 @@ Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the sh
 archived first version: don't build from it.
 
 **First thing next session:** `gh pr list --repo yylee83/hooked`, then `git checkout main && git pull`. As of the
-evening of 2026-11-11 nothing was open: #51–#58 are merged. **Check that live has #56's two migrations**
-(`20261112120000_listening_search_history.sql`, `20261112130000_history_function_grants.sql`): Erin runs
-`supabase db push` from this folder (linked to live); "up to date" means it's done. Both are on the test database.
-Without them the site works but records no listening or search history.
+evening of 2026-11-11 nothing was open: #51–#59 are merged. Nothing is waiting for `supabase db push`: every
+migration through `20261112130000_history_function_grants.sql` is on **both** databases (Erin confirmed live
+2026-11-12), so listening and search history is recording.
 
 **Supabase keys were replaced on 2026-11-11.** Claude accidentally printed both projects' old service-role keys in a
 session (a zsh word-splitting mistake), so Erin moved both projects to Supabase's new keys and **disabled the legacy
@@ -59,7 +58,7 @@ collins, tradwives, taylor swift, barack obama, serial, the rest is history, man
 with only part of your search in its title ("Mandela and the Death of Apartheid") is kept now but ranks below
 full-name titles.
 
-**Listening and search history (2026-11-11, #56, merged; live needs the `db push` above):** Erin's request, for the team only ("mainly for us"). Every play in Hooked's player (`listening_sessions`: start,
+**Listening and search history (2026-11-11, #56, live):** Erin's request, for the team only ("mainly for us"). Every play in Hooked's player (`listening_sessions`: start,
 stop, furthest, heard, skipped, finished, where it was started from) and every search with the first result tapped
 (`search_events`). Signed-in only; the app can add but never read. Six `insights_*` views in Supabase answer: what people
 finish or drop, where they stop, who's drifting away, top searches, searches that missed, and brief ideas (searched
