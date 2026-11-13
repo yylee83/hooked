@@ -61,7 +61,7 @@ export default async function SearchPage({ searchParams }) {
   const community = type === "people" || type === "briefs";
   const max = Math.min(200, Math.max(PAGE, parseInt(sp.max) || PAGE));
 
-  // Pasted an Apple Podcasts or Spotify link? Go straight to logging it.
+  // Pasted an Apple Podcasts or Spotify link? Go straight to that episode's page (Play, Log it, + Up next).
   let linkError = null;
   if (query && isPodcastLink(query)) {
     const r = await resolveLink(query);
