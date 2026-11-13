@@ -13,8 +13,8 @@ TypeScript for new code) and the order of work.
 of what they listened to, follow friends, send and discuss episodes, and make **Briefs**: topic
 collections that can be cut down to just the parts of each episode where the topic comes up.
 
-The owner is **YY (Youyoung Lee)**. She is not a developer, so explain changes in plain language,
-without code jargon. The current focus is the **review/logging experience**. Keep things simple, and
+Hooked is **Erin and YY (Youyoung Lee)**'s project, built together; the repo just lives under YY's GitHub
+account. YY is not a developer, so explain changes in plain language, without code jargon. The current focus is the **review/logging experience**. Keep things simple, and
 don't add surfaces to Home without asking: she has removed clutter before (the "For you" row moved
 off Home).
 
