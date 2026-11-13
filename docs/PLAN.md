@@ -221,8 +221,11 @@ Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title
   (fake activity on live shows up in Just logged, Popular on Hooked, friends' feeds, the digest and Wrapped). Run
   `TEST_PEOPLE_PASSWORD='…' node scripts/seed-test-people.mjs --friends-with erin` before the Home review and after
   each test refresh (a refresh from live wipes them): 5 people (`maya.test` … `theo.test`, @example.com emails), ~24 logs
-  over 10 days, votes, replies, 4 sends to @erin. `--remove` deletes them. It only ever talks to `hooked-test`, and
-  gets the key from the Supabase CLI. Real invitees go on live via `allowed_emails`.
+  over 10 days, votes, replies, 4 sends to @erin. `--remove` deletes them. It only ever talks to `hooked-test`. It
+  needs the test project's **secret** key (`sb_secret_…`) in `SUPABASE_SERVICE_ROLE_KEY`, from Supabase → hooked-test →
+  Project Settings → API Keys, loaded without showing it: `read -rs "SUPABASE_SERVICE_ROLE_KEY?Test secret key: " && export
+  SUPABASE_SERVICE_ROLE_KEY` (zsh). The Supabase CLI can't supply it: it hides secret keys (`api-keys` shows them masked), and
+  the old `service_role` keys are off since 2026-11-11. Real invitees go on live via `allowed_emails`.
 - Check the daily catalog job ran: Vercel → Logs, path `/api/cron/catalog`, 09:00 UTC. It now also re-reads 5 feed
   shows per run (`refreshStale` in `lib/catalog.js`).
 - Turn on Supabase → Authentication → "Leaked password protection".
