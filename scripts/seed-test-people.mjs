@@ -8,9 +8,11 @@
 //   node scripts/seed-test-people.mjs --remove                                            delete them all
 //
 // Sign in as one on a preview with its email (listed when it finishes) and that password.
-// Keys: SUPABASE_SERVICE_ROLE_KEY if set, otherwise fetched with the Supabase CLI (you need to be logged in).
+// Key: the test project's **secret** key (sb_secret_…) in SUPABASE_SERVICE_ROLE_KEY. Copy it from Supabase → hooked-test
+// → Project Settings → API Keys, then load it without it showing on screen or landing in your shell history (zsh):
+//   read -rs "SUPABASE_SERVICE_ROLE_KEY?Test secret key: " && export SUPABASE_SERVICE_ROLE_KEY
+// (The Supabase CLI hides secret keys, and the old service_role keys were turned off on 2026-11-11.)
 // Their emails are made up (@example.com): never put real addresses in this file, the repo is public.
-import { execSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
 const TEST_REF = "wxbpizgeauuomagbmwja";
@@ -41,10 +43,15 @@ const HOOKS_NO = ["Great first half, then it drags", "Too much ad chat for me", 
 const REPLIES = ["Agree, that ending!", "I need to listen to this", "Hard disagree, I loved the second half", "Adding it to Up next", "Which part got you?"];
 
 function serviceKey() {
-  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const out = execSync(`supabase projects api-keys --project-ref ${TEST_REF} -o json`, { stdio: ["ignore", "pipe", "ignore"] }).toString();
-  const key = JSON.parse(out).find((k) => k.name === "service_role")?.api_key;
-  if (!key) throw new Error("Couldn't get the test service key. Run `supabase login`, or set SUPABASE_SERVICE_ROLE_KEY.");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!key.startsWith("sb_secret_")) {
+    console.error(
+      "Set SUPABASE_SERVICE_ROLE_KEY to the test project's secret key (sb_secret_…), from Supabase → hooked-test →\n" +
+        "Project Settings → API Keys. Without it showing on screen (zsh):\n" +
+        '  read -rs "SUPABASE_SERVICE_ROLE_KEY?Test secret key: " && export SUPABASE_SERVICE_ROLE_KEY'
+    );
+    process.exit(1);
+  }
   return key;
 }
 
