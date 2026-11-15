@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import Art from "./Art";
 import FinishPrompt from "./FinishPrompt";
 import { findLog, getState, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
-import { episodeHref } from "@/lib/addresses";
+import { episodeHref, logHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, savedLength, saveLast, saveProgress } from "@/lib/progress";
 import { flushSpots, pullSpots } from "@/lib/progress-sync";
 import { markFinished, useFinished } from "@/lib/finished";
@@ -605,6 +605,8 @@ export function PlayerProvider({ children }) {
                 <button className="mini__skip" onClick={() => startSeg(q.current.i + 1)} aria-label="Next clip">
                   <NextIcon />
                 </button>
+              ) : !meta ? (
+                <LogPill ep={s.ep} />
               ) : (
                 <span className="mini__spacer" aria-hidden="true" />
               )}
@@ -613,6 +615,18 @@ export function PlayerProvider({ children }) {
         </div>
       )}
     </PlayerContext.Provider>
+  );
+}
+
+// "Log it" in the player, the speed pill's twin on the right: log the episode without leaving it (it keeps playing;
+// the player hides on the Log it page). Yellow "Logged" once it is (no ✓: the row has no room for it on a phone),
+// which opens your log to edit.
+function LogPill({ ep }) {
+  const logged = !!findLog(useStore(), ep);
+  return (
+    <Link href={logHref(ep.ref, ep.id)} className={`mini__log ${logged ? "is-logged" : ""}`}>
+      {logged ? "Logged" : "Log it"}
+    </Link>
   );
 }
 

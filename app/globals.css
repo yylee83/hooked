@@ -429,12 +429,16 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .mini__scrub .playhead--live:focus-visible .playhead__knob { transform: translate(-50%, -50%) scale(1.15); }
 .mini__scrub .playhead--live.is-dragging .playhead__knob { transform: translate(-50%, -50%) scale(1.3); cursor: grabbing; box-shadow: 2px 2px 0 var(--ink); }
 .mini__scrub .playhead--live:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 6px; }
-.mini__controls { display: grid; grid-template-columns: 1fr auto auto auto 1fr; align-items: center; justify-items: center; gap: 14px; }
+.mini__controls { display: grid; grid-template-columns: 1fr auto auto auto 1fr; align-items: center; justify-items: center; gap: 10px; }
 .mini__controls .mini__btn { width: 52px; height: 52px; }
 .mini__jump { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--ink); }
 .mini__jump:active { transform: scale(0.92); }
 .mini__rate { justify-self: start; font-size: 14px; font-weight: 700; border: 2.5px solid var(--ink); border-radius: 999px; padding: 5px 11px; background: var(--butter); min-width: 58px; }
 .mini__controls .mini__skip { justify-self: end; }
+/* "Log it" in the player: the speed pill's twin on the right. Blue until logged, then yellow (done). */
+.mini__log { justify-self: end; font-size: 13px; font-weight: 700; border: 2.5px solid var(--ink); border-radius: 999px; padding: 5px 9px; background: var(--cobalt); color: var(--white); white-space: nowrap; text-align: center; min-width: 58px; }
+.mini__log.is-logged { background: var(--butter); color: var(--ink); }
+.mini__log:active { transform: scale(0.95); }
 .mini__spacer { justify-self: end; width: 38px; }
 
 /* ---------- v9: close player ---------- */
