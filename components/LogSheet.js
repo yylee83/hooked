@@ -94,7 +94,7 @@ export default function LogSheet({ episode, preset }) {
   async function save() {
     if (hooked === undefined) {
       setNudge(true);
-      setError("Pick “I'm hooked” or “I'm not hooked” at the top first.");
+      setError("Pick “I'm hooked” or “I'm not hooked” first.");
       document.getElementById("hooked-choice")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -132,6 +132,20 @@ export default function LogSheet({ episode, preset }) {
         </div>
       </div>
 
+      <h3 className="label">Your rating</h3>
+      <p className="muted small" style={{ margin: "0 0 6px" }}>Tap the left half of a star for a half star.</p>
+      <RatingInput value={rating} onChange={setRating} />
+
+      <h3 className="display h-md cobalt">What's the hook?</h3>
+      <textarea
+        className="input textarea"
+        rows={4}
+        maxLength={280}
+        placeholder="One line. What got you?"
+        value={hook}
+        onChange={(e) => setHook(e.target.value)}
+      />
+
       <h3 className="display h-md">Are you hooked?</h3>
       <div className="choice" id="hooked-choice">
         <button className={`btn btn--display ${hooked === true ? "btn--cobalt is-on" : ""}`} onClick={() => (setHooked(true), setNudge(false), setError(""))}>
@@ -148,20 +162,6 @@ export default function LogSheet({ episode, preset }) {
             ? `You're hooked on ${onShow.title || episode.feedTitle || "this show"}, so we picked I'm hooked.`
             : "Hooked shows go on your profile and into your friends' feeds."}
       </p>
-
-      <h3 className="label">Your rating</h3>
-      <p className="muted small" style={{ margin: "0 0 6px" }}>Tap the left half of a star for a half star.</p>
-      <RatingInput value={rating} onChange={setRating} />
-
-      <h3 className="display h-md cobalt">What's the hook?</h3>
-      <textarea
-        className="input textarea"
-        rows={4}
-        maxLength={280}
-        placeholder="One line. What got you?"
-        value={hook}
-        onChange={(e) => setHook(e.target.value)}
-      />
 
       <h3 className="label">Send it to a friend</h3>
       {state?.user && state.following?.length > 0 ? (
