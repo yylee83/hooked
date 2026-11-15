@@ -242,6 +242,9 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 
 /* ---------- bottom nav + mini player ---------- */
 .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--cream); border-top: var(--line); padding-bottom: env(safe-area-inset-bottom); }
+/* Bottom-pinned bars follow the visible screen's bottom (BottomNav.js, useBottomPinned), and the nav steps aside while the keyboard is up. */
+.nav, .mini { translate: 0 var(--vv-shift, 0px); }
+html.keyboard-open .nav { display: none; }
 .nav__inner { max-width: 540px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 88px 1fr 1fr; align-items: center; height: 76px; padding: 0 8px; }
 .nav__link { text-align: center; font-weight: 700; font-size: 18px; color: var(--muted); }
 .nav__link.is-active { color: var(--cobalt); }
