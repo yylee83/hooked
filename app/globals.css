@@ -755,8 +755,16 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .finish-prompt__label { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cobalt); font-weight: 700; }
 .finish-prompt__stars { display: flex; justify-content: center; }
 .finish-prompt__stars .rating { gap: 4px; }
-.finish-prompt__choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.finish-prompt__choice .btn { justify-content: center; padding: 9px 10px; font-size: 15px; }
+/* One row: a Hooked | Not hooked switch (colors as on the Log it sheet) and Log it, which saves. */
+.finish-prompt__row { display: flex; gap: 10px; align-items: center; }
+.finish-prompt__seg { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; border: 2.5px solid var(--ink); border-radius: 999px; overflow: hidden; background: var(--white); }
+.finish-prompt__seg-btn { padding: 8px 4px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.finish-prompt__seg-btn + .finish-prompt__seg-btn { border-left: 2.5px solid var(--ink); }
+.finish-prompt__seg-btn.is-hooked { background: var(--cobalt); color: var(--white); }
+.finish-prompt__seg-btn.is-not { background: var(--ink); color: var(--white); }
+.finish-prompt__save { flex: none; justify-content: center; padding: 9px 18px; font-size: 15px; }
+.finish-prompt__done { align-items: center; padding: 16px 14px; }
+.finish-prompt__done-line { display: flex; gap: 8px; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
 .finish-prompt__more { text-align: center; font-size: 13px; font-weight: 600; color: var(--cobalt); }
 .finish-prompt__error { color: var(--ink); text-align: center; }
 
