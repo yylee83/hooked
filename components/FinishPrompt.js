@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { RatingInput } from "./LogSheet";
-import { addLog, findLog, sameEpisode, useStore } from "@/lib/store";
+import { addLog, findHookedShow, findLog, sameEpisode, useStore } from "@/lib/store";
 import { logHref } from "@/lib/addresses";
 import { askLater, doneFinished } from "@/lib/finished";
 
@@ -19,7 +19,9 @@ export default function FinishPrompt({ entry, current }) {
   const [error, setError] = useState("");
   const movedOn = !!current && !sameEpisode(current, ep);
   // Logged somewhere else (the log sheet, another device) while we were asking: nothing left to ask.
-  const loggedElsewhere = !!findLog(useStore(), ep) && !saving;
+  const store = useStore();
+  const loggedElsewhere = !!findLog(store, ep) && !saving;
+  const onShow = !!findHookedShow(store, { showRef: ep.showRef, feedId: ep.feedId });
   useEffect(() => {
     if (loggedElsewhere) doneFinished(ep);
   }, [loggedElsewhere, ep]);
@@ -58,7 +60,10 @@ export default function FinishPrompt({ entry, current }) {
           <Art src={ep.image} title={ep.feedTitle} size={46} radius={10} episodeRef={ep.ref} episodeId={ep.id} />
           <div className="mini__text">
             <p className="mini__title">{ep.title}</p>
-            <p className="mini__show">{ep.feedTitle}</p>
+            <p className="mini__show">
+              {ep.feedTitle}
+              {onShow && " · you're hooked"}
+            </p>
           </div>
         </div>
         <div className="finish-prompt__stars">

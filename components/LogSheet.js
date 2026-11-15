@@ -5,7 +5,7 @@ import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
 import { logHref } from "@/lib/addresses";
-import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
+import { addLog, findHookedShow, findLog, sendRecommendation, useStore } from "@/lib/store";
 
 export function RatingInput({ value, onChange, size = 52 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // two pickers on a page each need their own gradient ids
@@ -79,6 +79,15 @@ export default function LogSheet({ episode, preset }) {
     setSendTo(existing.sentTo || []);
   }
 
+  // A new log of a show you're hooked on starts on "I'm hooked" (you can still switch). Once: your account may
+  // load after the sheet opens, and a choice you've made is never changed.
+  const onShow = findHookedShow(state, { showRef: episode.showRef, feedId: episode.feedId });
+  const [picked, setPicked] = useState(false);
+  if (onShow && !existing && !picked && hooked === undefined) {
+    setPicked(true);
+    setHooked(true);
+  }
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -133,7 +142,11 @@ export default function LogSheet({ episode, preset }) {
         </button>
       </div>
       <p className={`muted small ${nudge ? "nudge" : ""}`}>
-        {nudge ? "Pick one first. Not hooked is just as valid." : "Hooked shows go on your profile and into your friends' feeds."}
+        {nudge
+          ? "Pick one first. Not hooked is just as valid."
+          : picked && hooked === true
+            ? `You're hooked on ${onShow.title || episode.feedTitle || "this show"}, so we picked I'm hooked.`
+            : "Hooked shows go on your profile and into your friends' feeds."}
       </p>
 
       <h3 className="label">Your rating</h3>
