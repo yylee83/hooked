@@ -60,8 +60,9 @@ export function PlayerProvider({ children }) {
   }, [path]);
   const store = useStore();
   const userId = store?.user?.id || null;
-  // The newest finished, unlogged episode still being asked about in the player.
-  const asking = useFinished().find((f) => f.stage === "prompt" && !findLog(store, f.ep));
+  // The newest finished episode still being asked about in the player. It stays while its log is saving (the log
+  // shows as yours straight away); FinishPrompt clears it once saved, or if it was logged somewhere else.
+  const asking = useFinished().find((f) => f.stage === "prompt");
 
   const seg = () => q.current.segs[q.current.i];
   const segLen = (s) => Math.max(0, (s.end ?? s.ep.duration ?? 0) - s.start);
