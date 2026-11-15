@@ -8,7 +8,7 @@ import Art from "./Art";
 import FinishPrompt from "./FinishPrompt";
 import { findLog, getState, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
-import { clearLast, clearProgress, loadLast, resumeAt, saveLast, saveProgress } from "@/lib/progress";
+import { clearLast, clearProgress, loadLast, resumeAt, savedLength, saveLast, saveProgress } from "@/lib/progress";
 import { flushSpots, pullSpots } from "@/lib/progress-sync";
 import { markFinished, useFinished } from "@/lib/finished";
 import { pullFinished } from "@/lib/finished-sync";
@@ -195,7 +195,8 @@ export function PlayerProvider({ children }) {
   const showPaused = useCallback((ep) => {
     q.current = { segs: [{ ep, start: 0, end: null }], i: 0, meta: null };
     const t = resumeAt(ep);
-    const d = ep.duration || 0;
+    // The length the audio really had when your spot was saved, not the feed's (which leaves out added ads).
+    const d = savedLength(ep) || ep.duration || 0;
     pending.current = t;
     setTimes({ elapsed: t, length: d });
     setProgress(d ? Math.min(1, t / d) : 0);
