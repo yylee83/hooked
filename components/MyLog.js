@@ -10,7 +10,7 @@ import { supabase as sb } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, sameEpisode, saveProfile, signOut, useStore } from "@/lib/store";
 import { Diary, ShowsView, UpNextView } from "./LogViews";
-import { supabase } from "@/lib/supabase/client";
+import { myBriefs } from "@/lib/briefs-client";
 import { minutes, plural } from "@/lib/format";
 import { logHref, showHref } from "@/lib/addresses";
 
@@ -139,17 +139,15 @@ function ProfilePanel({ state }) {
   );
 }
 
-// Briefs you've made.
+// Briefs you've made: drafts first (they open in the builder), then published ones.
 function MyBriefs({ userId }) {
   const [briefs, setBriefs] = useState(null);
   useEffect(() => {
     let live = true;
-    supabase()
-      ?.from("briefs")
-      .select("id, title, color, mode, total_seconds, items")
-      .eq("author_id", userId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => live && setBriefs(data || []));
+    myBriefs(userId).then(
+      (data) => live && setBriefs(data),
+      () => live && setBriefs([])
+    );
     return () => {
       live = false;
     };
@@ -160,10 +158,11 @@ function MyBriefs({ userId }) {
       <h2 className="label">My briefs</h2>
       <div className="row gap wrap">
         {briefs.map((b) => (
-          <Link key={b.id} href={`/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
+          <Link key={b.id} href={b.draft ? `/briefs/b/${b.id}/edit` : `/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
             <span className="display">{b.title}</span>
             <span className="mono small">
-              {b.items.length} shows{b.total_seconds ? ` · ${minutes(b.total_seconds)}` : ""}
+              {b.draft ? "Draft · " : ""}
+              {plural(b.items.length, "show")}{b.total_seconds ? ` · ${minutes(b.total_seconds)}` : ""}
             </span>
           </Link>
         ))}

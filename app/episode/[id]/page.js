@@ -5,6 +5,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
 import { ShareButton } from "@/components/Share";
+import { AddToBriefButton } from "@/components/AddToBrief";
 import { LogButton, QueueButton } from "@/components/Social";
 import { JoinNudge } from "@/components/JoinNudge";
 import LogThread from "@/components/LogThread";
@@ -115,6 +116,7 @@ export default async function EpisodePage({ params, searchParams }) {
         )}
         <LogButton episode={card} shadow />
         <QueueButton episode={card} />
+        {card.audio && <AddToBriefButton episode={card} />}
         <ShareButton episode={card} />
       </div>
 

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Art from "./Art";
@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase/client";
 import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
+import { MAX_ITEMS, UNTITLED, savedItem } from "@/lib/briefs-client";
 
 const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
@@ -18,6 +19,19 @@ const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
 const itemKey = (x) => (x.episodeId != null ? `p${x.episodeId}` : x.episodeRef ? `r${x.episodeRef}` : `t${x.episode}`);
 // Drafts saved before this change kept bare Podcast Index numbers.
 const asKey = (k) => (/^\d+$/.test(String(k)) ? `p${k}` : String(k));
+
+// A saved brief, as the builder edits it.
+export const editingFrom = (b) => ({
+  id: b.id,
+  authorId: b.author_id,
+  draft: !!b.draft,
+  title: b.title,
+  dek: b.dek,
+  color: b.color,
+  mode: b.mode,
+  topic: b.topic,
+  items: b.items || [],
+});
 
 export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const router = useRouter();
@@ -40,6 +54,11 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const [color, setColor] = useState("cobalt");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Signed in, a new brief (or a draft) is saved to your account as you go, as a draft only you can see.
+  // A published brief you're editing changes only when you tap "Save changes".
+  const [draftId, setDraftId] = useState(editing?.draft ? editing.id : null);
+  const [draftSaved, setDraftSaved] = useState(""); // "saving" / "saved" / "failed"
+  const autosaving = useRef(null);
 
   // Bring back a draft (e.g. after signing in to publish), or start from a trending topic.
   useEffect(() => {
@@ -50,8 +69,10 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setResult({ topic: editing.topic, mode: editing.mode || "clips", items });
       setPicked(items.map(itemKey));
       setPool(Object.fromEntries(items.map((x) => [itemKey(x), x])));
-      setTitle(editing.title || "");
-      setTitleTouched(true);
+      // A draft started from an episode page has no title yet: let it follow the topic.
+      const untitled = editing.draft && editing.title === UNTITLED;
+      setTitle(untitled ? "" : editing.title || "");
+      setTitleTouched(!untitled);
       setDek(editing.dek || "");
       setColor(editing.color || "cobalt");
       return;
@@ -119,15 +140,17 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   async function remove() {
     if (!confirmDelete) return setConfirmDelete(true);
     setSaving(true);
-    const { error: err } = await supabase().from("briefs").delete().eq("id", editing.id);
+    const { error: err } = await supabase().from("briefs").delete().eq("id", autosaving.current?.id || draftId || editing.id);
     if (err) {
       setSaving(false);
       setError("Couldn't delete. Try again.");
       return;
     }
-    router.push("/briefs");
+    router.push(isDraft ? "/me" : "/briefs");
     router.refresh();
   }
+  const isDraft = !!draftId || !!editing?.draft;
+  const isPublished = !!editing && !editing.draft;
   const total = briefSeconds(chosen, briefMode);
   const clipCount = result?.mode === "clips" ? result.items.filter((x) => x.clips?.length).length : 0;
 
@@ -135,7 +158,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   function toggle(item) {
     const k = itemKey(item);
     if (picked.includes(k)) return setPicked((p) => p.filter((x) => x !== k));
-    if (picked.length >= 12) return;
+    if (picked.length >= MAX_ITEMS) return;
     setPool((o) => ({ ...o, [k]: item }));
     setPicked((p) => [...p, k]);
   }
@@ -157,7 +180,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       if (!res.ok || !data.item) throw new Error(data.error || "We couldn't find that episode.");
       const item = data.item;
       const k = itemKey(item);
-      if (!picked.includes(k) && picked.length >= 12) throw new Error("A brief can hold 12 episodes. Remove one first.");
+      if (!picked.includes(k) && picked.length >= MAX_ITEMS) throw new Error(`A brief can hold ${MAX_ITEMS} episodes. Remove one first.`);
       setPool((o) => ({ ...o, [k]: item }));
       setPicked((p) => (p.includes(k) ? p : [...p, k]));
       setLink("");
@@ -167,6 +190,61 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     }
     setAdding(false);
   }
+
+  // The brief as it's saved. Our ids go with each item; the database fills them in from Podcast Index numbers.
+  function briefRow() {
+    const items = chosen.map((x) => savedItem(x, briefMode));
+    return {
+      title: title.trim().slice(0, 80) || (briefTopic ? titleCase(briefTopic).slice(0, 80) : UNTITLED),
+      dek: dek.trim() || null,
+      topic: briefTopic,
+      color,
+      mode: briefMode,
+      items,
+      total_seconds: Math.round(briefSeconds(items, briefMode)),
+    };
+  }
+
+  // Save the draft a moment after each change. Never while publishing, and never for a published brief.
+  const canDraft = !!state?.user && !(editing && !editing.draft) && chosen.length > 0;
+  const draftKey = canDraft ? JSON.stringify({ ...briefRow(), title: title.trim().slice(0, 80) || UNTITLED }) : "";
+  // One save at a time (so a new draft is only created once). Resolves true once saved.
+  function writeDraft(key, how = "saved") {
+    const job = (autosaving.current ||= {});
+    clearTimeout(job.timer);
+    const before = job.running;
+    job.running = (async () => {
+      await before;
+      setDraftSaved("saving");
+      const row = { ...JSON.parse(key), draft: true };
+      const id = job.id || draftId;
+      const q = id ? supabase().from("briefs").update(row).eq("id", id) : supabase().from("briefs").insert(row);
+      const { data, error: err } = await q.select("id").single();
+      if (err) {
+        setDraftSaved("failed");
+        return false;
+      }
+      if (!id) {
+        job.id = data.id;
+        setDraftId(data.id);
+        // Reloading (or coming back later) opens this draft.
+        window.history.replaceState(null, "", `/briefs/b/${data.id}/edit`);
+        try {
+          sessionStorage.removeItem(DRAFT);
+        } catch {}
+      }
+      setDraftSaved(how);
+      return true;
+    })();
+    return job.running;
+  }
+  useEffect(() => {
+    if (!draftKey || saving) return;
+    const job = (autosaving.current ||= {});
+    clearTimeout(job.timer);
+    job.timer = setTimeout(() => writeDraft(draftKey), 1200);
+    return () => clearTimeout(job.timer);
+  }, [draftKey, saving]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function publish() {
     if (!state?.user) {
@@ -178,37 +256,20 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     }
     setSaving(true);
     setError("");
-    // Our ids go with each item; the database fills them in for items that have Podcast Index numbers.
-    const items = chosen.map((x) => ({
-      ...(x.episodeRef ? { episodeRef: x.episodeRef } : {}),
-      ...(x.showRef ? { showRef: x.showRef } : {}),
-      ...(x.episodeId != null ? { episodeId: x.episodeId } : {}),
-      ...(x.feedId != null ? { feedId: x.feedId } : {}),
-      show: x.show,
-      episode: x.episode,
-      image: x.image,
-      audio: x.audio,
-      duration: x.duration,
-      transcript: x.transcript,
-      clips: briefMode === "clips" ? x.clips : null,
-    }));
-    const row = {
-      title: title.trim().slice(0, 80) || titleCase(briefTopic),
-      dek: dek.trim() || null,
-      topic: briefTopic,
-      color,
-      mode: briefMode,
-      items,
-      total_seconds: Math.round(briefSeconds(items, briefMode)),
-    };
-    const q = editing ? supabase().from("briefs").update(row).eq("id", editing.id) : supabase().from("briefs").insert(row);
+    clearTimeout(autosaving.current?.timer);
+    await autosaving.current?.running;
+    const row = briefRow();
+    // Publishing a draft turns it public. (Only drafts send `draft`, so publishing works before that column exists.)
+    const draft = autosaving.current?.id || draftId;
+    const id = draft || editing?.id;
+    const q = id ? supabase().from("briefs").update(draft ? { ...row, draft: false } : row).eq("id", id) : supabase().from("briefs").insert(row);
     const { data, error: err } = await q.select("id").single();
     if (err) {
       setSaving(false);
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
-    for (const it of items) if (it.episodeId != null) refreshCatalog({ episodeId: it.episodeId });
+    for (const it of row.items) if (it.episodeId != null) refreshCatalog({ episodeId: it.episodeId });
     try {
       sessionStorage.removeItem(DRAFT);
     } catch {}
@@ -222,11 +283,11 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
   return (
     <>
-      <Link href={editing ? `/briefs/b/${editing.id}` : "/briefs"} className="back">
-        ← {editing ? "Back to brief" : "Briefs"}
+      <Link href={isPublished ? `/briefs/b/${editing.id}` : "/briefs"} className="back">
+        ← {isPublished ? "Back to brief" : "Briefs"}
       </Link>
       <h1 className="display h-lg" style={{ margin: "18px 0 8px" }}>
-        {editing ? "Edit brief" : "New brief"}
+        {isPublished ? "Edit brief" : editing?.draft ? "Your draft" : "New brief"}
       </h1>
       <p className="muted" style={{ fontSize: 19 }}>
         Pick a topic. We'll find episodes about it, and if you want, just the parts where it comes up.
@@ -358,6 +419,11 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       {chosen.length > 0 && (
         <section id="your-brief" className="card stack" style={{ marginTop: 26, scrollMarginTop: 20 }}>
           <h2 className="label" style={{ margin: 0 }}>Your brief</h2>
+          {isDraft && (
+            <p className="mono small muted" style={{ margin: 0 }} role="status">
+              {draftSaved === "failed" ? "Couldn't save the draft just now." : "Draft · saved as you go · only you can see it"}
+            </p>
+          )}
           <p className="mono">
             {chosen.length} {chosen.length === 1 ? "episode" : "episodes"} · {briefMode === "clips" ? clock(total) : minutes(total)} total
           </p>
@@ -407,12 +473,28 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
             ))}
           </div>
           <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 10 }} onClick={publish} disabled={saving || !state?.accounts}>
-            {saving ? (editing ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : editing ? "Save changes" : "Publish brief"}
+            {saving ? (isPublished ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : isPublished ? "Save changes" : "Publish brief"}
           </button>
-          {editing && (
-            <button type="button" className={`btn ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving} style={{ alignSelf: "center" }}>
-              {confirmDelete ? "Tap again to delete for good" : "Delete this brief"}
-            </button>
+          <div className="row gap center wrap" style={{ justifyContent: "center" }}>
+            {canDraft && (
+              <button type="button" className="btn btn--sm" onClick={() => writeDraft(draftKey, "kept")} disabled={saving || draftSaved === "saving"}>
+                {draftSaved === "saving" ? "Saving…" : "Save draft"}
+              </button>
+            )}
+            {(editing || draftId) && (
+              <button type="button" className={`btn btn--sm ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving}>
+                {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this brief"}
+              </button>
+            )}
+          </div>
+          {draftSaved === "kept" && (
+            <p className="small" style={{ margin: 0, textAlign: "center" }} role="status">
+              ✓ Draft saved. It&apos;s under My briefs on{" "}
+              <Link href="/me" className="u-link">
+                My log
+              </Link>
+              , ready when you are.
+            </p>
           )}
           {state && !state.accounts && <p className="muted small">Publishing needs profiles switched on (Supabase keys in Vercel).</p>}
         </section>
