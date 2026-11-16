@@ -246,7 +246,7 @@ export default async function SearchPage({ searchParams }) {
         <SignInButton />
       </div>
       <p className="muted" style={{ marginTop: 6 }}>
-        Find an episode or a show. Search a person to see everywhere they've been on.
+        Find your next listen. Search a show, an episode, or anyone who's been a guest.
       </p>
 
       <form id="search-form" className="search" action="/search" role="search">
