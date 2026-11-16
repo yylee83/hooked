@@ -389,4 +389,10 @@ Each step is its own branch and pull request.
 - To sign in on a preview link, use "Email me a sign-in link" or "Forgot password?" (the test database's copied accounts have no password).
 - ~~Search results are weak~~ (much better since #42–#47; searching our own tables is still to do, step 9).
 - The two built-in briefs (The Midterms, Tradwives) now find only some of their episodes on Podcast Index: refresh them.
+- **Update `fast-xml-parser` (late Nov 2026 or after).** It reads shows' own feeds (`lib/feeds.js`). `npm audit` flags a
+  low advisory ([GHSA-474x-hrwr-fgx4](https://github.com/advisories/GHSA-474x-hrwr-fgx4): slow parsing of unclosed
+  "stop node" tags) in 5.11.2 and older. We're not affected: `lib/feeds.js` never sets `stopNodes`. The fix is 5.12.1
+  (released 2026-11-13), so let it settle first. Then one PR: move `package.json` from the exact `"5.11.1"` to `"^5.12.1"`
+  (nothing records why it was exact; it came in with the show notes work on Nov 1), and check that full show notes still
+  come through from a few real feeds.
 - ~~Safe-fetch guard~~ (done: `lib/safe-fetch.js` for pasted Spotify short links, share-image covers and transcripts).
