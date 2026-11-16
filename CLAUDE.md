@@ -102,7 +102,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   (one per user+episode), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
   `listening_progress` (where you stopped in each episode; private), `finished_episodes` (finished in the player, not
-  logged yet; private), `briefs`, and the team-only history: `listening_sessions` and `search_events` (see below).
+  logged yet; private), `briefs` (`draft` ones are seen only by their author; server pages read without a sign-in, so
+  they never show drafts), and the team-only history: `listening_sessions` and `search_events` (see below).
 - **Embeds need explicit foreign-key hints**, because several tables point at `profiles`, e.g.
   `profiles!logs_user_id_fkey(...)`, `profiles!comments_author_id_fkey(...)`. A missing hint
   silently breaks reviews on episode pages (this has happened before).
@@ -114,12 +115,14 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
-  `/briefs` (a briefs-only search, "Hooked selects" swipe row of built-in briefs, listener briefs in a grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`), `/me` My log (tabs: Episodes, Shows,
+  `/briefs` (a briefs-only search, "Hooked selects" swipe row of built-in briefs, listener briefs in a grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
+  the browser, `components/DraftEditor.js`), `/me` My log (tabs: Episodes, Shows,
   Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet;
   `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
 - **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
-  ("+ Up next"), `HookShowButton`. Done states are yellow (`btn--butter`). `SignInButton` (`components/Account.js`)
+  ("+ Up next"), `HookShowButton`; on episode pages also `AddToBriefButton` ("+ Brief", `components/AddToBrief.js`: add to one
+  of your briefs or start a draft; helpers in `lib/briefs-client.js`). Done states are yellow (`btn--butter`). `SignInButton` (`components/Account.js`)
   sits in page headers when signed out.
 - **API routes** (`app/api/`): `resolve` (paste a link), `episode`, `for-you`, `top-episodes`,
   `genres`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.

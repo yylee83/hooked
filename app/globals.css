@@ -479,6 +479,24 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .share-opt--main:hover { background: var(--cobalt); }
 .share-preview { margin-top: 12px; font-size: 13px; color: var(--muted); background: var(--white); border-radius: 12px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; border: 1.5px solid rgba(21,19,29,.15); }
 .share-ok { margin-top: 10px; font-weight: 700; color: #11795f; }
+/* "+ Brief" on an episode page (components/AddToBrief.js) */
+.add-brief .plus-sheet__panel { max-height: 86vh; overflow-y: auto; }
+.add-brief__ep { margin: -6px 0 0; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.add-brief__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.add-brief__row { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: var(--white); border: 2.5px solid var(--ink); border-radius: 16px; padding: 11px 14px; font: inherit; color: var(--ink); cursor: pointer; }
+.add-brief__row:hover:not(:disabled) { background: var(--butter); }
+.add-brief__row:disabled { cursor: default; }
+.add-brief__row:disabled:not(.is-in) { opacity: .55; }
+.add-brief__row.is-in { background: var(--cream); }
+.add-brief__dot { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); }
+.add-brief__title { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.add-brief__meta { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.add-brief__state { flex: none; font-weight: 700; font-size: 14px; color: var(--cobalt); }
+.add-brief__row.is-in .add-brief__state { color: var(--ink); }
+.add-brief__new { border-style: dashed; font-weight: 700; color: var(--cobalt); }
+.add-brief__plus { flex: none; width: 14px; text-align: center; font-weight: 800; }
+.add-brief__done { margin: 0; background: var(--white); border: 2.5px solid var(--ink); border-radius: 16px; padding: 11px 14px; box-shadow: 3px 3px 0 var(--ink); }
+.add-brief__error { margin: 0; color: #b3261e; font-weight: 600; }
 .shared-by { margin: 16px 0 6px; background: var(--white); border: var(--line); border-radius: 24px; box-shadow: var(--shadow-sm); padding: 16px 18px; font-size: 18px; }
 .shared-by .avatar { flex: none; }
 .shared-by__take { margin-top: 12px; padding-top: 12px; border-top: 2px dashed rgba(21,19,29,.2); }
