@@ -208,31 +208,41 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   // Save the draft a moment after each change. Never while publishing, and never for a published brief.
   const canDraft = !!state?.user && !(editing && !editing.draft) && chosen.length > 0;
   const draftKey = canDraft ? JSON.stringify({ ...briefRow(), title: title.trim().slice(0, 80) || UNTITLED }) : "";
+  // One save at a time (so a new draft is only created once). Resolves true once saved.
+  function writeDraft(key, how = "saved") {
+    const job = (autosaving.current ||= {});
+    clearTimeout(job.timer);
+    const before = job.running;
+    job.running = (async () => {
+      await before;
+      setDraftSaved("saving");
+      const row = { ...JSON.parse(key), draft: true };
+      const id = job.id || draftId;
+      const q = id ? supabase().from("briefs").update(row).eq("id", id) : supabase().from("briefs").insert(row);
+      const { data, error: err } = await q.select("id").single();
+      if (err) {
+        setDraftSaved("failed");
+        return false;
+      }
+      if (!id) {
+        job.id = data.id;
+        setDraftId(data.id);
+        // Reloading (or coming back later) opens this draft.
+        window.history.replaceState(null, "", `/briefs/b/${data.id}/edit`);
+        try {
+          sessionStorage.removeItem(DRAFT);
+        } catch {}
+      }
+      setDraftSaved(how);
+      return true;
+    })();
+    return job.running;
+  }
   useEffect(() => {
     if (!draftKey || saving) return;
     const job = (autosaving.current ||= {});
     clearTimeout(job.timer);
-    job.timer = setTimeout(async () => {
-      await job.running; // one save at a time, so a new draft is only created once
-      job.running = (async () => {
-        setDraftSaved("saving");
-        const row = { ...JSON.parse(draftKey), draft: true };
-        const id = job.id || draftId;
-        const q = id ? supabase().from("briefs").update(row).eq("id", id) : supabase().from("briefs").insert(row);
-        const { data, error: err } = await q.select("id").single();
-        if (err) return setDraftSaved("failed");
-        if (!id) {
-          job.id = data.id;
-          setDraftId(data.id);
-          // Reloading (or coming back later) opens this draft.
-          window.history.replaceState(null, "", `/briefs/b/${data.id}/edit`);
-          try {
-            sessionStorage.removeItem(DRAFT);
-          } catch {}
-        }
-        setDraftSaved("saved");
-      })();
-    }, 1200);
+    job.timer = setTimeout(() => writeDraft(draftKey), 1200);
     return () => clearTimeout(job.timer);
   }, [draftKey, saving]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -411,7 +421,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           <h2 className="label" style={{ margin: 0 }}>Your brief</h2>
           {isDraft && (
             <p className="mono small muted" style={{ margin: 0 }} role="status">
-              {draftSaved === "saving" ? "Saving…" : draftSaved === "failed" ? "Couldn't save the draft just now." : "Draft · saved as you go · only you can see it"}
+              {draftSaved === "failed" ? "Couldn't save the draft just now." : "Draft · saved as you go · only you can see it"}
             </p>
           )}
           <p className="mono">
@@ -465,10 +475,26 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 10 }} onClick={publish} disabled={saving || !state?.accounts}>
             {saving ? (isPublished ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : isPublished ? "Save changes" : "Publish brief"}
           </button>
-          {(editing || draftId) && (
-            <button type="button" className={`btn ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving} style={{ alignSelf: "center" }}>
-              {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this brief"}
-            </button>
+          <div className="row gap center wrap" style={{ justifyContent: "center" }}>
+            {canDraft && (
+              <button type="button" className="btn btn--sm" onClick={() => writeDraft(draftKey, "kept")} disabled={saving || draftSaved === "saving"}>
+                {draftSaved === "saving" ? "Saving…" : "Save draft"}
+              </button>
+            )}
+            {(editing || draftId) && (
+              <button type="button" className={`btn btn--sm ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving}>
+                {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this brief"}
+              </button>
+            )}
+          </div>
+          {draftSaved === "kept" && (
+            <p className="small" style={{ margin: 0, textAlign: "center" }} role="status">
+              ✓ Draft saved. It&apos;s under My briefs on{" "}
+              <Link href="/me" className="u-link">
+                My log
+              </Link>
+              , ready when you are.
+            </p>
           )}
           {state && !state.accounts && <p className="muted small">Publishing needs profiles switched on (Supabase keys in Vercel).</p>}
         </section>
