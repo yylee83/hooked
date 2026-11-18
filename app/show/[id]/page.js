@@ -41,7 +41,7 @@ export default async function ShowPage({ params, searchParams }) {
   // asking for one extra tells us whether there are more to show.
   const max = Math.min(MOST, Math.max(PAGE, parseInt(query.max) || PAGE));
   const fromPi = s.id && s.source !== "feed" && s.source !== "spotify";
-  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, max + 1)) : { data: [] }, showStats({ ref: s.ref, feedId: s.id })]);
+  const [eps, community] = await Promise.all([fromPi ? safe(getEpisodes(s.id, max + 1, true)) : { data: [] }, showStats({ ref: s.ref, feedId: s.id })]);
   let raws = eps.data || [];
   if (!raws.length && s.ref) raws = await ownShowEpisodes(s.ref, max + 1);
   const more = raws.length > max && max < MOST;
