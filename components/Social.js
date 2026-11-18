@@ -82,6 +82,24 @@ export function HookShowButton({ show }) {
   );
 }
 
+// "+ Hook this show" under the show name on the log sheet and in the "Log it?" prompt. Hooking is a choice of its
+// own (Decision 6): logging or rating an episode never hooks its show. Saves straight away, like the show page's
+// button, so Cancel on the log doesn't undo it. `episode` is an episode card ({ showRef, feedId, feedTitle, … }).
+export function HookShowPill({ episode, short = false }) {
+  const state = useStore();
+  const show = { showRef: episode.showRef, feedId: episode.feedId, title: episode.feedTitle, image: episode.feedImage };
+  if (!show.showRef && show.feedId == null) return null;
+  const on = !!findHookedShow(state, show);
+  return (
+    <button type="button" className={`hook-pill ${on ? "is-on" : ""}`} onClick={() => toggleHookedShow(show)} aria-pressed={on}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path d={on ? "M5 12l5 5L20 7" : "M12 5v14M5 12h14"} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {on ? (short ? "Hooked" : "Hooked on this show") : short ? "Hook show" : "Hook this show"}
+    </button>
+  );
+}
+
 // "+ Up next" on any episode: saves it to your queue (it plays after whatever's on).
 export function QueueButton({ episode, from }) {
   const state = useStore();
