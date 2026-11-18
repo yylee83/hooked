@@ -649,6 +649,9 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .foryou__show { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -4px; }
 .foryou__actions { margin-top: auto; flex-wrap: wrap; }
 .foryou__actions .btn { padding-left: 10px; padding-right: 10px; }
+/* Home: "New episodes from your hooked shows" (components/NewEpisodes.js) reuses the For you cards. */
+.new-eps__hint { margin: -6px 0 10px; }
+.foryou__why.new-eps__when { background: var(--butter); }
 .me-tabs { gap: 5px; }
 .me-tabs .tab { padding: 6px 11px; font-size: 14.5px; }
 .tab__n { min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }

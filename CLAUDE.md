@@ -112,7 +112,10 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home (Up next card, Sent to you as slim rows that drop off once queued or logged, friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
+- **Pages** (`app/`): `/` Home (Up next card, "New episodes from your hooked shows" swipe row (`components/NewEpisodes.js`,
+  `/api/new-episodes`; signed out or nothing hooked: "New from popular shows on Hooked"), "Listening on Hooked now" for
+  signed-out visitors (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
+  Sent to you as slim rows that drop off once queued or logged, "Friends listening now" (played in the last day), friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
   `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
@@ -126,7 +129,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   of your briefs or start a draft; helpers in `lib/briefs-client.js`). Done states are yellow (`btn--butter`). `SignInButton` (`components/Account.js`)
   sits in page headers when signed out.
 - **API routes** (`app/api/`): `resolve` (paste a link), `episode`, `for-you`, `top-episodes`,
-  `genres`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
+  `genres`, `new-episodes`, `listening-now`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
 - **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
   localStorage when signed out (moved into the account on sign-in).
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30, speed, drag the playhead,

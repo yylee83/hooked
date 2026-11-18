@@ -4,6 +4,8 @@ import KeysNotice from "@/components/KeysNotice";
 import { AvatarLink, FreshLogs } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
 import UpNextHome from "@/components/UpNextHome";
+import NewEpisodes from "@/components/NewEpisodes";
+import ListeningOnHooked from "@/components/ListeningOnHooked";
 import TrendingConversations from "@/components/TrendingConversations";
 import { NotificationBell } from "@/components/Notifications";
 
@@ -29,6 +31,12 @@ export default function FriendsPage() {
       <KeysNotice />
 
       <UpNextHome />
+
+      {/* The newest episodes of your hooked shows (signed out: of popular shows), ready to play. */}
+      <NewEpisodes />
+
+      {/* Signed out: what people on Hooked are listening to, without names. Signed in: Friends listening now, in the feed. */}
+      <ListeningOnHooked />
 
       <FriendsFeed />
 

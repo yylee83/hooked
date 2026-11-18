@@ -265,7 +265,7 @@ export function FriendsFeed() {
 
       {data?.listening?.length > 0 && (
         <>
-          <h2 className="section-title">Listening now</h2>
+          <h2 className="section-title">Friends listening now</h2>
           <div className="np-row">
             {data.listening.map((p, i) => (
               <Link key={p.id} href={episodeHref(p.now_playing.ref, p.now_playing.id)} className="np">
