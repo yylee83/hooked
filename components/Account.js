@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
 import Stars from "./Stars";
+import { logVerb, plural, starStats } from "@/lib/format";
 import { initialsOf, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
@@ -43,7 +44,7 @@ export function FreshLogs() {
     if (!db) return setLogs([]);
     let live = true;
     db.from("logs")
-      .select(`user_id, episode_ref, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle), ${LOG_EPISODE}`)
+      .select(`user_id, episode_ref, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle), ${LOG_EPISODE}`)
       .not("who.handle", "is", null)
       .order("logged_at", { ascending: false })
       .limit(8)
@@ -62,7 +63,7 @@ export function FreshLogs() {
             <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} feedId={l.feed_id} />
             <div className="min0 grow">
               <p className="small">
-                <b>@{l.who.handle}</b> {l.hooked ? "is hooked on" : "wasn't hooked by"}
+                <b>@{l.who.handle}</b> {logVerb(l)}
               </p>
               <Link href={episodeHref(l.episode_ref, l.episode_id)} className="title-sm" style={{ display: "block" }}>
                 {l.title}
@@ -106,7 +107,7 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
     Promise.all([
       db
         .from("logs")
-        .select("user_id, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
+        .select("user_id, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(handle)")
         .eq(col, key)
         .not("who.handle", "is", null)
         .order("logged_at", { ascending: false })
@@ -128,15 +129,21 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
     };
   }, [episodeId, episodeRef, me]);
   if (!logs?.length) return null;
-  const hooked = logs.filter((l) => l.hooked).length;
+  const stars = starStats(logs);
   // Your own review first.
   if (me) logs = [...logs.filter((l) => l.user_id === me), ...logs.filter((l) => l.user_id !== me)];
   return (
     <section>
       <h2 className="label">What listeners think</h2>
       {logs.length > 2 && <p className="muted small" style={{ marginTop: -4 }}>Most useful reviews first.</p>}
-      <p className="mono small" style={{ marginBottom: 6 }}>
-        {hooked} of {logs.length} hooked
+      <p className="mono small row gap-xs center" style={{ marginBottom: 6 }}>
+        {stars.count > 0 ? (
+          <>
+            <Stars value={stars.avg} size={14} /> {stars.avg} from {plural(stars.count, "rating")}
+          </>
+        ) : (
+          plural(logs.length, "review")
+        )}
       </p>
       <ul>
         {logs.map((l) => (
@@ -144,9 +151,6 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
             <div className="min0 grow">
               <p className="small row gap-xs center wrap">
                 <b>{l.user_id === me ? "You" : `@${l.who.handle}`}</b>
-                <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`} style={{ fontSize: 11, padding: "2px 8px" }}>
-                  {l.hooked ? "Hooked" : "Not hooked"}
-                </span>
                 {l.rating > 0 && <Stars value={Number(l.rating)} size={14} />}
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}

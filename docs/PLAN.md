@@ -86,14 +86,24 @@ previews, and the server saving new episodes all work. Things to know:
 - Never print keys: keep them in env vars or files and only ever show a key's prefix. The shell is **zsh**, which
   doesn't split `$var` into words like bash does.
 
-**Decision 6 (proposed 2026-11-11, waiting on YY):** stars rate episodes, "hooked" moves to shows. Written up in full in
-the decisions doc ("Decision 6: Stars rate episodes, hooked is for shows"): the log sheet becomes stars → what's the
-hook → "Are you hooked on [show]?" (pre-selected if already hooked, otherwise asked fresh every time; No isn't
-remembered); a table of every screen that changes; % hooked = people hooked on a show ÷ unique people who logged any
-episode of it (Popular on Hooked keeps it next to average stars); Wrapped = average stars, episodes logged, and shows
-hooked ÷ unique shows logged. **Done already, without changing saved data:** pre-selecting for hooked shows (#70) and
-the new order (#71). Build in three steps once YY agrees: log sheet + "Log it?" prompt + catch-up (hooked
-shows from hooked logs) + `logs.hooked` optional; then the screens; then drop the column.
+**Decision 6, agreed by Erin and YY on 2026-11-17: stars rate episodes, "hooked" is for shows.** Steps 1 and 2 are
+**#82 (logging) and #83 (screens)**, stacked; merge them together. Step 3 (drop `logs.hooked` and
+`recommendations.hooked`, and the `typeof l.hooked` line in `logToDb`, the test-people script and `check-trending`) comes
+later, in its own PR. What Erin decided:
+- **Log sheet** (Erin's layout, mockup A on the canvas "Log sheet: hook the show"): "Your rating" in the big cobalt heading
+  style, then "What did you think?" in the bold label style; no "Are you hooked?". A "+ Hook this show" pill under the show
+  name (`HookShowPill`, `components/Social.js`) saves **straight away** (Cancel doesn't undo it) and is yellow "✓ Hooked on
+  this show" on every episode of a hooked show. The "Log it?" prompt has the short pill beside a cobalt **Log it** (yellow
+  next to the yellow pill read as one control); "Add what you thought ›" carries the stars over (`/log/<id>?stars=4`).
+- **A show is hooked only when someone chooses it** (show page or the pill). Logging or rating never hooks a show.
+  `hookedShows()` no longer adds shows from hooked logs. The one-time catch-up
+  (`20261118120000_hooked_is_for_shows.sql`) hooked every show already logged as hooked (live copy: 9 → 14 hooked shows);
+  logs saved on a device before sign-in get the same catch-up when they move into the account.
+- **Feeds:** "@erin rated …" with stars, "@erin logged …" without (`logVerb`, `lib/format.js`). Logs without stars say
+  "Logged" where a verdict used to be. **% hooked** (show page, Popular on Hooked) = of the people who logged any episode,
+  the share hooked on the show (hooked people who never logged don't count, so it stays ≤ 100%). **Wrapped:** episodes
+  logged (with hours), % of your logged shows you're hooked on, average stars.
+- Later: "@erin got hooked on Slate Money" in friends' activity.
 
 **Decided 2026-11-11 (Erin):**
 - **Searching our own tables is on hold** until Erin and YY have used search longer and have real misses to test

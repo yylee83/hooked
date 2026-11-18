@@ -1,7 +1,7 @@
 "use client";
 // On a show page: your take (from the episodes you logged) next to everyone's on Hooked.
 import Stars from "./Stars";
-import { sameShow, useStore } from "@/lib/store";
+import { findHookedShow, sameShow, useStore } from "@/lib/store";
 import { plural } from "@/lib/format";
 
 // `show` is { showRef, feedId }: our show id, and the Podcast Index number when it has one.
@@ -24,7 +24,7 @@ export default function ShowRatings({ show, community }) {
             <p className="show-ratings__score muted">No stars yet</p>
           )}
           <p className="muted small">
-            {plural(mine.length, "episode")} logged · hooked on {mine.filter((l) => l.hooked).length}
+            {plural(mine.length, "episode")} logged{findHookedShow(state, show) ? " · you're hooked" : ""}
           </p>
         </div>
       )}

@@ -25,7 +25,7 @@ export default function FriendsResults({ query }) {
     if (!db || !state?.user || !ids) return;
     let live = true;
     db.from("logs")
-      .select(`user_id, episode_ref, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(id, handle, display_name), ${EPISODE}`)
+      .select(`user_id, episode_ref, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(id, handle, display_name), ${EPISODE}`)
       .in("user_id", ids.split(","))
       .order("logged_at", { ascending: false })
       .limit(MAX_LOGS)
@@ -115,8 +115,7 @@ export default function FriendsResults({ query }) {
                       <Link href={`/u/${l.who.handle}`}>
                         <b>@{l.who.handle}</b>
                       </Link>
-                      <span className="muted">{l.hooked ? "hooked" : "not hooked"}</span>
-                      {l.rating > 0 && <Stars value={Number(l.rating)} size={14} />}
+                      {l.rating > 0 ? <Stars value={Number(l.rating)} size={14} /> : <span className="muted">logged it</span>}
                     </p>
                     {l.hook && <p className="log__hook">“{l.hook}”</p>}
                   </li>

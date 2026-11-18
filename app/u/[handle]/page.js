@@ -6,7 +6,7 @@ import { Avatar, FollowButton } from "@/components/Friends";
 import { ShareButton } from "@/components/Share";
 import LogThread, { ReviewAdd } from "@/components/LogThread";
 import { getProfilePage } from "@/lib/supabase/public";
-import { minutes, plural } from "@/lib/format";
+import { minutes, plural, starStats } from "@/lib/format";
 import { site } from "@/lib/site";
 import { episodeHref, showHref } from "@/lib/addresses";
 
@@ -31,8 +31,8 @@ export default async function ProfilePage({ params }) {
   const { handle } = await params;
   const page = await getProfilePage(handle);
   if (!page) notFound();
-  const { profile, logs, shows, briefs, followers, following } = page;
-  const hookedCount = logs.filter((l) => l.hooked).length;
+  const { profile, logs, shows, briefs, followers, following, hookedCount } = page;
+  const stars = starStats(logs);
 
   const groups = [];
   for (const l of logs) {
@@ -51,7 +51,8 @@ export default async function ProfilePage({ params }) {
           <h1 className="display profile__name">{profile.display_name || `@${profile.handle}`}</h1>
           {profile.display_name && <p className="me__handle">@{profile.handle}</p>}
           <p className="mono me__stats">
-            {plural(logs.length, "episode")} · {hookedCount} hooked
+            {plural(logs.length, "episode")}
+            {stars.count > 0 && ` · ★ ${stars.avg} avg`} · hooked on {plural(hookedCount, "show")}
           </p>
           <p className="me__people small">
             <Link href={`/u/${profile.handle}/people?tab=following`}><b>{following}</b> following</Link>
@@ -124,7 +125,7 @@ export default async function ProfilePage({ params }) {
                     <LogThread logUserId={profile.id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                   </div>
                   <div className="log__side">
-                    <span className={`sticker ${l.hooked ? "" : "sticker--outline"}`}>{l.hooked ? "Hooked" : "Not hooked"}</span>
+                    {!(l.rating > 0) && <span className="sticker sticker--outline">Logged</span>}
                     <ReviewAdd logUserId={profile.id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                     <ShareButton
                       compact

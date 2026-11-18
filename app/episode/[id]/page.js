@@ -80,12 +80,9 @@ export default async function EpisodePage({ params, searchParams }) {
               thinks you'd enjoy this.
             </p>
           </div>
-          {shared.log && (shared.log.rating > 0 || shared.log.hook || shared.log.hooked) && (
+          {shared.log && (shared.log.rating > 0 || shared.log.hook) && (
             <div className="shared-by__take">
-              <div className="row gap-xs center wrap">
-                {shared.log.hooked && <span className="sticker">Hooked</span>}
-                {shared.log.rating > 0 && <Stars value={Number(shared.log.rating)} size={18} />}
-              </div>
+              {shared.log.rating > 0 && <Stars value={Number(shared.log.rating)} size={18} />}
               {shared.log.hook && <p className="shared-by__hook">“{shared.log.hook}”</p>}
             </div>
           )}
