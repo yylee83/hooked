@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
+import ListeningOnHooked from "./ListeningOnHooked";
 import { logVerb } from "@/lib/format";
 import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
@@ -211,8 +212,16 @@ export function FriendsFeed() {
             .order("logged_at", { ascending: false })
             .limit(30)
         : Promise.resolve({ data: [] }),
-    ]).then(([r, n, l]) => {
-      if (live) setData({ recs: (r.data || []).map(withEpisode), listening: (n.data || []).filter((p) => p.now_playing?.id), logs: (l.data || []).map(withEpisode), error: r.error });
+    ]).then(async ([r, n, l]) => {
+      const listening = (n.data || []).filter((p) => p.now_playing?.id || p.now_playing?.ref);
+      // Some plays were saved without a cover: use the episode's (or its show's) from our tables.
+      const missing = listening.filter((p) => !p.now_playing.image && p.now_playing.ref).map((p) => p.now_playing.ref);
+      if (missing.length) {
+        const { data: eps } = await db.from("episodes").select("id, image_url, show:shows(image_url)").in("id", missing);
+        const art = new Map((eps || []).map((e) => [e.id, e.image_url || e.show?.image_url || ""]));
+        for (const p of listening) if (!p.now_playing.image && p.now_playing.ref) p.now_playing = { ...p.now_playing, image: art.get(p.now_playing.ref) || "" };
+      }
+      if (live) setData({ recs: (r.data || []).map(withEpisode), listening, logs: (l.data || []).map(withEpisode), error: r.error });
     });
     return () => {
       live = false;
@@ -263,9 +272,12 @@ export function FriendsFeed() {
         </>
       )}
 
+      {/* No friends have played anything in the last day: what everyone on Hooked is listening to (no names). */}
+      {data && !data.listening?.length && <ListeningOnHooked always />}
+
       {data?.listening?.length > 0 && (
         <>
-          <h2 className="section-title">Listening now</h2>
+          <h2 className="section-title">Friends listening now</h2>
           <div className="np-row">
             {data.listening.map((p, i) => (
               <Link key={p.id} href={episodeHref(p.now_playing.ref, p.now_playing.id)} className="np">

@@ -101,7 +101,7 @@ export function HookShowPill({ episode, short = false }) {
 }
 
 // "+ Up next" on any episode: saves it to your queue (it plays after whatever's on).
-export function QueueButton({ episode, from }) {
+export function QueueButton({ episode, from, icon = false }) {
   const state = useStore();
   const item = {
     episodeId: episode.id,
@@ -114,6 +114,21 @@ export function QueueButton({ episode, from }) {
     ...(from ? { from } : {}),
   };
   const on = inUpNext(state, episode);
+  // Icon only (small cards): "+", then a check once it's in Up next.
+  if (icon)
+    return (
+      <button
+        type="button"
+        className={`icon-act ${on ? "is-on" : ""}`}
+        onClick={() => (on ? removeFromList(item) : addToList(item))}
+        aria-pressed={on}
+        aria-label={on ? `Remove ${episode.title} from Up next` : `Add ${episode.title} to Up next`}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d={on ? "M5 12l5 5L20 7" : "M12 5v14M5 12h14"} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    );
   return (
     <button
       className={`btn btn--sm ${on ? "btn--butter" : ""}`}

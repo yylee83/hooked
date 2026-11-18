@@ -712,10 +712,17 @@ function NextIcon() {
 }
 
 // "Play" button used on episode rows.
-export function PlayButton({ episode }) {
+export function PlayButton({ episode, icon = false }) {
   const p = usePlayer();
   if (!episode.audio) return null;
   const isThis = !p?.queueMeta && sameEpisode(p?.current, episode);
+  // Icon only (small cards): a round button with the play/pause sign.
+  if (icon)
+    return (
+      <button type="button" className="icon-act icon-act--play" onClick={() => p.play(episode)} aria-label={isThis && p.playing ? `Pause ${episode.title}` : `Play ${episode.title}`}>
+        {isThis && p.playing ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
+      </button>
+    );
   return (
     <button className="btn btn--sm" onClick={() => p.play(episode)}>
       {isThis && p.playing ? <PauseIcon size={14} /> : <PlayIcon size={14} />}

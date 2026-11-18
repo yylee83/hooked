@@ -649,6 +649,23 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .foryou__show { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -4px; }
 .foryou__actions { margin-top: auto; flex-wrap: wrap; }
 .foryou__actions .btn { padding-left: 10px; padding-right: 10px; }
+/* Home: "New episodes" (components/NewEpisodes.js): a swipe row of small cards. */
+.new-eps__hint { margin: -6px 0 10px; }
+.new-eps__row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 -2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.new-eps__row::-webkit-scrollbar { display: none; }
+.new-eps__card { flex: none; width: 140px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
+.new-eps__card--ghost { height: 230px; border: 2.5px dashed rgba(21, 19, 29, 0.25); border-radius: 14px; }
+.new-eps__card .art { box-shadow: 3px 3px 0 var(--ink); }
+.new-eps__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 14px; line-height: 1.2; margin-top: 4px; }
+.new-eps__show { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -3px; }
+.new-eps__foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; }
+.new-eps__when { font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.new-eps__acts { display: flex; gap: 5px; flex: none; }
+.new-eps__acts .icon-act { width: 30px; height: 30px; border-width: 2px; }
+/* Round icon-only buttons on small cards (PlayButton / QueueButton with `icon`). */
+.icon-act { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 2.5px solid var(--ink); border-radius: 50%; background: var(--white); color: var(--ink); }
+.icon-act--play { background: var(--cobalt); color: var(--white); }
+.icon-act.is-on { background: var(--butter); }
 .me-tabs { gap: 5px; }
 .me-tabs .tab { padding: 6px 11px; font-size: 14.5px; }
 .tab__n { min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }

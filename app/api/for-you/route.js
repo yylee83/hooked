@@ -6,7 +6,7 @@
 import { episodeCard, getEpisodes, safe } from "@/lib/podcastindex";
 import { popularOnHooked, topCharts } from "@/lib/charts";
 import { publicDb } from "@/lib/supabase/public";
-import { REF, ownShowEpisodes, withRefs } from "@/lib/catalog";
+import { REF, newestOfShow, showRowsFor, withRefs } from "@/lib/catalog";
 import { genreLabel } from "@/lib/genres";
 
 const PI_ID = /^\d{1,15}$/;
@@ -15,23 +15,6 @@ const keys = (a, max) => [...new Set((Array.isArray(a) ? a : []).map(String).fil
 const uuids = (a, max) => (Array.isArray(a) ? a : []).filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, max);
 // One show, whichever id we know it by: the Podcast Index number when it has one, else ours.
 const showKeyOf = (c) => (c.feedId ? `f${c.feedId}` : c.showRef ? `r${c.showRef}` : "");
-
-// Our show rows for a list of ids (ours or Podcast Index numbers), looked up by either.
-async function showRows(db, list) {
-  const refs = list.filter((x) => REF.test(x));
-  const nums = list.filter((x) => PI_ID.test(x));
-  const cols = "id, podcastindex_id, source, title, image_url";
-  const [a, b] = await Promise.all([
-    refs.length ? db.from("shows").select(cols).in("id", refs) : { data: [] },
-    nums.length ? db.from("shows").select(cols).in("podcastindex_id", nums) : { data: [] },
-  ]);
-  const map = new Map();
-  for (const r of [...(a.data || []), ...(b.data || [])]) {
-    map.set(r.id, r);
-    if (r.podcastindex_id) map.set(String(r.podcastindex_id), r);
-  }
-  return map;
-}
 
 export async function POST(req) {
   let body = {};
@@ -63,21 +46,10 @@ export async function POST(req) {
     return { ...card, reason, kind };
   };
 
-  // The newest episodes of one show: from Podcast Index when it serves the show, otherwise (or if
-  // Podcast Index doesn't answer) the episodes we saved from the show's own feed.
-  // Podcast Index's episode list leaves out the show's name, so we pass in the one we know.
-  const newestOf = async (row, piId, max, known = {}) => {
-    if (piId) {
-      const { data } = await safe(getEpisodes(piId, max));
-      const show = { id: piId, title: row?.title || known.title, image: row?.image_url || known.image, ...(row ? { ref: row.id } : {}) };
-      if (data?.length) return withRefs(data.map((e) => episodeCard(e, show)));
-    }
-    if (!row || row.source === "spotify") return [];
-    return (await ownShowEpisodes(row.id, max)).map((e) => episodeCard(e));
-  };
+  const newestOf = (row, piId, max, known = {}) => newestOfShow(row, piId, max, { known });
 
   // 1) New from shows you love.
-  const rows = db && lovedIds.length ? await showRows(db, lovedIds) : new Map();
+  const rows = lovedIds.length ? await showRowsFor(lovedIds) : new Map();
   const fromLoved = (
     await Promise.all(
       lovedIds.map(async (id) => {
@@ -155,7 +127,7 @@ export async function POST(req) {
   // 4) Not much to go on yet? Fill with what's popular here (any show, including ones from their own feed).
   if (picks.length < 4) {
     const pop = (await popularOnHooked(30, 8)).filter((s) => (s.feedId || s.showRef) && !isKnownShow(s));
-    const popRows = db ? await showRows(db, pop.map((s) => s.showRef).filter(Boolean)) : new Map();
+    const popRows = await showRowsFor(pop.map((s) => s.showRef).filter(Boolean));
     for (const s of pop.slice(0, 4)) {
       const eps = await newestOf(popRows.get(s.showRef), s.feedId, 1, s);
       const x = take(eps[0], "Popular on Hooked", "popular");
