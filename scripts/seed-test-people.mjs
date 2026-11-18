@@ -61,15 +61,6 @@ const must = ({ data, error }, what) => {
   return data;
 };
 
-// Saves with the old copied columns (title, feed_title…) if the database still requires them; they go in
-// stage D, so try without first.
-async function insertFlexible(table, rows, copies) {
-  if (!rows.length) return;
-  let res = await db.from(table).insert(rows);
-  if (res.error && /null value in column|violates not-null/i.test(res.error.message)) res = await db.from(table).insert(rows.map((r, i) => ({ ...r, ...copies(i) })));
-  must(res, `saving ${table}`);
-}
-
 async function findUser(email) {
   for (let page = 1; page < 50; page++) {
     const { users } = must(await db.auth.admin.listUsers({ page, perPage: 200 }), "listing users");
@@ -139,12 +130,7 @@ async function create(password) {
       });
     });
   });
-  const ep = (r) => r._ep;
-  const logCopies = (rows) => (i) => {
-    const e = ep(rows[i]);
-    return { episode_id: e.podcastindex_id, title: e.title, feed_id: e.show.podcastindex_id, feed_title: e.show.title, image: e.image_url || e.show.image_url, feed_image: e.show.image_url, audio: e.audio_url, duration: e.duration_seconds };
-  };
-  await insertFlexible("logs", logs.map(({ _ep, ...r }) => r), logCopies(logs));
+  must(await db.from("logs").insert(logs.map(({ _ep, ...r }) => r)), "saving logs");
 
   // Votes and replies on each other's reviews (mostly on the shared episodes).
   const reactions = [];
@@ -165,14 +151,8 @@ async function create(password) {
   if (friend) handles.slice(0, 4).forEach((h, k) => send(ids[h], friend.id, pool[(k * 3 + 2) % pool.length], ["You'll love this", "Thought of you", "The bit about halfway through!", ""][k]));
   send(ids["maya.test"], ids["sam.test"], pool[5], "For your commute");
   send(ids["jo.test"], ids["priya.test"], pool[2], "");
-  await insertFlexible(
-    "recommendations",
-    sends.map(({ _ep, ...r }) => r),
-    (i) => {
-      const e = sends[i]._ep;
-      return { episode_id: e.podcastindex_id, title: e.title, feed_id: e.show.podcastindex_id, feed_title: e.show.title, image: e.image_url || e.show.image_url, audio: e.audio_url, duration: e.duration_seconds };
-    }
-  );
+  must(await db.from("recommendations").insert(sends.map(({ _ep, ...r }) => r)), "saving sends");
+
 
   console.log(`Made ${PEOPLE.length} test people: ${logs.length} logs, ${reactions.length} votes, ${comments.length} replies, ${sends.length} sends.`);
   if (friend) console.log(`They and @${friend.handle} follow each other; ${sends.length - 2} episodes are in @${friend.handle}'s Sent to you.`);

@@ -238,7 +238,14 @@ Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title
     `addLog`, `addToList`, `toggleHookedShow`, `sendRecommendation` and the sign-in move in `lib/store.js`): the server
     finds or creates the entry from Podcast Index and returns our id. If it can't, the old trigger path still works
     until step 2.
-  - [ ] **Stage D step 2 (on or after 2026-11-17), in one PR:**
+  - [x] **Stage D step 2 (#79, 2026-11-17), in one PR** (`20261117120000_stage_d_drop_copies.sql`; Erin chose one PR over
+    two, accepting that saves may fail for a minute between merge and `db push`, and for anyone on an old tab until
+    they reload). Backup: `~/claude/hooked-backups/live-2026-11-17-before-stage-d.json`. Copies matched our tables
+    except one episode the show had renamed (pages already show our title). Rehearsed on that copy with
+    `scripts/checks/stage-d.sql` (6 checks; 4 fail without the migration), applied to the test database, and
+    clicked through on a local build against it (log, send, Up next, hook, vote, reply, notifications, unhook,
+    remove). Up next now holds episodes only (`list_items.episode_ref` required). Kept: `episode_ref_for` /
+    `show_ref_for` (brief items use them). The plan was:
     - a migration that drops the copied columns from `logs`, `recommendations`, `list_items` and `hooked_shows` (with
       their required rules, e.g. `logs.title`, `recommendations.title`, `list_items.title`), and `episode_id` from
       `comments` / `reactions` (with the old `(log_user_id, episode_id)` keys);
@@ -247,7 +254,7 @@ Still to check (as of 2026-11-07, found with `grep -rn 'from("logs")\|feed_title
     - the saves that stop sending the copies (`logToDb`, `listToDb`, `hookedToDb`, the send insert in `lib/store.js`).
     Back up live, compare copies with our tables on the fresh export (prep 1 did this: identical), rehearse with
     `scripts/rehearse-migrations.mjs`, test database, then live.
-  - [ ] Run the search again just before stage D, in case new code added readers. Added since 2026-11-07:
+  - [x] Run the search again just before stage D (done 2026-11-17: no select asks for a dropped column), in case new code added readers. Added since 2026-11-07:
     `components/FriendsResults.js` (reads logs through `withEpisode`, fine) and `scripts/seed-test-people.mjs` (tries
     without the copies first; its `copies` fallback can go after step 2).
   - [x] Hooked shows (`hooked_shows`): **decided 2026-11-07 (Erin), drop their copies (`feed_id`, `title`, `image`) in
