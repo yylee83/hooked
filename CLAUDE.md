@@ -93,8 +93,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   entry if needed. `lib/catalog.js` upgrades entries from Podcast Index, and brings in shows Podcast Index lacks from
   their own feed (through Apple) or as Spotify-only entries. See `docs/DATA_MODEL.md`.
 - **Our ids are the keys**: logs, Up next, sends, replies, reactions and notifications by `episode_ref`, hooked shows
-  by `show_ref`. The Podcast Index numbers (`episode_id`, `feed_id`) are optional; send them when known, and never send
-  them as empty (the database keeps the stored one). A log's show is `episodes.show_id`, through
+  by `show_ref`, and nothing else: since Stage D (#79) these rows keep no copies of titles, covers or Podcast Index numbers
+  (notifications still do: each is a snapshot). Read details through the episode (`episodeOf` / `LOG_EPISODE` / `withEpisode`
+  in `lib/log-episode.js`); a save without our id is refused, so get it first (`ensureRefs` / `ourEpisodeId`). A log's show is `episodes.show_id`, through
   `episodes!logs_episode_ref_fkey(show_id)`. In the app, compare episodes and shows with `sameEpisode`, `findLog`,
   `inUpNext`, `sameShow` and `findHookedShow` (`lib/store.js`), and build links with `episodeHref` / `showHref` /
   `logHref` (`lib/addresses.js`).

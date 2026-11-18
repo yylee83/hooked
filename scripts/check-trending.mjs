@@ -31,12 +31,12 @@ await db.exec(`
     ('epF00001', 'show0005', 'F: sends only', 'feed');
 `);
 const log = (u, ep, hook, ago = "1 hour", rating = null) =>
-  `insert into public.logs (user_id, episode_ref, title, hooked, hook, rating, logged_at) values ('${U(u)}', '${ep}', 'x', true, ${hook ? `'${hook}'` : "null"}, ${rating ?? "null"}, now() - interval '${ago}');`;
+  `insert into public.logs (user_id, episode_ref, hooked, hook, rating, logged_at) values ('${U(u)}', '${ep}', true, ${hook ? `'${hook}'` : "null"}, ${rating ?? "null"}, now() - interval '${ago}');`;
 const reply = (author, logUser, ep, ago = "1 hour") =>
   `insert into public.comments (log_user_id, episode_ref, author_id, body, created_at) values ('${U(logUser)}', '${ep}', '${U(author)}', 'hi', now() - interval '${ago}');`;
 const agree = (who, logUser, ep) => `insert into public.reactions (log_user_id, episode_ref, user_id, kind) values ('${U(logUser)}', '${ep}', '${U(who)}', 'agree');`;
 const send = (from, to, ep, ago = "1 hour") =>
-  `insert into public.recommendations (from_id, to_id, episode_ref, title, created_at) values ('${U(from)}', '${U(to)}', '${ep}', 'x', now() - interval '${ago}');`;
+  `insert into public.recommendations (from_id, to_id, episode_ref, created_at) values ('${U(from)}', '${U(to)}', '${ep}', now() - interval '${ago}');`;
 
 await db.exec([
   // A: three people today; bob's review has two thumbs up, so it's the top review. Dan (no handle) wrote a longer one.
