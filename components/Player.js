@@ -13,6 +13,7 @@ import { flushSpots, pullSpots } from "@/lib/progress-sync";
 import { markFinished, useFinished } from "@/lib/finished";
 import { pullFinished } from "@/lib/finished-sync";
 import { listenPlay, listenSave, listenTick } from "@/lib/history";
+import { ensureRefs } from "@/lib/catalog-client";
 
 const FINISH = 60; // the last minute of an episode counts as finished
 
@@ -68,6 +69,23 @@ export function PlayerProvider({ children }) {
   const segLen = (s) => Math.max(0, (s.end ?? s.ep.duration ?? 0) - s.start);
   const total = () => q.current.segs.reduce((sum, s) => sum + segLen(s), 0);
 
+  // An episode played straight from search (or a chart) may only have Podcast Index's number. Get our id as soon as
+  // it starts, so listening history, your spot, "Log it?" and the log itself all save with it. The server creates
+  // our entry if needed, from Podcast Index; playback never waits for it.
+  const addRef = useCallback(async (id) => {
+    const ref = (await ensureRefs({ episodeIds: [id] })).episodes[String(id)];
+    if (!ref) return; // history, your spot and saves still ask again later
+    const mine = (x) => !x.ep.ref && x.ep.id != null && String(x.ep.id) === String(id);
+    if (!q.current.segs.some(mine)) return; // something else is playing now
+    q.current = { ...q.current, segs: q.current.segs.map((x) => (mine(x) ? { ...x, ep: { ...x.ep, ref } } : x)) };
+    const cur = q.current.segs[q.current.i];
+    if (cur && String(cur.ep.id) === String(id)) {
+      if (!q.current.meta) saveLast(cur.ep);
+      setNowPlaying({ ...cur.ep });
+    }
+    force((n) => n + 1);
+  }, []);
+
   const startSeg = useCallback((i, offset = 0) => {
     const el = audio.current;
     const s = q.current.segs[i];
@@ -97,7 +115,8 @@ export function PlayerProvider({ children }) {
       el.play().catch(() => {});
     }
     setNowPlaying({ ...s.ep });
-  }, []);
+    if (!s.ep.ref && s.ep.id != null) addRef(s.ep.id);
+  }, [addRef]);
 
   // Play a list of segments: [{ ep, start, end }], with optional { title } for a brief.
   const playQueue = useCallback(
