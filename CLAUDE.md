@@ -133,7 +133,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   auto-advance through Up next). It remembers where you stopped in `lib/progress.js` (this browser) and,
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
-  saved it; something playing is never interrupted. A resumed episode shows the length measured from its audio
+  saved it; something playing is never interrupted. An episode started with only Podcast Index's number gets our id
+  as soon as it plays (`addRef`); `ensureRefs` (`lib/catalog-client.js`) remembers answers, so it's asked once per visit. A resumed episode shows the length measured from its audio
   (`savedLength`), not the feed's. A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
   doesn't stop playback. The bottom bar stays pinned on iPhone after the keyboard closes (`useBottomPinned`,
   `components/BottomNav.js`).
