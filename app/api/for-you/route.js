@@ -97,7 +97,7 @@ export async function POST(req) {
     const { data } = await db
       .from("logs")
       .select(
-        "rating, hooked, who:profiles!logs_user_id_fkey(handle), " +
+        "rating, who:profiles!logs_user_id_fkey(handle), " +
           "episode:episodes!logs_episode_ref_fkey(id, podcastindex_id, title, image_url, audio_url, duration_seconds, published_at, show:shows(id, podcastindex_id, title, image_url))"
       )
       .in("user_id", friends)
@@ -106,7 +106,7 @@ export async function POST(req) {
       .order("logged_at", { ascending: false })
       .limit(40);
     fromFriends = (data || [])
-      .filter((l) => l.episode && l.hooked && (l.rating >= 4 || !l.rating))
+      .filter((l) => l.episode && l.rating >= 4) // stars rate episodes (Decision 6): what friends gave 4+
       .map((l) => {
         const e = l.episode;
         const card = {
@@ -122,7 +122,7 @@ export async function POST(req) {
           duration: e.duration_seconds || 0,
           date: e.published_at ? Math.floor(new Date(e.published_at).getTime() / 1000) : 0,
         };
-        return [card, l.rating ? `@${l.who?.handle} gave it ${l.rating}★` : `@${l.who?.handle} is hooked`];
+        return [card, `@${l.who?.handle} gave it ${l.rating}★`];
       });
   }
 

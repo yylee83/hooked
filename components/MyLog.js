@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, sameEpisode, saveProfile, signOut, useStore } from "@/lib/store";
 import { Diary, ShowsView, UpNextView } from "./LogViews";
 import { myBriefs } from "@/lib/briefs-client";
-import { minutes, plural } from "@/lib/format";
+import { minutes, plural, starStats } from "@/lib/format";
 import { logHref, showHref } from "@/lib/addresses";
 
 // Weekly email: a Sunday roundup of what friends logged and sent you.
@@ -206,7 +206,7 @@ export default function MyLog() {
   const np = state.nowPlaying;
   const nowPlayingLogged = np && logs.some((l) => sameEpisode(l, np));
   const showCount = new Set(logs.map((l) => l.feedId || l.feedTitle)).size;
-  const hookedPct = logs.length ? Math.round((logs.filter((l) => l.hooked).length / logs.length) * 100) : 0;
+  const stars = starStats(logs);
   const hours = Math.round(logs.reduce((a, l) => a + (l.duration || 0), 0) / 3600);
   const queue = state.list.length;
   const needsSetup = !state.user || !state.profile?.handle;
@@ -256,7 +256,8 @@ export default function MyLog() {
         <div className="me-stats">
           <span><b>{logs.length}</b> episodes</span>
           <span><b>{showCount}</b> shows</span>
-          <span><b>{hookedPct}%</b> hooked</span>
+          {stars.count > 0 && <span><b>★ {stars.avg}</b> avg</span>}
+          <span><b>{shows.length}</b> hooked</span>
           {hours > 0 && <span><b>{hours}</b> hrs</span>}
         </div>
       )}
@@ -318,7 +319,7 @@ export default function MyLog() {
       ) : logs.length === 0 && !(tab === "shows" && shows.length) ? (
         <section className="empty card" style={{ marginTop: 16 }}>
           <p className="display h-md">Nothing logged yet.</p>
-          <p className="muted">Find an episode, hit play, then tell us: hooked, or not?</p>
+          <p className="muted">Find an episode, hit play, then rate it and say what you thought.</p>
           <Link className="btn btn--cobalt btn--shadow-sm" href="/search">
             Find something
           </Link>
@@ -326,7 +327,7 @@ export default function MyLog() {
       ) : tab === "shows" ? (
         <ShowsView logs={logs} hooked={state.shows} />
       ) : tab === "stats" ? (
-        <Wrapped logs={logs} />
+        <Wrapped logs={logs} hooked={state.shows} />
       ) : (
         <Diary logs={logs} />
       )}

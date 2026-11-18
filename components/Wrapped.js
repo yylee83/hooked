@@ -5,7 +5,7 @@ import Link from "next/link";
 import Art from "./Art";
 import { genreLabel } from "@/lib/genres";
 import { showHref } from "@/lib/addresses";
-import { showKey } from "@/lib/store";
+import { findHookedShow, showKey } from "@/lib/store";
 
 // Checked for colorblind separation; each slice also has an outline and a labeled legend row.
 const COLORS = ["#2340FF", "#F0559F", "#D9A900", "#11957A", "#E8622E", "#7C4DFF"];
@@ -71,7 +71,7 @@ function Donut({ slices, active, onActive }) {
   );
 }
 
-export default function Wrapped({ logs }) {
+export default function Wrapped({ logs, hooked = {} }) {
   const [genres, setGenres] = useState(null);
   const [active, setActive] = useState(null);
   // Our show id, or the Podcast Index number for older logs saved on this device.
@@ -130,7 +130,6 @@ export default function Wrapped({ logs }) {
     });
   }
 
-  const hookedRate = Math.round((logs.filter((l) => l.hooked).length / logs.length) * 100);
   const rated = logs.filter((l) => l.rating > 0);
   const avg = rated.length ? (rated.reduce((s, l) => s + l.rating, 0) / rated.length).toFixed(1) : null;
 
@@ -139,6 +138,9 @@ export default function Wrapped({ logs }) {
   const showCount = {};
   for (const l of logs) if (showOf(l)) showCount[showOf(l)] = (showCount[showOf(l)] || 0) + 1;
   const topShowId = Object.entries(showCount).sort((a, b) => b[1] - a[1])[0]?.[0];
+  // % hooked (Decision 6): of the shows you've logged, the share you're hooked on.
+  const loggedShows = [...new Map(logs.filter(showOf).map((l) => [showOf(l), { showRef: l.showRef, feedId: l.feedId }])).values()];
+  const hookedRate = loggedShows.length ? Math.round((loggedShows.filter((s) => findHookedShow({ shows: hooked }, s)).length / loggedShows.length) * 100) : 0;
   const topShow = topShowId ? logs.find((l) => showOf(l) === topShowId) : null;
 
   const dayCount = Array(7).fill(0);
@@ -186,12 +188,12 @@ export default function Wrapped({ logs }) {
 
       <div className="wrapped__stats">
         <div className="stat">
-          <span className="stat__num">{hours(totalSecs)}</span>
-          <span className="stat__label">hours logged</span>
+          <span className="stat__num">{logs.length}</span>
+          <span className="stat__label">episodes logged · {hours(totalSecs)} hrs</span>
         </div>
         <div className="stat">
           <span className="stat__num">{hookedRate}%</span>
-          <span className="stat__label">got you hooked</span>
+          <span className="stat__label">of your shows got you hooked</span>
         </div>
         <div className="stat">
           <span className="stat__num">{avg ? `${avg}★` : "–"}</span>

@@ -17,7 +17,7 @@ export function starText(rating) {
 export function shareText(ep, review) {
   let text = `I thought you would enjoy this podcast: "${ep.title}"${ep.feedTitle ? ` from ${ep.feedTitle}` : ""}.`;
   if (review) {
-    const take = [starText(review.rating), review.hook ? `"${review.hook}"` : review.hooked ? "I'm hooked." : ""].filter(Boolean).join(" ");
+    const take = [starText(review.rating), review.hook ? `"${review.hook}"` : ""].filter(Boolean).join(" ");
     if (take) text += ` My take: ${take}`;
   }
   return text;
@@ -71,7 +71,7 @@ export function ShareSheet({ episode, onClose }) {
   }, [onClose]);
 
   const mine = findLog(state, episode);
-  const review = mine ? { hooked: mine.hooked, rating: mine.rating, hook: mine.hook } : null;
+  const review = mine ? { rating: mine.rating, hook: mine.hook } : null;
   const handle = state?.profile?.handle;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   // Our short address when we know it; otherwise the Podcast Index number, which redirects to it.
