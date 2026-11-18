@@ -37,7 +37,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const router = useRouter();
   const state = useStore();
   const [topic, setTopic] = useState("");
-  const [mode, setMode] = useState("clips");
+  // New briefs use whole episodes for now (Erin, 2026-11-18); "Just the parts" comes back as a choice later.
+  // Briefs already made with clips keep their mode when edited.
+  const [mode, setMode] = useState("full");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   // The latest search, shown as the list to pick from: { topic, mode, items }.
@@ -303,16 +305,6 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           minLength={2}
           maxLength={80}
         />
-        <div className="mode">
-          <button type="button" className={`mode__opt ${mode === "clips" ? "is-on" : ""}`} onClick={() => setMode("clips")} aria-pressed={mode === "clips"}>
-            <span className="display">Just the parts</span>
-            <span>Cut each episode down to where the topic comes up, then play them back to back.</span>
-          </button>
-          <button type="button" className={`mode__opt ${mode === "full" ? "is-on" : ""}`} onClick={() => setMode("full")} aria-pressed={mode === "full"}>
-            <span className="display">Whole episodes</span>
-            <span>Pick full episodes about the topic.</span>
-          </button>
-        </div>
         <button className="btn btn--cobalt btn--shadow-sm" disabled={loading || topic.trim().length < 2}>
           {loading ? (mode === "clips" ? "Reading transcripts…" : "Finding episodes…") : "Find episodes"}
         </button>

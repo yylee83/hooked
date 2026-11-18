@@ -120,7 +120,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
-  `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
+  `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (tabs: Episodes, Shows,
   Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
   show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
