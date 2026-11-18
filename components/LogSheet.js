@@ -5,7 +5,8 @@ import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
 import { logHref } from "@/lib/addresses";
-import { addLog, findHookedShow, findLog, sendRecommendation, useStore } from "@/lib/store";
+import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
+import { HookShowPill } from "./Social";
 
 export function RatingInput({ value, onChange, size = 52 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // two pickers on a page each need their own gradient ids
@@ -59,49 +60,33 @@ export function RatingInput({ value, onChange, size = 52 }) {
   );
 }
 
-export default function LogSheet({ episode, preset }) {
+// Stars and "What did you think?" rate the episode; hooking the show is its own choice (the pill under the show name,
+// Decision 6). `presetRating` carries stars picked in the "Log it?" prompt over ("Add what you thought").
+export default function LogSheet({ episode, presetRating = 0 }) {
   const router = useRouter();
   const state = useStore();
   const existing = findLog(state, episode);
   const [touched, setTouched] = useState(false);
-  const [hooked, setHooked] = useState(preset);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(presetRating);
   const [hook, setHook] = useState("");
   const [sendTo, setSendTo] = useState([]);
-  const [nudge, setNudge] = useState(false);
 
   // Fill in an earlier log of this episode, once, if there is one.
   if (existing && !touched) {
     setTouched(true);
-    if (preset === undefined) setHooked(existing.hooked);
-    setRating(existing.rating || 0);
+    if (!presetRating) setRating(existing.rating || 0);
     setHook(existing.hook || "");
     setSendTo(existing.sentTo || []);
-  }
-
-  // A new log of a show you're hooked on starts on "I'm hooked" (you can still switch). Once: your account may
-  // load after the sheet opens, and a choice you've made is never changed.
-  const onShow = findHookedShow(state, { showRef: episode.showRef, feedId: episode.feedId });
-  const [picked, setPicked] = useState(false);
-  if (onShow && !existing && !picked && hooked === undefined) {
-    setPicked(true);
-    setHooked(true);
   }
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   async function save() {
-    if (hooked === undefined) {
-      setNudge(true);
-      setError("Pick “I'm hooked” or “I'm not hooked” first.");
-      document.getElementById("hooked-choice")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
     setSaving(true);
     setError("");
     try {
-      const review = { hooked, rating, hook: hook.trim() };
+      const review = { rating, hook: hook.trim() };
       await addLog({ ...episode, ...review, sentTo: sendTo });
       // Send to friends picked here (once each).
       const already = existing?.sentTo || [];
@@ -129,14 +114,15 @@ export default function LogSheet({ episode, preset }) {
         <div>
           <h2 className="display sheet__epTitle">{episode.title}</h2>
           <p className="sheet__show">{episode.feedTitle}</p>
+          <HookShowPill episode={episode} />
         </div>
       </div>
 
-      <h3 className="label">Your rating</h3>
+      <h3 className="display h-md cobalt">Your rating</h3>
       <p className="muted small" style={{ margin: "0 0 6px" }}>Tap the left half of a star for a half star.</p>
       <RatingInput value={rating} onChange={setRating} />
 
-      <h3 className="display h-md cobalt">What's the hook?</h3>
+      <h3 className="label">What did you think?</h3>
       <textarea
         className="input textarea"
         rows={4}
@@ -145,23 +131,6 @@ export default function LogSheet({ episode, preset }) {
         value={hook}
         onChange={(e) => setHook(e.target.value)}
       />
-
-      <h3 className="display h-md">Are you hooked?</h3>
-      <div className="choice" id="hooked-choice">
-        <button className={`btn btn--display ${hooked === true ? "btn--cobalt is-on" : ""}`} onClick={() => (setHooked(true), setNudge(false), setError(""))}>
-          I'm hooked
-        </button>
-        <button className={`btn btn--display ${hooked === false ? "btn--ink is-on" : ""}`} onClick={() => (setHooked(false), setNudge(false), setError(""))}>
-          I'm not hooked
-        </button>
-      </div>
-      <p className={`muted small ${nudge ? "nudge" : ""}`}>
-        {nudge
-          ? "Pick one first. Not hooked is just as valid."
-          : picked && hooked === true
-            ? `You're hooked on ${onShow.title || episode.feedTitle || "this show"}, so we picked I'm hooked.`
-            : "Hooked shows go on your profile and into your friends' feeds."}
-      </p>
 
       <h3 className="label">Send it to a friend</h3>
       {state?.user && state.following?.length > 0 ? (

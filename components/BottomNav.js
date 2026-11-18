@@ -25,7 +25,7 @@ function PlusSheet({ onClose }) {
         <p className="display plus-sheet__title">What are we making?</p>
         <Link href="/search?type=episodes" className="plus-option tone-cobalt" onClick={onClose}>
           <span className="display">Log a review</span>
-          <span>Find an episode, say if you're hooked, rate it, give the hook.</span>
+          <span>Find an episode, rate it, say what you thought.</span>
         </Link>
         <PasteLink onDone={onClose} />
         <Link href="/briefs/new" className="plus-option tone-bubblegum" onClick={onClose}>

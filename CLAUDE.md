@@ -100,7 +100,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `inUpNext`, `sameShow` and `findHookedShow` (`lib/store.js`), and build links with `episodeHref` / `showHref` /
   `logHref` (`lib/addresses.js`).
 - Tables: `allowed_emails` (the invite list; no app access), `trending_topics` (48 hours of Google Trends; only the server writes), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
-  (one per user+episode), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
+  (one per user+episode; `hooked` is optional and no longer asked: **hooked is for shows**, Decision 6), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
   `listening_progress` (where you stopped in each episode; private), `finished_episodes` (finished in the player, not
   logged yet; private), `briefs` (`draft` ones are seen only by their author; server pages read without a sign-in, so
@@ -118,8 +118,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/briefs` (a briefs-only search, "Hooked selects" swipe row of built-in briefs, listener briefs in a grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (tabs: Episodes, Shows,
-  Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: stars, What's the hook?, then
-  Are you hooked?, picked already for shows you're hooked on; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
+  Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
+  show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
 - **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
   ("+ Up next"), `HookShowButton`; on episode pages also `AddToBriefButton` ("+ Brief", `components/AddToBrief.js`: add to one
@@ -140,7 +140,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `components/BottomNav.js`).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
   finished. If you're looking, the player turns into "✓ Finished · log it?" (`components/FinishPrompt.js`: optional stars,
-  a Hooked | Not hooked switch, then **Log it**; it stays ("Saving…") until saved, then shows "✓ Logged" briefly); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's
+  a small **Hook show** pill, then **Log it**; it stays ("Saving…") until saved, then shows "✓ Logged" briefly); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's
   Episodes tab (`components/FinishedNotLogged.js`) for 3 days, where Skip ends it. Logged episodes are never asked about.
   Signed in, the list syncs across devices through `finished_episodes` (`lib/finished-sync.js`; private, own rows only).
 - **Reactions** (`lib/social.js`, `components/LogThread.js`): small black icons, no bubbles.

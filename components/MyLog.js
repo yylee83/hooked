@@ -296,14 +296,9 @@ export default function MyLog() {
               <p className="muted">{np.feedTitle}</p>
             </div>
           </div>
-          <div className="choice">
-            <Link className="btn btn--display btn--cobalt" href={`${logHref(np.ref, np.id)}?hooked=1`}>
-              I'm hooked
-            </Link>
-            <Link className="btn btn--display" href={`${logHref(np.ref, np.id)}?hooked=0`}>
-              I'm not hooked
-            </Link>
-          </div>
+          <Link className="btn btn--display btn--cobalt np__log" href={logHref(np.ref, np.id)}>
+            Log it
+          </Link>
         </section>
       )}
 

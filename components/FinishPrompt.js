@@ -1,6 +1,6 @@
 "use client";
 // "✓ Finished · log it?": takes the player's place when an episode reaches its last minute (lib/finished.js).
-// Pick stars (optional) and Hooked or Not hooked (picked for you on shows you're hooked on), then Log it. It stays
+// Pick stars (optional), then Log it; "Hook show" beside it hooks the show (its own choice, Decision 6). It stays
 // ("Saving…") until the log is saved, so a save that fails says so, then shows "✓ Logged" for a moment before the
 // player comes back. ✕ sends it to "Finished, not logged" on My log.
 import { useEffect, useState } from "react";
@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import Art from "./Art";
 import Stars from "./Stars";
 import { RatingInput } from "./LogSheet";
-import { addLog, findHookedShow, findLog, sameEpisode, useStore } from "@/lib/store";
+import { addLog, findLog, sameEpisode, useStore } from "@/lib/store";
+import { HookShowPill } from "./Social";
 import { logHref } from "@/lib/addresses";
 import { askLater, doneFinished } from "@/lib/finished";
 
@@ -20,22 +21,13 @@ export default function FinishPrompt({ entry, current }) {
   const { ep } = entry;
   const router = useRouter();
   const [rating, setRating] = useState(0);
-  const [hooked, setHooked] = useState(undefined);
   const [saving, setSaving] = useState(false);
-  const [done, setDone] = useState(null); // { rating, hooked } once saved
+  const [done, setDone] = useState(null); // { rating } once saved
   const [error, setError] = useState("");
   const movedOn = !!current && !sameEpisode(current, ep);
   const store = useStore();
   // Logged somewhere else (the log sheet, another device) while we were asking: nothing left to ask.
   const loggedElsewhere = !!findLog(store, ep) && !saving && !done;
-  const onShow = !!findHookedShow(store, { showRef: ep.showRef, feedId: ep.feedId });
-
-  // Hooked on the show: start on Hooked (once; your account may load after the prompt appears).
-  const [picked, setPicked] = useState(false);
-  if (onShow && !picked && hooked === undefined) {
-    setPicked(true);
-    setHooked(true);
-  }
 
   useEffect(() => {
     if (loggedElsewhere) doneFinished(ep);
@@ -55,12 +47,12 @@ export default function FinishPrompt({ entry, current }) {
   }, [done, ep]);
 
   async function save() {
-    if (hooked === undefined || saving) return;
+    if (saving) return;
     setSaving(true);
     setError("");
     try {
-      await addLog({ ...ep, hooked, rating, hook: "" });
-      setDone({ rating, hooked });
+      await addLog({ ...ep, rating, hook: "" });
+      setDone({ rating });
     } catch (e) {
       setError(`Couldn't save (${e?.message || "unknown error"}). Try again.`);
     }
@@ -76,7 +68,6 @@ export default function FinishPrompt({ entry, current }) {
           <p className="finish-prompt__done-line">
             <span>✓ Logged</span>
             {done.rating > 0 && <Stars value={done.rating} size={16} />}
-            <span>{done.hooked ? "Hooked" : "Not hooked"}</span>
           </p>
           <button className="finish-prompt__more" onClick={() => (doneFinished(ep), router.push("/me"))}>
             See it in My log ›
@@ -101,31 +92,21 @@ export default function FinishPrompt({ entry, current }) {
           <Art src={ep.image} title={ep.feedTitle} size={46} radius={10} episodeRef={ep.ref} episodeId={ep.id} />
           <div className="mini__text">
             <p className="mini__title">{ep.title}</p>
-            <p className="mini__show">
-              {ep.feedTitle}
-              {onShow && " · you're hooked"}
-            </p>
+            <p className="mini__show">{ep.feedTitle}</p>
           </div>
         </div>
         <div className="finish-prompt__stars">
           <RatingInput value={rating} onChange={setRating} size={36} />
         </div>
         <div className="finish-prompt__row">
-          <div className="finish-prompt__seg" role="radiogroup" aria-label="Are you hooked?">
-            <button role="radio" aria-checked={hooked === true} className={`finish-prompt__seg-btn ${hooked === true ? "is-hooked" : ""}`} disabled={saving} onClick={() => setHooked(true)}>
-              Hooked
-            </button>
-            <button role="radio" aria-checked={hooked === false} className={`finish-prompt__seg-btn ${hooked === false ? "is-not" : ""}`} disabled={saving} onClick={() => setHooked(false)}>
-              Not hooked
-            </button>
-          </div>
-          <button className="btn btn--butter finish-prompt__save" disabled={hooked === undefined || saving} onClick={save}>
+          <HookShowPill episode={ep} short />
+          <button className="btn btn--cobalt finish-prompt__save" disabled={saving} onClick={save}>
             {saving ? "Saving…" : "Log it"}
           </button>
         </div>
         {error && <p className="small finish-prompt__error">{error}</p>}
-        <Link href={`${logHref(ep.ref, ep.id)}${hooked === undefined ? "" : `?hooked=${hooked ? 1 : 0}`}`} className="finish-prompt__more" onClick={() => askLater(ep)}>
-          Add a hook line ›
+        <Link href={`${logHref(ep.ref, ep.id)}${rating ? `?stars=${rating}` : ""}`} className="finish-prompt__more" onClick={() => askLater(ep)}>
+          Add what you thought ›
         </Link>
       </div>
     </div>
