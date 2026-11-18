@@ -292,7 +292,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         {isPublished ? "Edit brief" : editing?.draft ? "Your draft" : "New brief"}
       </h1>
       <p className="muted" style={{ fontSize: 19 }}>
-        Pick a topic. We'll find episodes about it, and if you want, just the parts where it comes up.
+        Pick a topic. We'll find episodes about it, and you choose the ones that make your brief.
       </p>
 
       <form onSubmit={find} className="stack" style={{ marginTop: 22 }}>
