@@ -63,12 +63,14 @@ function Hook({ text }) {
 }
 
 // ---------- Episodes tab (the diary): every episode you logged, newest first ----------
+// Stars rate episodes (Decision 6), so the diary filters by stars.
 const FILTERS = [
   ["all", "All"],
-  ["hooked", "Hooked"],
-  ["not", "Not hooked"],
+  ["five", "★ 5"],
   ["top", "★ 4+"],
-  ["reviews", "With a hook"],
+  ["low", "★ 3 and under"],
+  ["unrated", "No stars"],
+  ["reviews", "With a review"],
 ];
 
 export function Diary({ logs }) {
@@ -79,9 +81,10 @@ export function Diary({ logs }) {
   const list = useMemo(() => {
     const words = norm(q).split(/\s+/).filter(Boolean);
     return logs.filter((l) => {
-      if (filter === "hooked" && !l.hooked) return false;
-      if (filter === "not" && l.hooked) return false;
+      if (filter === "five" && !(l.rating >= 5)) return false;
       if (filter === "top" && !(l.rating >= 4)) return false;
+      if (filter === "low" && !(l.rating > 0 && l.rating <= 3)) return false;
+      if (filter === "unrated" && l.rating > 0) return false;
       if (filter === "reviews" && !l.hook) return false;
       const hay = norm(`${l.title} ${l.feedTitle} ${l.hook}`);
       return words.every((w) => hay.includes(w));
@@ -128,12 +131,9 @@ export function Diary({ logs }) {
                     </Link>
                     <span className="diary__meta">
                       <span className="diary__show">{l.feedTitle}</span>
-                      {l.rating > 0 && <Stars value={l.rating} size={13} />}
+                      {l.rating > 0 ? <Stars value={l.rating} size={13} /> : <span className="diary__logged">Logged</span>}
                     </span>
                     {l.hook && <Hook text={l.hook} />}
-                  </span>
-                  <span className={`diary__verdict ${l.hooked ? "is-hooked" : ""}`} title={l.hooked ? "Hooked" : "Not hooked"}>
-                    {l.hooked ? "Hooked" : "Not"}
                   </span>
                 </li>
               ))}
@@ -182,7 +182,6 @@ export function showsFromLogs(logs, hooked = {}) {
     return {
       ...s,
       avg: rated.length ? rated.reduce((a, l) => a + l.rating, 0) / rated.length : 0,
-      hookedCount: s.logs.filter((l) => l.hooked).length,
       isHookedOn: !!findHookedShow({ shows: hooked }, s),
     };
   });
@@ -233,7 +232,7 @@ export function ShowsView({ logs, hooked }) {
                   </span>
                   <span className="mono small muted">
                     {s.logs.length
-                      ? `${plural(s.logs.length, "episode")} · hooked on ${s.hookedCount} of ${s.logs.length}`
+                      ? plural(s.logs.length, "episode")
                       : "No episodes logged yet"}
                   </span>
                 </span>
@@ -247,7 +246,7 @@ export function ShowsView({ logs, hooked }) {
                     .map((l) => (
                       <Link key={l.ref || l.id} href={episodeHref(l.ref, l.id)} className="shows-list__ep">
                         <span className="min0 grow">{l.title}</span>
-                        {l.rating > 0 ? <Stars value={l.rating} size={12} /> : <span className="muted small">{l.hooked ? "Hooked" : "Not hooked"}</span>}
+                        {l.rating > 0 ? <Stars value={l.rating} size={12} /> : <span className="muted small">Logged</span>}
                       </Link>
                     ))}
                   {s.feedId && (

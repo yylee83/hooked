@@ -143,6 +143,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   a small **Hook show** pill, then **Log it**; it stays ("Saving…") until saved, then shows "✓ Logged" briefly); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's
   Episodes tab (`components/FinishedNotLogged.js`) for 3 days, where Skip ends it. Logged episodes are never asked about.
   Signed in, the list syncs across devices through `finished_episodes` (`lib/finished-sync.js`; private, own rows only).
+- **Hooked is for shows, stars rate episodes** (Decision 6): no screen reads a log's `hooked`. Feeds say "rated" / "logged"
+  (`logVerb`), averages come from `starStats` (`lib/format.js`), and % hooked counts hooked shows among a show's listeners.
 - **Reactions** (`lib/social.js`, `components/LogThread.js`): small black icons, no bubbles.
   Thumbs up (`agree`) and thumbs down (`disagree`; the two cancel each other out) vote on the review, under it
   (`LogThread`). + (`adding`: wants to listen, and adds the episode to Up next) is `ReviewAdd`, next to the episode

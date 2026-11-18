@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
+import { logVerb } from "@/lib/format";
 import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
@@ -190,7 +191,7 @@ export function FriendsFeed() {
     Promise.all([
       db
         .from("recommendations")
-        .select(`id, episode_ref, hooked, rating, hook, note, created_at, sender:profiles!recommendations_from_id_fkey(id, handle, display_name), ${episodeOf("recommendations")}`)
+        .select(`id, episode_ref, rating, hook, note, created_at, sender:profiles!recommendations_from_id_fkey(id, handle, display_name), ${episodeOf("recommendations")}`)
         .eq("to_id", state.user.id)
         .order("created_at", { ascending: false })
         .limit(20),
@@ -205,7 +206,7 @@ export function FriendsFeed() {
       followIds.length
         ? db
             .from("logs")
-            .select(`user_id, episode_ref, hooked, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(id, handle, display_name), ${LOG_EPISODE}`)
+            .select(`user_id, episode_ref, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(id, handle, display_name), ${LOG_EPISODE}`)
             .in("user_id", followIds)
             .order("logged_at", { ascending: false })
             .limit(30)
@@ -300,7 +301,7 @@ export function FriendsFeed() {
                     <Link href={`/u/${l.who.handle}`}>
                       <b>@{l.who.handle}</b>
                     </Link>{" "}
-                    {l.hooked ? "is hooked on" : "wasn't hooked by"}
+                    {logVerb(l)}
                   </p>
                   <Link href={episodeHref(l.episode_ref, l.episode_id)} className="title-sm" style={{ display: "block" }}>
                     {l.title}
