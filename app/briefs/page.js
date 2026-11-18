@@ -8,6 +8,11 @@ import { curatedSummary } from "@/lib/briefs-server";
 import { minutes, plural } from "@/lib/format";
 
 export const metadata = { title: "Briefs" };
+
+// Tile colours on this page (Erin, 2026-11-18): featured briefs are always pink, listener briefs always blue, whatever
+// colour each brief has on its own page.
+const FEATURED = "bubblegum";
+const LISTENER = "cobalt";
 export const revalidate = 60;
 
 // Every card's one line of details, the same for built-in and listener briefs:
@@ -78,7 +83,7 @@ export default async function BriefsPage({ searchParams }) {
                 key={b.href}
                 href={b.href}
                 title={b.title}
-                color={b.color}
+                color={b.slug ? FEATURED : LISTENER}
                 covers={b.slug ? curated[b.slug]?.covers : b.covers}
                 meta={b.slug ? curated[b.slug]?.meta : listenerMeta(b)}
               />
@@ -87,11 +92,11 @@ export default async function BriefsPage({ searchParams }) {
         </section>
       ) : (
         <>
-          <h2 className="section-title">Hooked selects</h2>
+          <h2 className="section-title">Featured briefs</h2>
           <div className="selects" role="list">
             {briefs.map((b) => (
               <div key={b.slug} role="listitem" className="selects__item">
-                <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={b.color} covers={curated[b.slug].covers} meta={curated[b.slug].meta} />
+                <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={FEATURED} covers={curated[b.slug].covers} meta={curated[b.slug].meta} />
               </div>
             ))}
           </div>
@@ -105,7 +110,7 @@ export default async function BriefsPage({ searchParams }) {
                     key={b.id}
                     href={`/briefs/b/${b.id}`}
                     title={b.title}
-                    color={b.color}
+                    color={LISTENER}
                     covers={(b.items || []).map((it) => it.image)}
                     meta={listenerMeta({ ...b, author: b.author?.handle })}
                   />
