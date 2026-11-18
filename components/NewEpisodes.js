@@ -10,13 +10,13 @@ import { hookedShows, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { shortDate } from "@/lib/format";
 
-// "Today", "Yesterday", "3 days ago", then the date.
+// "Today", "Yesterday", "3d ago", then the date (short: it sits beside two buttons on a small card).
 function released(unixSeconds) {
   if (!unixSeconds) return "";
   const days = Math.floor((Date.now() / 1000 - unixSeconds) / 86400);
   if (days <= 0) return "Today";
   if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
+  if (days < 7) return `${days}d ago`;
   return shortDate(unixSeconds);
 }
 
