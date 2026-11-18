@@ -8,7 +8,7 @@ TypeScript for new code) and the order of work.
 
 ## What this is
 
-**Hooked** (hooked-nu.vercel.app) is "Letterboxd for podcasts." People find podcast episodes, log them
+**Hooked** (hookedonpods.com; `hooked-nu.vercel.app` and `www.` forward to it) is "Letterboxd for podcasts." People find podcast episodes, log them
 (hooked or not hooked, optional 0.5–5 stars, and "What's the hook?", a one-line review), keep a diary
 of what they listened to, follow friends, send and discuss episodes, and make **Briefs**: topic
 collections that can be cut down to just the parts of each episode where the topic comes up.
@@ -22,6 +22,8 @@ off Home).
 
 - **Next.js 16 (App Router, Turbopack), React 19**, plain JavaScript (no TypeScript), and one
   stylesheet: `app/globals.css`. No CSS framework.
+- **The domain** is `hookedonpods.com` (bought on GoDaddy; its DNS points at Vercel: A records for `@`, a CNAME for
+  `www`). `NEXT_PUBLIC_SITE_URL` is `https://hookedonpods.com` in Production; Supabase's sign-in Site URL matches it.
 - **GitHub → Vercel.** The repo is `yylee83/hooked` (public). Every push to `main` deploys to
   production automatically within about a minute. **Work on a branch** and let Vercel give you a
   preview URL; merge to `main` only when it's ready to go live.
