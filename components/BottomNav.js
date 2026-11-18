@@ -30,7 +30,7 @@ function PlusSheet({ onClose }) {
         <PasteLink onDone={onClose} />
         <Link href="/briefs/new" className="plus-option tone-bubblegum" onClick={onClose}>
           <span className="display">Make a brief</span>
-          <span>Pick a topic. We'll pull the best episodes, or just the parts that mention it.</span>
+          <span>Pick a topic. We'll find the best episodes about it.</span>
         </Link>
         <button className="link-btn" style={{ marginTop: 6 }} onClick={onClose}>
           Never mind
