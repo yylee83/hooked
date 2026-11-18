@@ -38,6 +38,14 @@ export async function GET() {
       });
     }
   }
-  const episodes = [...byEp.values()].sort((a, b) => b.listeners - a.listeners || b.at - a.at).slice(0, MAX).map(({ at, ...rest }) => rest);
+  const top = [...byEp.values()].sort((a, b) => b.listeners - a.listeners || b.at - a.at).slice(0, MAX);
+  // Some plays were saved without a cover: use the episode's (or its show's) from our tables.
+  const missing = top.filter((e) => !e.image && e.ref).map((e) => e.ref);
+  if (missing.length) {
+    const { data: eps } = await db.from("episodes").select("id, image_url, show:shows(image_url)").in("id", missing);
+    const art = new Map((eps || []).map((e) => [e.id, e.image_url || e.show?.image_url || ""]));
+    for (const e of top) if (!e.image && e.ref) e.image = art.get(e.ref) || "";
+  }
+  const episodes = top.map(({ at, ...rest }) => rest);
   return Response.json({ episodes }, { headers: { "Cache-Control": "public, s-maxage=120" } });
 }

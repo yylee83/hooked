@@ -1,19 +1,20 @@
 "use client";
 // Home, signed out: "Listening on Hooked now", what people played in the last day. Episodes only, no names
-// (/api/listening-now). Signed in, the friends version ("Friends listening now", components/Friends.js) shows instead.
+// (/api/listening-now). Signed in, "Friends listening now" (components/Friends.js) shows instead, and falls back to this
+// (`always`) when no friends have played anything in the last day.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Art from "./Art";
 import { useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 
-export default function ListeningOnHooked() {
+export default function ListeningOnHooked({ always = false }) {
   const state = useStore();
   const [episodes, setEpisodes] = useState(null);
-  const signedOut = !!state && !state.user;
+  const shown = !!state && (always || !state.user);
 
   useEffect(() => {
-    if (!signedOut) return;
+    if (!shown) return;
     let live = true;
     fetch("/api/listening-now")
       .then((r) => (r.ok ? r.json() : { episodes: [] }))
@@ -22,9 +23,9 @@ export default function ListeningOnHooked() {
     return () => {
       live = false;
     };
-  }, [signedOut]);
+  }, [shown]);
 
-  if (!signedOut || !episodes?.length) return null;
+  if (!shown || !episodes?.length) return null;
   return (
     <>
       <h2 className="section-title">Listening on Hooked now</h2>

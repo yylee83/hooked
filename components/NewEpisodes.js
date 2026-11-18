@@ -1,5 +1,5 @@
 "use client";
-// Home: "New episodes from your hooked shows", a swipe row of the newest episodes, ready to play.
+// Home: "New episodes" (from your hooked shows), a swipe row of small cards with play and + Up next icons.
 // Signed out (or nothing hooked yet): "New from popular shows on Hooked" instead. Data: /api/new-episodes.
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -46,29 +46,31 @@ export default function NewEpisodes() {
 
   return (
     <section className="new-eps">
-      <h2 className="section-title">{hooked ? "New episodes from your hooked shows" : "New from popular shows on Hooked"}</h2>
+      <h2 className="section-title">{hooked ? "New episodes" : "New from popular shows on Hooked"}</h2>
       {!hooked && state.user && <p className="muted small new-eps__hint">Hook the shows you love and their new episodes land here.</p>}
       {!data ? (
-        <div className="foryou" aria-label="Loading">
+        <div className="new-eps__row" aria-label="Loading">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="foryou__card foryou__card--ghost" />
+            <div key={i} className="new-eps__card new-eps__card--ghost" />
           ))}
         </div>
       ) : !episodes.length ? (
         <p className="muted">Nothing new from your hooked shows yet. You’ve caught up.</p>
       ) : (
-        <div className="foryou">
+        <div className="new-eps__row">
           {episodes.map((ep) => (
-            <article key={ep.ref || ep.id} className="foryou__card">
-              {ep.date > 0 && <span className="foryou__why new-eps__when mono">{released(ep.date)}</span>}
-              <Art src={ep.image} title={ep.feedTitle} size="100%" radius={14} className="art--fluid" episodeRef={ep.ref} episodeId={ep.id} />
-              <Link href={episodeHref(ep.ref, ep.id)} className="foryou__title">
+            <article key={ep.ref || ep.id} className="new-eps__card">
+              <Art src={ep.image} title={ep.feedTitle} size="100%" radius={12} className="art--fluid" episodeRef={ep.ref} episodeId={ep.id} />
+              <Link href={episodeHref(ep.ref, ep.id)} className="new-eps__title">
                 {ep.title}
               </Link>
-              <p className="muted small foryou__show">{ep.feedTitle}</p>
-              <div className="row gap-xs foryou__actions">
-                <PlayButton episode={ep} />
-                <QueueButton episode={ep} />
+              <p className="new-eps__show">{ep.feedTitle}</p>
+              <div className="new-eps__foot">
+                {ep.date > 0 && <span className="new-eps__when mono">{released(ep.date)}</span>}
+                <span className="new-eps__acts">
+                  <PlayButton episode={ep} icon />
+                  <QueueButton episode={ep} icon />
+                </span>
               </div>
             </article>
           ))}
