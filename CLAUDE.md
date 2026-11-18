@@ -117,8 +117,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/briefs` (a briefs-only search, "Hooked selects" swipe row of built-in briefs, listener briefs in a grid), `/briefs/new` and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (tabs: Episodes, Shows,
-  Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet;
-  `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
+  Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: stars, What's the hook?, then
+  Are you hooked?, picked already for shows you're hooked on; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
 - **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
   ("+ Up next"), `HookShowButton`; on episode pages also `AddToBriefButton` ("+ Brief", `components/AddToBrief.js`: add to one
@@ -132,10 +132,13 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   auto-advance through Up next). It remembers where you stopped in `lib/progress.js` (this browser) and,
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
-  saved it; something playing is never interrupted.
+  saved it; something playing is never interrupted. A resumed episode shows the length measured from its audio
+  (`savedLength`), not the feed's. A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
+  doesn't stop playback. The bottom bar stays pinned on iPhone after the keyboard closes (`useBottomPinned`,
+  `components/BottomNav.js`).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
   finished. If you're looking, the player turns into "✓ Finished · log it?" (`components/FinishPrompt.js`: optional stars,
-  Hooked / Not hooked saves); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's
+  a Hooked | Not hooked switch, then **Log it**; it stays ("Saving…") until saved, then shows "✓ Logged" briefly); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's
   Episodes tab (`components/FinishedNotLogged.js`) for 3 days, where Skip ends it. Logged episodes are never asked about.
   Signed in, the list syncs across devices through `finished_episodes` (`lib/finished-sync.js`; private, own rows only).
 - **Reactions** (`lib/social.js`, `components/LogThread.js`): small black icons, no bubbles.
