@@ -112,9 +112,10 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home (Up next card, "New episodes from your hooked shows" swipe row (`components/NewEpisodes.js`,
-  `/api/new-episodes`; signed out or nothing hooked: "New from popular shows on Hooked"), "Listening on Hooked now" for
-  signed-out visitors (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
+- **Pages** (`app/`): `/` Home (Up next card, "New episodes" swipe row of small cards from your hooked shows (`components/NewEpisodes.js`,
+  `/api/new-episodes`; signed out or nothing hooked: "New from popular shows on Hooked"; icon-only `PlayButton` /
+  `QueueButton` with `icon`), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
+  listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
   Sent to you as slim rows that drop off once queued or logged, "Friends listening now" (played in the last day), friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
   `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
