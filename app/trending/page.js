@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { trendingTopics } from "@/lib/trends";
+import { trendingLabel } from "@/components/TrendingBar";
 
-export const metadata = { title: "Trending now" };
+export const metadata = { title: "Trending topics" };
 export const revalidate = 1800;
 
 export default async function TrendingPage() {
   const topics = await trendingTopics(25);
   return (
     <>
-      <h1 className="display h-lg cobalt">Trending now</h1>
+      <h1 className="display h-lg cobalt">{trendingLabel(topics)}</h1>
       <p className="muted" style={{ margin: "8px 0 22px", fontSize: 19 }}>
         {topics[0]?.source === "wikipedia" ? "What people are reading about most today." : "What the US has been searching for over the past two days, from Google Trends."} Tap one to hear what podcasts are saying, or make it a brief.
       </p>
