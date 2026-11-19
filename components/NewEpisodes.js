@@ -1,6 +1,8 @@
 "use client";
 // Home: "New episodes" (from your hooked shows), a swipe row of small cards with play and + Up next icons.
 // Signed out (or nothing hooked yet): "New from popular shows on Hooked" instead. Data: /api/new-episodes.
+// The last row shown is remembered on this device (`hooked:new-eps`, with whose it was), so Home shows it at once and
+// swaps in the fresh list when it arrives, instead of blank tiles while the account and the episodes load.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Art from "./Art";
@@ -9,6 +11,9 @@ import { QueueButton } from "./Social";
 import { hookedShows, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { shortDate } from "@/lib/format";
+
+const SAVED = "hooked:new-eps";
+const SAVED_FOR = 3 * 86400 * 1000; // older than 3 days: not worth showing, even for a second
 
 // "Today", "Yesterday", "3d ago", then the date (short: it sits beside two buttons on a small card).
 function released(unixSeconds) {
@@ -20,38 +25,69 @@ function released(unixSeconds) {
   return shortDate(unixSeconds);
 }
 
+function readSaved() {
+  try {
+    const s = JSON.parse(window.localStorage.getItem(SAVED) || "null");
+    if (s && Array.isArray(s.episodes) && Date.now() - (s.at || 0) < SAVED_FOR) return s;
+  } catch {}
+  return null;
+}
+
+function save(who, data) {
+  try {
+    window.localStorage.setItem(SAVED, JSON.stringify({ who, mode: data.mode, episodes: data.episodes.slice(0, 12), at: Date.now() }));
+  } catch {}
+}
+
 export default function NewEpisodes() {
   const state = useStore();
-  const [data, setData] = useState(null); // { mode, episodes }
+  const [data, setData] = useState(null); // { mode, episodes }: the fresh answer
+  const [saved, setSaved] = useState(null); // the last answer on this device, until the fresh one arrives
+  const who = state ? state.user?.id || "out" : null;
   const shows = state ? hookedShows(state).map((s) => String(s.showRef || s.feedId || "")).filter(Boolean).slice(0, 12) : [];
   const logged = state ? state.logs.map((l) => String(l.ref || l.id || "")).filter(Boolean) : [];
   const key = state ? JSON.stringify({ shows, logged }) : "";
+
+  // Read after the first render (the server has no saved row), so the page the server sent and this one match.
+  useEffect(() => setSaved(readSaved()), []);
 
   useEffect(() => {
     if (!key) return;
     let live = true;
     fetch("/api/new-episodes", { method: "POST", headers: { "Content-Type": "application/json" }, body: key })
       .then((r) => (r.ok ? r.json() : { episodes: [] }))
-      .then((d) => live && setData(d))
+      .then((d) => {
+        if (!live) return;
+        setData(d);
+        if (Array.isArray(d.episodes)) save(who, d);
+      })
       .catch(() => live && setData({ episodes: [] }));
     return () => {
       live = false;
     };
-  }, [key]);
+  }, [key, who]);
 
-  if (!state) return null;
-  const hooked = shows.length > 0;
-  const episodes = data?.episodes || [];
+  // Someone else's saved row (another account, or from before signing in/out) is never shown.
+  const usable = saved && (who === null || saved.who === who) ? saved : null;
+  const shown = data || usable;
+  if (!state && !usable) return null;
+
+  const hooked = state ? shows.length > 0 : usable.mode === "hooked";
+  const episodes = shown?.episodes || [];
   if (data && !episodes.length && !hooked) return null;
 
   return (
     <section className="new-eps">
       <h2 className="section-title">{hooked ? "New episodes" : "New from popular shows on Hooked"}</h2>
-      {!hooked && state.user && <p className="muted small new-eps__hint">Hook the shows you love and their new episodes land here.</p>}
-      {!data ? (
+      {!hooked && state?.user && <p className="muted small new-eps__hint">Hook the shows you love and their new episodes land here.</p>}
+      {!shown ? (
         <div className="new-eps__row" aria-label="Loading">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="new-eps__card new-eps__card--ghost" />
+            <div key={i} className="new-eps__card new-eps__card--ghost" aria-hidden="true">
+              <span className="new-eps__ghost-art" />
+              <span className="new-eps__ghost-line" />
+              <span className="new-eps__ghost-line new-eps__ghost-line--short" />
+            </div>
           ))}
         </div>
       ) : !episodes.length ? (

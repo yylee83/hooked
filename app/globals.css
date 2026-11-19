@@ -649,7 +649,13 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .new-eps__row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 -2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .new-eps__row::-webkit-scrollbar { display: none; }
 .new-eps__card { flex: none; width: 140px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
-.new-eps__card--ghost { height: 230px; border: 2.5px dashed rgba(21, 19, 29, 0.25); border-radius: 14px; }
+/* First visit only (later visits show the remembered row): card-shaped stand-ins that gently fade in and out. */
+.new-eps__card--ghost { animation: new-eps-breathe 1.2s ease-in-out infinite alternate; }
+.new-eps__ghost-art { display: block; aspect-ratio: 1; border-radius: 12px; background: rgba(21, 19, 29, 0.09); }
+.new-eps__ghost-line { display: block; height: 12px; margin-top: 4px; border-radius: 6px; background: rgba(21, 19, 29, 0.09); }
+.new-eps__ghost-line--short { width: 60%; }
+@keyframes new-eps-breathe { from { opacity: 1; } to { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .new-eps__card--ghost { animation: none; } }
 .new-eps__card .art { box-shadow: 3px 3px 0 var(--ink); }
 .new-eps__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 14px; line-height: 1.2; margin-top: 4px; }
 .new-eps__show { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -3px; }
