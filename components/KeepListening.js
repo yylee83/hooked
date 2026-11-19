@@ -3,21 +3,24 @@
 // an episode comes off Up next when it starts playing, this is where one you stopped partway through lives.
 // Built from your saved spots (lib/progress.js: this device's, merged with your account's by lib/progress-sync.js when
 // the player opens), so it needs nothing new saved. Details come from /api/episode (cached). The episode in the player
-// is left out: it's already in the bar. Remove forgets the spot (next time it starts from the top).
+// is left out: it's already in the bar, and so is an episode you've logged with a minute or less left (shown as "1 min
+// left": under 90 seconds; Erin, 2026-11-18). Remove forgets the spot (next time it starts from the top).
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Art from "./Art";
 import { PlayButton, usePlayer } from "./Player";
 import { allSpots, clearProgress } from "@/lib/progress";
-import { sameEpisode } from "@/lib/store";
+import { findLog, sameEpisode, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { minutes } from "@/lib/format";
 
 const MAX = 10;
 const OUR_ID = /^[a-z2-9]{8}$/;
+const LOGGED_NEAR_END = 90; // seconds left: anything that reads "1 min left" or less
 
 export default function KeepListening() {
   const player = usePlayer();
+  const state = useStore();
   const [rows, setRows] = useState(null); // [{ ep, t, d, at }]
 
   const load = useCallback(async () => {
@@ -47,7 +50,9 @@ export default function KeepListening() {
     return () => document.removeEventListener("visibilitychange", again);
   }, [load]);
 
-  const shown = (rows || []).filter((r) => !(player?.current && !player.queueMeta && sameEpisode(player.current, r.ep))).slice(0, MAX);
+  const inPlayer = (r) => player?.current && !player.queueMeta && sameEpisode(player.current, r.ep);
+  const loggedNearEnd = (r) => r.d > 0 && r.d - r.t < LOGGED_NEAR_END && state && findLog(state, r.ep);
+  const shown = (rows || []).filter((r) => !inPlayer(r) && !loggedNearEnd(r)).slice(0, MAX);
   if (!shown.length) return null;
 
   function remove(r) {
