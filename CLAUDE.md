@@ -117,7 +117,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Pages** (`app/`): `/` Home (Up next card, "New episodes" swipe row of small cards from your hooked shows (`components/NewEpisodes.js`,
   `/api/new-episodes`; signed out or nothing hooked: "New from popular shows on Hooked"; icon-only `PlayButton` /
   `QueueButton` with `icon`; the last row is remembered on the device (`hooked:new-eps`, with whose it was; cleared on sign-out) and shown at
-  once while the fresh one loads), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
+  once while the fresh one loads; the top of each hooked show's own feed is read too (`feedNewest` in `lib/catalog.js`, kept 10 minutes), so an episode shows up before Podcast Index lists it: it's saved as one of ours, Podcast Index is asked to re-read the feed (`pubNotify`), and its number later joins the same entry by the feed's episode id), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
   listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
   Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"), Trending conversations (`components/TrendingConversations.js`, ranked by the
   `trending_conversations` database function), Just logged; no Apple chart),
