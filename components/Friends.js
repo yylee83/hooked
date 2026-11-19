@@ -5,7 +5,7 @@ import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
 import ListeningOnHooked from "./ListeningOnHooked";
-import { logVerb } from "@/lib/format";
+import { logVerb, plural } from "@/lib/format";
 import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
@@ -248,11 +248,17 @@ export function FriendsFeed() {
   }
 
   const noFollows = !state.following?.length;
-  // A send leaves the list once you've put it in Up next or logged it.
-  const sent = (data?.recs || []).filter((r) => {
+  // A send leaves the list once you've put it in Up next or logged it. Sends of the same episode (from one friend or
+  // several) are one row: newest first, everyone who sent it, each different note.
+  const groups = new Map();
+  for (const r of data?.recs || []) {
     const ep = { ref: r.episode_ref, id: r.episode_id };
-    return !inUpNext(state, ep) && !findLog(state, ep);
-  });
+    if (inUpNext(state, ep) || findLog(state, ep)) continue;
+    const k = r.episode_ref || `p${r.episode_id}`;
+    if (groups.has(k)) groups.get(k).push(r);
+    else groups.set(k, [r]);
+  }
+  const sent = [...groups.values()];
 
   return (
     <>
@@ -260,8 +266,8 @@ export function FriendsFeed() {
         <>
           <h2 className="section-title">Sent to you</h2>
           <ul className="sent">
-            {(allSent ? sent : sent.slice(0, 2)).map((r) => (
-              <SentRow key={r.id} r={r} onDismiss={() => setData({ ...data, recs: data.recs.filter((x) => x.id !== r.id) })} />
+            {(allSent ? sent : sent.slice(0, 2)).map((g) => (
+              <SentRow key={g[0].id} sends={g} onDismiss={() => setData({ ...data, recs: data.recs.filter((x) => !g.includes(x)) })} />
             ))}
           </ul>
           {sent.length > 2 && (
@@ -343,19 +349,42 @@ export function FriendsFeed() {
 }
 
 // One send on Home: who sent it, the episode, their note. + adds it to Up next (and it leaves the list); × is "not for me".
-function SentRow({ r, onDismiss }) {
-  const item = { episodeId: r.episode_id, episodeRef: r.episode_ref || undefined, title: r.title, feedId: r.feed_id, feedTitle: r.feed_title, image: r.image, from: r.sender?.handle ? `@${r.sender.handle}` : "a friend" };
-  const note = r.note || r.hook;
+// Who sent it: "@a", "@a and @b", "@a, @b and 2 others".
+function senderNames(handles) {
+  const names = handles.map((h) => (h ? `@${h}` : "a friend"));
+  if (names.length <= 2) return names.join(" and ");
+  return `${names.slice(0, 2).join(", ")} and ${plural(names.length - 2, "other")}`;
+}
+
+// One episode sent to you: `sends` are its sends, newest first (one or more, from one friend or several).
+function SentRow({ sends, onDismiss }) {
+  const r = sends[0];
+  const handles = [...new Set(sends.map((x) => x.sender?.handle || ""))];
+  const several = handles.length > 1;
+  // Each different note once, with who wrote it when more than one person sent the episode.
+  const seen = new Set();
+  const notes = [];
+  for (const x of sends) {
+    const text = (x.note || x.hook || "").trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    notes.push({ id: x.id, text, who: several ? x.sender?.handle : null });
+  }
+  const item = { episodeId: r.episode_id, episodeRef: r.episode_ref || undefined, title: r.title, feedId: r.feed_id, feedTitle: r.feed_title, image: r.image, from: senderNames(handles) };
   return (
     <li className="sent__row">
       <Link href={episodeHref(r.episode_ref, r.episode_id)} className="sent__main">
         <Art src={r.image} title={r.feed_title || ""} size={48} radius={10} />
         <span className="min0">
           <span className="sent__who">
-            <b>@{r.sender?.handle || "a friend"}</b> sent you
+            <b>{senderNames(handles)}</b> sent you
           </span>
           <span className="sent__title">{r.title}</span>
-          {note && <span className="sent__note">“{note}”</span>}
+          {notes.map((n) => (
+            <span key={n.id} className="sent__note">
+              {n.who ? `@${n.who}: ` : ""}“{n.text}”
+            </span>
+          ))}
         </span>
       </Link>
       <button
@@ -364,7 +393,7 @@ function SentRow({ r, onDismiss }) {
         title="Not for me"
         onClick={async () => {
           onDismiss();
-          await dismissRecommendation(r.id);
+          await Promise.all(sends.map((x) => dismissRecommendation(x.id)));
         }}
       >
         ×
