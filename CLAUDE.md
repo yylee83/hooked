@@ -119,7 +119,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `QueueButton` with `icon`; the last row is remembered on the device (`hooked:new-eps`, with whose it was; cleared on sign-out) and shown at
   once while the fresh one loads), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
   listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
-  Sent to you as slim rows that drop off once queued or logged, "Friends listening now" (played in the last day), friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
+  Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
   `trending_conversations` database function); no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
