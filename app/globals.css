@@ -614,6 +614,11 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .upnext { margin-top: 10px; }
 .upnext__n { width: 18px; text-align: center; color: var(--cobalt); flex: none; }
 .upnext__actions { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.keep-listening { margin: 16px 0 22px; }
+.keep-listening__list { list-style: none; margin: 0; padding: 0; }
+.keep-listening__meter { height: 5px; margin-top: 7px; border-radius: 3px; background: rgba(21, 19, 29, 0.12); overflow: hidden; max-width: 180px; }
+.keep-listening__meter span { display: block; height: 100%; background: var(--bubblegum); }
+.keep-listening__left { margin-top: 3px; color: var(--muted); }
 .me-tabs { gap: 6px; }
 .me-tabs .tab { padding: 7px 13px; font-size: 15px; }
 .me-stats { gap: 6px; flex-wrap: nowrap; }
