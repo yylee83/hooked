@@ -125,7 +125,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (tabs: Episodes, Shows,
-  Up next, Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
+  Up next (topped by "Keep listening": episodes started and not finished, from your saved spots, `components/KeepListening.js`), Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
   show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
 - **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
@@ -137,7 +137,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
   localStorage when signed out (moved into the account on sign-in).
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30, speed, drag the playhead,
-  auto-advance through Up next). It remembers where you stopped in `lib/progress.js` (this browser) and,
+  auto-advance through Up next; an episode on Up next comes off it as soon as it starts playing, from anywhere, and
+  finishing it still starts the next one). It remembers where you stopped in `lib/progress.js` (this browser) and,
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
   saved it; something playing is never interrupted. An episode started with only Podcast Index's number gets our id

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import FinishedNotLogged from "./FinishedNotLogged";
+import KeepListening from "./KeepListening";
 import HistoryNote from "./HistoryNote";
 import Art from "./Art";
 import Wrapped from "./Wrapped";
@@ -313,6 +314,8 @@ export default function MyLog() {
       </div>
 
       {tab === "diary" && <FinishedNotLogged />}
+
+      {tab === "upnext" && <KeepListening />}
 
       {tab === "upnext" ? (
         <UpNextView state={state} />

@@ -116,6 +116,15 @@ export function PlayerProvider({ children }) {
     }
     setNowPlaying({ ...s.ep });
     if (!s.ep.ref && s.ep.id != null) addRef(s.ep.id);
+    // An episode on Up next comes off it as soon as it starts playing, from anywhere (Erin, 2026-11-18). The queue
+    // remembers it came from there, so finishing it still moves on to the next one (advanceUpNext).
+    if (!q.current.meta) {
+      const item = upNext(getState()).find((x) => sameEpisode({ ref: x.episodeRef, id: x.episodeId }, s.ep));
+      if (item) {
+        q.current = { ...q.current, fromUpNext: true };
+        removeFromList(item);
+      }
+    }
   }, [addRef]);
 
   // Play a list of segments: [{ ep, start, end }], with optional { title } for a brief.
@@ -166,14 +175,15 @@ export function PlayerProvider({ children }) {
     [playQueue]
   );
 
-  // When an episode from Up next finishes: take it off the list and start the next one.
+  // When an episode from Up next finishes, start the next one (it came off the list when it started playing; if it's
+  // back on, e.g. added again while listening, it comes off now).
   const advanceUpNext = useCallback(
     async (finished) => {
       const list = upNext(getState());
-      const done = list.find((i) => sameEpisode({ ref: i.episodeRef, id: i.episodeId }, finished));
-      if (!done) return;
-      removeFromList(done);
-      for (const item of list.filter((i) => i !== done)) {
+      const again = list.find((i) => sameEpisode({ ref: i.episodeRef, id: i.episodeId }, finished));
+      if (again) removeFromList(again);
+      if (!q.current.fromUpNext && !again) return;
+      for (const item of list.filter((i) => i !== again)) {
         if (await playItem(item)) return;
       }
     },
