@@ -1,4 +1,6 @@
 import Link from "next/link";
+// Searching changes the page without reloading the site, so whatever is playing keeps playing (Erin, 2026-11-19).
+import Form from "next/form";
 import Art from "@/components/Art";
 import EpisodeRow from "@/components/EpisodeRow";
 import KeysNotice from "@/components/KeysNotice";
@@ -249,7 +251,7 @@ export default async function SearchPage({ searchParams }) {
         Find your next listen. Search a show, an episode, or anyone who's been a guest.
       </p>
 
-      <form id="search-form" className="search" action="/search" role="search">
+      <Form id="search-form" className="search" action="/search" role="search">
         <input
           className="input"
           type="search"
@@ -262,7 +264,7 @@ export default async function SearchPage({ searchParams }) {
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search
         </button>
-      </form>
+      </Form>
 
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
       <SearchFilters key={type} type={type} signedInHint={signedInHint} />
