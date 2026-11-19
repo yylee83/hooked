@@ -119,8 +119,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `QueueButton` with `icon`; the last row is remembered on the device (`hooked:new-eps`, with whose it was; cleared on sign-out) and shown at
   once while the fresh one loads), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
   listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
-  Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity, Just logged, Trending conversations (`components/TrendingConversations.js`, ranked by the
-  `trending_conversations` database function); no Apple chart),
+  Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"), Trending conversations (`components/TrendingConversations.js`, ranked by the
+  `trending_conversations` database function), Just logged; no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
