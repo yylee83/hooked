@@ -40,9 +40,10 @@ export default function FriendsPage() {
 
       <FriendsFeed />
 
-      <FreshLogs />
-
+      {/* Between "From people you follow" (the end of FriendsFeed) and Just logged (Erin, 2026-11-18). */}
       <TrendingConversations />
+
+      <FreshLogs />
     </>
   );
 }
