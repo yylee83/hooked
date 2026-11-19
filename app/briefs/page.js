@@ -1,4 +1,6 @@
 import Link from "next/link";
+// Searching changes the page without reloading the site, so whatever is playing keeps playing (Erin, 2026-11-19).
+import Form from "next/form";
 import { briefs } from "@/lib/briefs";
 import { SignInButton } from "@/components/Account";
 import { BriefCard } from "@/components/BriefCards";
@@ -55,12 +57,12 @@ export default async function BriefsPage({ searchParams }) {
       </p>
 
       {/* Searches briefs only (built-in and listeners'), by title, topic, description and the episodes inside. */}
-      <form className="search briefs-search" action="/briefs" role="search">
+      <Form className="search briefs-search" action="/briefs" role="search">
         <input className="input" type="search" name="q" defaultValue={query} placeholder="Search briefs" aria-label="Search briefs" />
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search
         </button>
-      </form>
+      </Form>
 
       {query ? (
         <section>

@@ -136,7 +136,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `genres`, `new-episodes`, `listening-now`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
 - **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
   localStorage when signed out (moved into the account on sign-in).
-- **Player**: `components/Player.js` (queue/clips, skip −15/+30, speed, drag the playhead,
+- **Player**: `components/Player.js` (queue/clips, skip −15/+30 (the lock screen too, whatever interval the phone asks for), speed, drag the playhead,
   auto-advance through Up next; an episode on Up next comes off it as soon as it starts playing, from anywhere, and
   finishing it still starts the next one). It remembers where you stopped in `lib/progress.js` (this browser) and,
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
@@ -166,6 +166,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   trend, top searches, search misses, brief ideas). Kept a year (`prune_history`, daily job). Notice: `components/HistoryNote.js`.
   Matching between people uses public logs only. New functions: revoke from `anon, authenticated` too, not just `public`
   (Supabase grants them by default; `scripts/check-history.mjs` mimics that).
+- **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Search ranking**: `lib/rank.js`. A result must contain the phrase, or all the words close
   together. Exact show names are boosted (the part before ":" or "|" counts as the name), and so are Apple popularity
   and recency; other languages rank lower. Show nothing rather than unrelated results. Shows only Apple knows:
