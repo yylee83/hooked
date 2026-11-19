@@ -541,12 +541,22 @@ body:has(.mini) .app { padding-bottom: 300px; }
 
 /* ---------- v11: brief editing ---------- */
 .order { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.order__row { display: flex; align-items: center; gap: 10px; background: var(--cream); border: 2px solid rgba(21,19,29,.15); border-radius: 14px; padding: 6px 8px; }
-.order__n { font-size: 13px; width: 16px; text-align: center; color: var(--cobalt); }
+.order__row { position: relative; display: flex; align-items: center; gap: 8px; background: var(--cream); border: 2px solid rgba(21,19,29,.15); border-radius: 14px; padding: 6px 6px 6px 2px; }
+.order.is-dragging { user-select: none; -webkit-user-select: none; }
+.order__row.is-lifted { z-index: 2; background: var(--white); border-color: var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+.order__grip { flex: none; align-self: stretch; width: 26px; display: grid; place-items: center; border: 0; background: none; padding: 0; color: rgba(21,19,29,.4); cursor: grab; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.order__grip svg { fill: currentColor; }
+.order__grip:hover, .is-lifted .order__grip { color: var(--ink); }
+.is-dragging, .is-dragging .order__grip { cursor: grabbing; }
+.order__n { font-size: 13px; width: 14px; text-align: center; color: var(--cobalt); flex: none; }
 .order__title { font-weight: 700; font-size: 14px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.order__btns { display: flex; gap: 4px; flex: none; }
-.order__btns button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink); background: var(--white); font-weight: 800; font-size: 14px; }
-.order__btns button:disabled { opacity: .3; }
+.order__arrows { display: flex; flex-direction: column; flex: none; }
+.order__arrows button, .order__remove { display: grid; place-items: center; border: 0; background: none; padding: 0; color: var(--ink); border-radius: 8px; }
+.order__arrows button { width: 30px; height: 22px; }
+.order__arrows svg, .order__remove svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.order__arrows button:disabled { opacity: .2; }
+.order__arrows button:not(:disabled):hover, .order__remove:hover { background: rgba(21,19,29,.07); }
+.order__remove { width: 30px; height: 30px; flex: none; color: var(--muted); }
 .brief__owner { display: flex; gap: 10px; margin: -10px 0 22px; }
 
 /* ---------- v12: brief cards with covers, edit button ---------- */
