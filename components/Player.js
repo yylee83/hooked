@@ -109,6 +109,9 @@ export function PlayerProvider({ children }) {
       };
       el.addEventListener("loadedmetadata", seekWhenReady, { once: true });
       el.load();
+      // Starting from the top: ask to play right away rather than after the audio's details arrive, so an
+      // episode that starts by itself (the next one on Up next) keeps going on a locked phone.
+      if (at <= 0) el.play().catch(() => {});
     } else {
       el.currentTime = at;
       el.playbackRate = rateRef.current;
@@ -116,14 +119,11 @@ export function PlayerProvider({ children }) {
     }
     setNowPlaying({ ...s.ep });
     if (!s.ep.ref && s.ep.id != null) addRef(s.ep.id);
-    // An episode on Up next comes off it as soon as it starts playing, from anywhere (Erin, 2026-11-18). The queue
-    // remembers it came from there, so finishing it still moves on to the next one (advanceUpNext).
+    // An episode on Up next comes off it as soon as it starts playing, from anywhere (Erin, 2026-11-18). Finishing
+    // it (or any other episode) still moves on to the next one (advanceUpNext).
     if (!q.current.meta) {
       const item = upNext(getState()).find((x) => sameEpisode({ ref: x.episodeRef, id: x.episodeId }, s.ep));
-      if (item) {
-        q.current = { ...q.current, fromUpNext: true };
-        removeFromList(item);
-      }
+      if (item) removeFromList(item);
     }
   }, [addRef]);
 
@@ -175,19 +175,48 @@ export function PlayerProvider({ children }) {
     [playQueue]
   );
 
-  // When an episode from Up next finishes, start the next one (it came off the list when it started playing; if it's
-  // back on, e.g. added again while listening, it comes off now).
+  // The next episode on Up next, looked up shortly before the one playing ends, so it can start the moment this one
+  // finishes. On a locked iPhone, waiting for the internet at that moment can leave the player stopped.
+  const nextUp = useRef(null); // { key, ep } (ep is null if it has no audio)
+  const itemKey = (i) => i?.episodeRef || (i?.episodeId != null ? String(i.episodeId) : "");
+  const upNextAfter = (ep) => upNext(getState()).filter((i) => !sameEpisode({ ref: i.episodeRef, id: i.episodeId }, ep));
+  const prefetchNext = useCallback(async (ep) => {
+    const item = upNextAfter(ep)[0];
+    const key = itemKey(item);
+    if (!key || nextUp.current?.key === key) return;
+    nextUp.current = { key, ep: null, loading: true };
+    try {
+      const qs = item.episodeRef ? `ref=${encodeURIComponent(item.episodeRef)}` : `id=${item.episodeId}`;
+      const res = await fetch(`/api/episode?${qs}`);
+      const found = res.ok ? await res.json() : null;
+      if (nextUp.current?.key === key) nextUp.current = { key, ep: found?.audio ? found : null };
+    } catch {
+      if (nextUp.current?.key === key) nextUp.current = null; // try again later
+    }
+  }, []);
+
+  // When an episode finishes, start the next one on Up next, wherever the finished one was played from (YY,
+  // 2026-11-19). Before, this only happened if the player remembered the episode came from Up next, and it forgot
+  // that whenever the page reloaded or the player was brought back, so playback just stopped.
   const advanceUpNext = useCallback(
-    async (finished) => {
+    async (finishedEp) => {
       const list = upNext(getState());
-      const again = list.find((i) => sameEpisode({ ref: i.episodeRef, id: i.episodeId }, finished));
-      if (again) removeFromList(again);
-      if (!q.current.fromUpNext && !again) return;
-      for (const item of list.filter((i) => i !== again)) {
+      const again = list.find((i) => sameEpisode({ ref: i.episodeRef, id: i.episodeId }, finishedEp));
+      if (again) removeFromList(again); // added again while listening: it's done now
+      const rest = list.filter((i) => i !== again);
+      const ready = nextUp.current;
+      nextUp.current = null;
+      if (rest.length && ready?.ep && ready.key === itemKey(rest[0])) {
+        // Already looked up: start straight away, without waiting for the internet.
+        source.current = "up_next";
+        playQueue([{ ep: ready.ep, start: 0, end: null }], null, resumeAt(ready.ep));
+        return;
+      }
+      for (const item of rest) {
         if (await playItem(item)) return;
       }
     },
-    [playItem]
+    [playItem, playQueue]
   );
 
   // Stop, unload and empty the player (without saving anything).
@@ -360,6 +389,8 @@ export function PlayerProvider({ children }) {
         setProgress(end ? el.currentTime / end : 0);
         setTimes({ elapsed: el.currentTime, length: end || 0 });
         if (end > FINISH && !el.paused && !el.seeking && el.currentTime >= end - FINISH) finished(s.ep);
+        // Two minutes from the end, look up what's next on Up next so it can start the moment this one ends.
+        if (end && !el.paused && el.currentTime >= end - 120) prefetchNext(s.ep);
         if (!el.paused && !el.seeking) listenTick(s.ep, el.currentTime, el.duration);
         // Save your spot every 5 seconds of listening.
         if (src.current === s.ep.audio && el.readyState >= 1 && !el.seeking && Math.abs(el.currentTime - lastSaved.current) >= 5) {
@@ -384,7 +415,7 @@ export function PlayerProvider({ children }) {
       el.removeEventListener("pause", off);
       el.removeEventListener("ended", next);
     };
-  }, [startSeg, advanceUpNext]);
+  }, [startSeg, advanceUpNext, prefetchNext]);
 
   // Jump to a point, as a fraction of the episode (or of the whole cut).
   function seekTo(f) {

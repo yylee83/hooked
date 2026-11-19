@@ -138,7 +138,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   localStorage when signed out (moved into the account on sign-in).
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30 (the lock screen too, whatever interval the phone asks for), speed, drag the playhead,
   auto-advance through Up next; an episode on Up next comes off it as soon as it starts playing, from anywhere, and
-  finishing it still starts the next one). It remembers where you stopped in `lib/progress.js` (this browser) and,
+  finishing any episode (not a brief) starts the next one on Up next; the next one is looked up two minutes before the
+  end, so it starts at once on a locked phone). It remembers where you stopped in `lib/progress.js` (this browser) and,
   signed in, syncs that with `listening_progress` (`lib/progress-sync.js`): on opening Hooked or coming back to the
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
   saved it; something playing is never interrupted. An episode started with only Podcast Index's number gets our id
