@@ -565,6 +565,8 @@ body:has(.mini) .app { padding-bottom: 300px; }
   .fan { top: -24px; right: 14px; }
 }
 .brief__owner .btn { background: var(--butter); color: var(--ink); }
+.brief__owner .brief__delete { background: var(--white); }
+.brief__owner .brief__delete.is-confirm { background: var(--ink); color: var(--white); }
 /* smaller cover fan */
 .brief-tile--fan { padding-right: 116px; }
 .brief-tile--sm.brief-tile--fan { padding-right: 100px; }
