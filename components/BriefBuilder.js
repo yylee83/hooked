@@ -142,9 +142,14 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   async function remove() {
     if (!confirmDelete) return setConfirmDelete(true);
     setSaving(true);
-    const { error: err } = await supabase().from("briefs").delete().eq("id", autosaving.current?.id || draftId || editing.id);
-    if (err) {
+    const { data, error: err } = await supabase()
+      .from("briefs")
+      .delete()
+      .eq("id", autosaving.current?.id || draftId || editing.id)
+      .select("id");
+    if (err || !data?.length) {
       setSaving(false);
+      setConfirmDelete(false);
       setError("Couldn't delete. Try again.");
       return;
     }
@@ -490,6 +495,15 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           )}
           {state && !state.accounts && <p className="muted small">Publishing needs profiles switched on (Supabase keys in Vercel).</p>}
         </section>
+      )}
+
+      {/* With every episode taken out, the card above is gone: deleting still works. */}
+      {chosen.length === 0 && (editing || draftId) && (
+        <div className="row gap center" style={{ justifyContent: "center", marginTop: 26 }}>
+          <button type="button" className={`btn btn--sm ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving}>
+            {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this brief"}
+          </button>
+        </div>
       )}
     </>
   );
