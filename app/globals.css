@@ -697,13 +697,12 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .featured-talk__who .stars { flex: none; margin-left: auto; }
 .featured-talk__who .star > svg path { stroke: var(--butter); }
 .featured-talk__who .star__fill path { fill: var(--butter); }
-.featured-talk__reply { font-size: 13px; line-height: 1.3; background: rgba(255, 255, 255, 0.13); border-left: 3px solid var(--bubblegum); border-radius: 4px 8px 8px 4px; padding: 4px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.featured-talk__reply b { color: var(--butter); }
+.featured-talk__reply { font-size: 13px; line-height: 1.3; opacity: .78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__reply b { font-weight: 700; }
 .featured-talk__ep { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 7px; border-top: 2px solid rgba(255, 255, 255, .25); }
 .featured-talk__ep .art { border: 2px solid var(--ink); }
 .featured-talk__title { font-weight: 700; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .featured-talk__counts { font-size: 12px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.featured-talk__join { flex: none; background: var(--butter); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 9px; font-weight: 800; font-size: 12.5px; }
 
 /* Up next on Home: a slim line back to the queue on My log */
 .upnext-line { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 8px 8px 8px 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); }

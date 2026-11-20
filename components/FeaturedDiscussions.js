@@ -144,7 +144,7 @@ export default function FeaturedDiscussions() {
             <p className="featured-talk__hook">{c.hook}</p>
             {c.reply && (
               <p className="featured-talk__reply">
-                <b>@{c.reply.author.handle}</b> {c.reply.body}
+                ↳ <b>@{c.reply.author.handle}</b> {c.reply.body}
               </p>
             )}
             <div className="featured-talk__ep">
@@ -155,7 +155,6 @@ export default function FeaturedDiscussions() {
                   {[c.reviews > 1 && `${c.reviews} reviews`, c.replies > 0 && (c.replies === 1 ? "1 reply" : `${c.replies} replies`)].filter(Boolean).join(" · ") || c.show}
                 </p>
               </div>
-              <span className="featured-talk__join">{c.replies > 0 ? "Join in" : "Reply"}</span>
             </div>
           </Link>
         ))}
