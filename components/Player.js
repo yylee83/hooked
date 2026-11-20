@@ -14,6 +14,7 @@ import { markFinished, useFinished } from "@/lib/finished";
 import { pullFinished } from "@/lib/finished-sync";
 import { listenPlay, listenSave, listenTick } from "@/lib/history";
 import { ensureRefs } from "@/lib/catalog-client";
+import { haptic } from "@/lib/haptics";
 
 const FINISH = 60; // the last minute of an episode counts as finished
 
@@ -694,7 +695,7 @@ export function PlayerProvider({ children }) {
               <button className="mini__jump" onClick={() => skip(-15)} aria-label="Back 15 seconds">
                 <JumpIcon back />
               </button>
-              <button className="mini__btn" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
+              <button className="mini__btn" onClick={() => (haptic(), toggle())} aria-label={playing ? "Pause" : "Play"}>
                 {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
               </button>
               <button className="mini__jump" onClick={() => skip(30)} aria-label="Forward 30 seconds">
@@ -723,7 +724,7 @@ export function PlayerProvider({ children }) {
 function LogPill({ ep }) {
   const logged = !!findLog(useStore(), ep);
   return (
-    <Link href={logHref(ep.ref, ep.id)} className={`mini__log ${logged ? "is-logged" : ""}`}>
+    <Link href={logHref(ep.ref, ep.id)} className={`mini__log ${logged ? "is-logged" : ""}`} onClick={() => haptic()}>
       {logged ? "Logged" : "Log it"}
     </Link>
   );
@@ -801,12 +802,12 @@ export function PlayButton({ episode, icon = false }) {
   // Icon only (small cards): a round button with the play/pause sign.
   if (icon)
     return (
-      <button type="button" className="icon-act icon-act--play" onClick={() => p.play(episode)} aria-label={isThis && p.playing ? `Pause ${episode.title}` : `Play ${episode.title}`}>
+      <button type="button" className="icon-act icon-act--play" onClick={() => (haptic(), p.play(episode))} aria-label={isThis && p.playing ? `Pause ${episode.title}` : `Play ${episode.title}`}>
         {isThis && p.playing ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
       </button>
     );
   return (
-    <button className="btn btn--sm" onClick={() => p.play(episode)}>
+    <button className="btn btn--sm" onClick={() => (haptic(), p.play(episode))}>
       {isThis && p.playing ? <PauseIcon size={14} /> : <PlayIcon size={14} />}
       {isThis && p.playing ? "Pause" : "Play"}
     </button>
@@ -821,7 +822,7 @@ export function PlayCut({ segs, title, label, tone }) {
   return (
     <button
       className={`btn btn--big btn--display ${tone === "cobalt" ? "btn--butter" : "btn--cobalt"} play-cut`}
-      onClick={() => (isThis ? p.toggle() : p.playQueue(segs, { title }))}
+      onClick={() => (haptic(), isThis ? p.toggle() : p.playQueue(segs, { title }))}
     >
       {isThis && p.playing ? <PauseIcon size={26} /> : <PlayIcon size={26} />}
       {isThis && p.playing ? "Pause" : label}

@@ -5,6 +5,7 @@ import { useState } from "react";
 import Art from "./Art";
 import { PauseIcon, PlayIcon, usePlayer } from "./Player";
 import { sameEpisode, upNext, useStore } from "@/lib/store";
+import { haptic } from "@/lib/haptics";
 import { episodeHref } from "@/lib/addresses";
 
 export default function UpNextCard({ onSeeAll }) {
@@ -20,6 +21,7 @@ export default function UpNextCard({ onSeeAll }) {
   const isThis = !player?.queueMeta && sameEpisode(player?.current, { ref: first.episodeRef, id: first.episodeId });
 
   async function play() {
+    haptic();
     if (isThis) return player.toggle();
     setBusy(true);
     setFailed(false);

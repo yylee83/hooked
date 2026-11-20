@@ -9,6 +9,7 @@ import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
 import { MAX_ITEMS, UNTITLED, savedItem } from "@/lib/briefs-client";
+import { haptic } from "@/lib/haptics";
 
 const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
@@ -129,6 +130,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const briefTopic = result?.topic || topic.trim() || chosen[0]?.show || "";
 
   function move(key, dir) {
+    haptic();
     setPicked((p) => {
       const i = p.indexOf(key);
       const j = i + dir;
