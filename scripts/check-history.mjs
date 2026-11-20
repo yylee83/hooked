@@ -116,12 +116,22 @@ check(!ideas.some((r) => r.query === "midterms"), "brief ideas: not \"midterms\"
 check(ideas.some((r) => r.query === "mandela"), "brief ideas: \"mandela\"");
 
 // ---- your own listening (my_listening, for Wrapped and My log) ----
+await db.exec(`
+  update public.episodes set published_at = now() - interval '3 days 1 hour', duration_seconds = 3600 where id = 'epA00001';
+  update public.episodes set published_at = now() - interval '400 days', duration_seconds = 1000 where id = 'epB00001';
+  update public.shows set categories = '["History", "Society & Culture"]' where id = 'show0001';
+  update public.shows set categories = '["News", "Daily News"]' where id = 'show0002';
+`);
 const mine = async (user, tz = "UTC") => (await as(user, `select public.my_listening('${tz}') as j`)).rows[0].j;
 const annL = await mine(1);
 check(annL.seconds === 3500 + 150 && annL.episodes === 2 && annL.finished === 1, `my_listening: Ann's own totals (got ${annL.seconds}s, ${annL.episodes} episodes, ${annL.finished} finished)`);
 check(annL.shows.length === 2 && annL.shows[0].id === "show0001" && annL.shows[0].seconds === 3500 && annL.shows[0].title === "Long Talk", "my_listening: shows ranked by time, with title");
 check(annL.days.length === 7 && annL.days.reduce((a, b) => a + b, 0) === annL.seconds, "my_listening: seconds by weekday add up");
 check(annL.hours.length === 24 && annL.hours.reduce((a, b) => a + b, 0) === annL.seconds, "my_listening: seconds by hour add up");
+check(annL.oldest?.id === "epB00001" && annL.typical_length === 2300, `my_listening: oldest episode and typical length (got ${annL.oldest?.id}, ${annL.typical_length})`);
+check(annL.age_days === 201 && annL.fresh_pct === 50, `my_listening: listening age (got ${annL.age_days} days, ${annL.fresh_pct}% fresh)`);
+check(annL.categories[0]?.name === "History" && annL.categories[0].seconds === 3500 && annL.categories.length === 4, "my_listening: topics weighted by time");
+check(annL.streak === 1 && annL.listening_days === 1 && annL.best_day?.seconds === annL.seconds && annL.binge === null, "my_listening: streak, best day, no binge from one episode a show");
 check((await mine(2)).seconds === 900 + 180, "my_listening: Bob sees only his own");
 check((await mine(1, "Not/AZone")).seconds === annL.seconds, "my_listening: an unknown time zone falls back to UTC");
 check((await mine(1, "Asia/Tokyo")).seconds === annL.seconds, "my_listening: a real time zone works");

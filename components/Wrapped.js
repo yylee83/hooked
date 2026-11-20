@@ -105,6 +105,45 @@ function Donut({ slices, active, onActive }) {
   );
 }
 
+// Broad store categories. Topics lead with the more specific ones (Investing, Daily News, Comedy Interviews), and fall
+// back to these only to fill up.
+const BROAD = new Set(["arts", "business", "comedy", "education", "fiction", "government", "health", "fitness", "health & fitness", "kids", "family", "kids & family", "leisure", "music", "news", "religion", "spirituality", "religion & spirituality", "science", "society", "culture", "society & culture", "sports", "technology", "tv", "film", "tv & film"]);
+const MAX_TOPICS = 6;
+
+function topicsOf(categories = []) {
+  const seen = new Set();
+  const clean = categories.filter((c) => c?.name && !seen.has(c.name.toLowerCase()) && seen.add(c.name.toLowerCase()));
+  const specific = clean.filter((c) => !BROAD.has(c.name.toLowerCase()));
+  const broad = clean.filter((c) => BROAD.has(c.name.toLowerCase()));
+  return [...specific, ...broad].slice(0, MAX_TOPICS).map((c) => c.name);
+}
+
+// Your listening age: how old episodes are when you first play them.
+function listeningAge(days) {
+  if (days == null) return null;
+  const when = days < 1 ? "the day they come out" : days < 14 ? `about ${days} ${days === 1 ? "day" : "days"} after they come out` : days < 60 ? `about ${Math.round(days / 7)} weeks after they come out` : days < 730 ? `about ${Math.round(days / 30)} months after they come out` : `about ${Math.round(days / 365)} years after they come out`;
+  const name = days <= 7 ? "Day-one listener" : days <= 60 ? "Keeping up" : days <= 365 ? "Catching up" : "Deep-cuts digger";
+  return { name, line: `You usually play episodes ${when}.` };
+}
+
+const shortDate = (d) => new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+const year = (d) => new Date(d).getFullYear();
+
+// A few small highlights, only the ones worth saying.
+function factsOf(L) {
+  const out = [];
+  if (L.streak >= 2) out.push(`Longest streak: ${L.streak} days in a row`);
+  if (L.best_day?.seconds >= 1800) out.push(`Biggest day: ${hours(L.best_day.seconds)} hrs on ${shortDate(L.best_day.day)}`);
+  if (L.binge) out.push(`Binge: ${L.binge.episodes} episodes of ${L.binge.show} in one day`);
+  if (L.typical_length > 0) {
+    const m = Math.round(L.typical_length / 60);
+    out.push(m >= 60 ? `You like them long: about ${m} minutes` : m <= 25 ? `You like them short: about ${m} minutes` : `Your usual episode: about ${m} minutes`);
+  }
+  if (L.oldest?.published_at && year(L.oldest.published_at) < new Date().getFullYear() - 1)
+    out.push(`Oldest thing you played: "${L.oldest.title}" (${L.oldest.show}, ${year(L.oldest.published_at)})`);
+  return out;
+}
+
 export default function Wrapped({ logs, hooked = {}, userId = null }) {
   const [got, setGot] = useState(null); // { ids, genres }
   const [active, setActive] = useState(null);
@@ -176,7 +215,8 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
       [DAYS[days.indexOf(Math.max(...days))], "your big listening day", true],
       [topTime(listening.hours || []), "when you listen most", true],
     ];
-    if (best) top = { label: "Most listened show", showRef: best.id, feedId: best.podcastindex_id, title: best.title, image: best.image, line: `${hours(best.seconds)} hrs · ${best.episodes} ${best.episodes === 1 ? "episode" : "episodes"}` };
+    // A single show gets the big card; two or more get the Top shows list instead.
+    if (best && listening.shows.length === 1) top = { label: "Most listened show", showRef: best.id, feedId: best.podcastindex_id, title: best.title, image: best.image, line: `${hours(best.seconds)} hrs · ${best.episodes} ${best.episodes === 1 ? "episode" : "episodes"}` };
   } else {
     // Weigh each log by its length, so a 2-hour episode counts more than a 10-minute one.
     const known = logs.map((l) => l.duration).filter(Boolean).sort((a, b) => a - b);
@@ -207,6 +247,10 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
   }
 
   const lead = slices.find((s) => s.key !== "rest");
+  const topShows = fromListening && listening.shows.length > 1 ? listening.shows.slice(0, 5) : [];
+  const topics = fromListening ? topicsOf(listening.categories) : [];
+  const age = fromListening ? listeningAge(listening.age_days) : null;
+  const facts = fromListening ? factsOf(listening) : [];
 
   return (
     <section className="wrapped" aria-labelledby="wrapped-title">
@@ -267,6 +311,57 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
             </Link>
             <p className="muted small">{top.line}</p>
           </div>
+        </div>
+      )}
+
+      {topShows.length > 0 && (
+        <div className="wrapped__section">
+          <p className="mono small">Your top shows</p>
+          <ol className="wrapped__shows">
+            {topShows.map((s, i) => (
+              <li key={s.id}>
+                <span className="mono wrapped__rank">{i + 1}</span>
+                <Art src={s.image} title={s.title} size={40} radius={10} showRef={s.id} feedId={s.podcastindex_id} />
+                <Link href={showHref(s.id, s.podcastindex_id)} className="grow min0 wrapped__show-name">
+                  {s.title}
+                </Link>
+                <span className="muted small">{hours(s.seconds)} {hours(s.seconds) === 1 ? "hr" : "hrs"}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {topics.length > 0 && (
+        <div className="wrapped__section">
+          <p className="mono small">What you're into</p>
+          <ul className="wrapped__topics">
+            {topics.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {age && (
+        <div className="wrapped__section">
+          <p className="mono small">Your listening age</p>
+          <p className="wrapped__age-name">{age.name}</p>
+          <p className="small">
+            {age.line}
+            {listening.fresh_pct != null && ` ${listening.fresh_pct}% within a week of release.`}
+          </p>
+        </div>
+      )}
+
+      {facts.length > 0 && (
+        <div className="wrapped__section">
+          <p className="mono small">Little things</p>
+          <ul className="wrapped__facts">
+            {facts.map((f) => (
+              <li key={f} className="small">{f}</li>
+            ))}
+          </ul>
         </div>
       )}
 
