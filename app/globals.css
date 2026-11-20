@@ -681,18 +681,36 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .me-stats span { display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12px; line-height: 1.1; }
 .me-stats b { margin: 0 0 2px; font-size: 20px; }
 .taste-cta--sm { margin-top: 28px; padding: 18px; }
-/* ---------- Up next on Home ---------- */
-.upnext-home { margin: 18px 0 8px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 14px 16px 16px; box-shadow: 5px 5px 0 var(--ink); }
-.upnext-home__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-.upnext-home__head .mono { color: var(--butter); }
-.upnext-home__all { color: var(--white); font-weight: 700; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
-.upnext-home__main { display: flex; gap: 14px; align-items: center; }
-.upnext-home__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 18px; line-height: 1.2; color: var(--white); }
-.upnext-home__show { font-size: 14px; opacity: .85; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.upnext-home__play { flex: none; width: 58px; height: 58px; border-radius: 999px; background: var(--butter); color: var(--ink); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; cursor: pointer; }
-.upnext-home__play:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
-.upnext-home__play:disabled { opacity: .7; }
-.upnext-home__rest { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 2px solid rgba(255, 255, 255, .25); }
+/* ---------- Featured discussions (top of Home) ---------- */
+.featured-talk { margin: 18px 0 6px; }
+.featured-talk__label { color: var(--muted); margin-bottom: 8px; }
+.featured-talk__row { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 2px 8px 10px 2px; margin: 0 -20px 0 -2px; }
+.featured-talk__row::-webkit-scrollbar { display: none; }
+.featured-talk__card { flex: none; width: 86%; max-width: 440px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 10px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 16px 16px 14px; box-shadow: 5px 5px 0 var(--ink); }
+.featured-talk__card:only-child { width: calc(100% - 26px); }
+.featured-talk__card--ghost { min-height: 230px; background: rgba(35, 64, 255, 0.35); box-shadow: none; animation: new-eps-breathe 1.2s ease-in-out infinite alternate; }
+.featured-talk__hook { font-weight: 800; font-size: 21px; line-height: 1.22; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.featured-talk__who { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.featured-talk__who .avatar { border-width: 2px; color: var(--ink); }
+.featured-talk__who .star > svg path { stroke: var(--butter); }
+.featured-talk__who .star__fill path { fill: var(--butter); }
+.featured-talk__reply { font-size: 14.5px; line-height: 1.3; background: rgba(255, 255, 255, 0.13); border-left: 4px solid var(--bubblegum); border-radius: 6px 12px 12px 6px; padding: 7px 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.featured-talk__reply b { color: var(--butter); }
+.featured-talk__ep { display: flex; gap: 10px; align-items: center; margin-top: auto; padding-top: 10px; border-top: 2px solid rgba(255, 255, 255, .25); }
+.featured-talk__ep .art { border: 2px solid var(--ink); }
+.featured-talk__title { font-weight: 700; font-size: 14.5px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__show { font-size: 13px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.featured-talk__counts { font-family: var(--mono); font-size: 12.5px; opacity: .9; }
+.featured-talk__join { flex: none; background: var(--butter); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 14px; box-shadow: 2px 2px 0 var(--ink); }
+
+/* Up next on Home: a slim line back to the queue on My log */
+.upnext-line { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 8px 8px 8px 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); }
+.upnext-line__link { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1; }
+.upnext-line__label { flex: none; color: var(--cobalt); font-size: 12.5px; }
+.upnext-line__title { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upnext-line__play { flex: none; width: 34px; height: 34px; border-radius: 999px; background: var(--butter); border: 2px solid var(--ink); display: grid; place-items: center; }
+.upnext-line__play:disabled { opacity: .7; }
 .diary__row { align-items: start; }
 .diary__row > .mono { margin-top: 12px; }
 .diary__hook { display: block; white-space: normal; overflow: visible; }
@@ -730,10 +748,6 @@ body:has(.mini) .app { padding-bottom: 300px; }
 
 /* "+" next to an episode in a list of reviews (ReviewAdd): adds it to Up next. */
 .fresh__side { flex: none; align-self: flex-start; }
-/* Trending conversations (Home, after Just logged) */
-.trending-convo { display: flex; gap: 14px; padding: 14px 0; border-top: var(--line); }
-.trending-convo:last-child { border-bottom: var(--line); }
-.trending-convo__counts { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 .review-add { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; }
 .review-add__btn { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 38px; height: 38px; padding: 0 8px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--white); color: var(--ink); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); -webkit-tap-highlight-color: transparent; }
 .review-add__btn.is-on { background: var(--butter); }
