@@ -7,7 +7,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
-import Stars from "./Stars";
 import { Avatar } from "./Friends";
 import { supabase } from "@/lib/supabase/client";
 import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
@@ -74,7 +73,6 @@ async function load(db) {
       image: r.image_url || r.show_image,
       person: { id: r.top_user_id, handle: r.top_handle },
       hook: r.top_hook,
-      rating: Number(r.top_rating) || 0,
       replies: under(comments.data, r.top_user_id, r.episode_ref).length,
       reviews: r.reviews,
       people: r.people,
@@ -97,7 +95,6 @@ async function load(db) {
       image: l.image || l.feed_image,
       person: l.who,
       hook: l.hook,
-      rating: Number(l.rating) || 0,
       replies: replies.length,
       reviews: 0,
       people: 0,
@@ -133,29 +130,27 @@ export default function FeaturedDiscussions() {
             href={`/episode/${c.ref}?from=${encodeURIComponent(c.person.handle)}&talk=1#thread`}
             className="featured-talk__card"
           >
-            <p className="featured-talk__hook">“{c.hook}”</p>
             <p className="featured-talk__who">
-              <Avatar person={c.person} size={26} />
-              <b>@{c.person.handle}</b>
-              {c.rating > 0 && <Stars value={c.rating} size={14} />}
+              <Avatar person={c.person} size={24} />
+              <span className="featured-talk__name">
+                {c.person.display_name ? <b>{c.person.display_name}</b> : <b>@{c.person.handle}</b>}
+                {c.person.display_name && <span className="featured-talk__handle">@{c.person.handle}</span>}
+              </span>
             </p>
+            <p className="featured-talk__hook">{c.hook}</p>
             {c.reply && (
               <p className="featured-talk__reply">
-                <b>@{c.reply.author.handle}</b> {c.reply.body}
+                ↳ <b>@{c.reply.author.handle}</b> {c.reply.body}
               </p>
             )}
             <div className="featured-talk__ep">
-              <Art src={c.image} title={c.show || ""} size={44} radius={10} />
+              <Art src={c.image} title={c.show || ""} size={30} radius={7} />
               <div className="min0 grow">
                 <p className="featured-talk__title">{c.title}</p>
-                <p className="featured-talk__show">{c.show}</p>
+                <p className="featured-talk__counts">
+                  {[c.reviews > 1 && `${c.reviews} reviews`, c.replies > 0 && (c.replies === 1 ? "1 reply" : `${c.replies} replies`)].filter(Boolean).join(" · ") || c.show}
+                </p>
               </div>
-            </div>
-            <div className="featured-talk__foot">
-              <span className="featured-talk__counts">
-                {[c.reviews > 1 && `${c.reviews} reviews`, c.replies > 0 && (c.replies === 1 ? "1 reply" : `${c.replies} replies`)].filter(Boolean).join(" · ")}
-              </span>
-              <span className="featured-talk__join">{c.replies > 0 ? "Join in →" : "Reply →"}</span>
             </div>
           </Link>
         ))}
