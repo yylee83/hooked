@@ -202,7 +202,6 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 .me__stats { font-size: 15px; margin-top: 4px; }
 .hooked-on { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
 .card.np { width: auto; margin-top: 30px; }
-.np__log { display: flex; width: 100%; margin-top: 18px; }
 .log__row { display: grid; grid-template-columns: 26px auto 1fr auto; gap: 12px; align-items: center; padding: 16px 0; border-top: var(--line); }
 .log__day { font-size: 20px; }
 .log__row .sticker { font-size: 12px; padding: 3px 9px; }
@@ -441,6 +440,21 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .mini__close { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--white); color: var(--ink); align-self: flex-start; }
 .mini__close:hover { background: var(--cream); }
 .mini__close:active { transform: scale(0.92); }
+
+/* Minimized player: a small tab in the bottom-left corner that opens it back up (Player.js). */
+.player-tab { position: fixed; left: 12px; bottom: calc(88px + env(safe-area-inset-bottom)); translate: 0 var(--vv-shift, 0px); z-index: 19; display: flex; align-items: center; gap: 6px; padding: 5px 9px 5px 5px; background: var(--white); color: var(--ink); border: var(--line); border-radius: 14px; box-shadow: var(--shadow-sm); cursor: pointer; }
+.player-tab:active { transform: translate(2px, 2px); box-shadow: none; }
+.player-tab .art { display: block; border: 2px solid var(--ink); }
+.player-tab__cover { position: relative; display: block; }
+.player-tab__eq { position: absolute; inset: 2px; display: flex; align-items: flex-end; justify-content: center; gap: 2px; padding-bottom: 6px; border-radius: 5px; background: rgba(21, 19, 29, 0.5); }
+.player-tab__eq i { display: block; width: 4px; height: 16px; border-radius: 2px; background: var(--bubblegum); transform-origin: bottom; animation: player-eq 0.9s ease-in-out infinite; }
+.player-tab__eq i:nth-child(2) { animation-delay: -0.3s; animation-duration: 0.7s; }
+.player-tab__eq i:nth-child(3) { animation-delay: -0.6s; animation-duration: 1.1s; }
+@keyframes player-eq { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .player-tab__eq i { animation: none; transform: scaleY(0.7); } }
+.player-tab__caret { display: block; }
+@media (min-width: 600px) { .player-tab { left: max(12px, calc(50% - 258px)); } }
+body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-bottom)); }
 
 /* ---------- v9: friends, profiles, sharing ---------- */
 .find-friends { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: var(--line); background: var(--white); color: var(--ink); }
@@ -691,18 +705,46 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .me-stats span { display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12px; line-height: 1.1; }
 .me-stats b { margin: 0 0 2px; font-size: 20px; }
 .taste-cta--sm { margin-top: 28px; padding: 18px; }
-/* ---------- Up next on Home ---------- */
-.upnext-home { margin: 18px 0 8px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 14px 16px 16px; box-shadow: 5px 5px 0 var(--ink); }
-.upnext-home__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-.upnext-home__head .mono { color: var(--butter); }
-.upnext-home__all { color: var(--white); font-weight: 700; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
-.upnext-home__main { display: flex; gap: 14px; align-items: center; }
-.upnext-home__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 18px; line-height: 1.2; color: var(--white); }
-.upnext-home__show { font-size: 14px; opacity: .85; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.upnext-home__play { flex: none; width: 58px; height: 58px; border-radius: 999px; background: var(--butter); color: var(--ink); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; cursor: pointer; }
-.upnext-home__play:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
-.upnext-home__play:disabled { opacity: .7; }
-.upnext-home__rest { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 2px solid rgba(255, 255, 255, .25); }
+/* ---------- Featured discussions (top of Home) ---------- */
+.featured-talk { margin: 18px 0 6px; }
+.featured-talk__label { margin: 4px 0 14px; }
+.featured-talk__row { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 2px 8px 8px 2px; margin: 0 -20px 0 -2px; }
+.featured-talk__row::-webkit-scrollbar { display: none; }
+.featured-talk__card { flex: none; width: 250px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 7px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 16px; padding: 11px 12px 10px; box-shadow: 3px 3px 0 var(--ink); }
+.featured-talk__card--ghost { min-height: 150px; background: rgba(35, 64, 255, 0.35); box-shadow: none; animation: new-eps-breathe 1.2s ease-in-out infinite alternate; }
+.featured-talk__hook { font-weight: 500; font-size: 14.5px; line-height: 1.38; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.featured-talk__who { display: flex; align-items: center; gap: 6px; font-size: 13px; min-width: 0; }
+.featured-talk__who .avatar { border-width: 2px; color: var(--ink); }
+.featured-talk__name { display: flex; gap: 5px; align-items: baseline; min-width: 0; overflow: hidden; white-space: nowrap; }
+.featured-talk__name b { overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__handle { opacity: .75; }
+.featured-talk__reply { font-size: 13px; line-height: 1.3; opacity: .78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__reply b { font-weight: 700; }
+.featured-talk__ep { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 7px; border-top: 2px solid rgba(255, 255, 255, .25); }
+.featured-talk__ep .art { border: 2px solid var(--ink); }
+.featured-talk__title { font-weight: 700; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__counts { font-size: 12px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Up next card on My log (above the tabs) ---------- */
+.upnext-card { margin: 18px 0 8px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 14px 16px 16px; box-shadow: 5px 5px 0 var(--ink); }
+.upnext-card__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.upnext-card__head .mono { color: var(--butter); }
+.upnext-card__all { color: var(--white); font-weight: 700; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
+.upnext-card__main { display: flex; gap: 14px; align-items: center; }
+.upnext-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 18px; line-height: 1.2; color: var(--white); }
+.upnext-card__show { font-size: 14px; opacity: .85; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upnext-card__play { flex: none; width: 58px; height: 58px; border-radius: 999px; background: var(--butter); color: var(--ink); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; cursor: pointer; }
+.upnext-card__play:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.upnext-card__play:disabled { opacity: .7; }
+.upnext-card__rest { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 2px solid rgba(255, 255, 255, .25); }
+
+/* Up next on Home: a slim line back to the queue on My log */
+.upnext-line { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 8px 8px 8px 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); }
+.upnext-line__link { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1; }
+.upnext-line__label { flex: none; color: var(--cobalt); font-size: 12.5px; }
+.upnext-line__title { font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upnext-line__play { flex: none; width: 34px; height: 34px; border-radius: 999px; background: var(--butter); border: 2px solid var(--ink); display: grid; place-items: center; }
+.upnext-line__play:disabled { opacity: .7; }
 .diary__row { align-items: start; }
 .diary__row > .mono { margin-top: 12px; }
 .diary__hook { display: block; white-space: normal; overflow: visible; }
@@ -740,10 +782,6 @@ body:has(.mini) .app { padding-bottom: 300px; }
 
 /* "+" next to an episode in a list of reviews (ReviewAdd): adds it to Up next. */
 .fresh__side { flex: none; align-self: flex-start; }
-/* Trending conversations (Home, after Just logged) */
-.trending-convo { display: flex; gap: 14px; padding: 14px 0; border-top: var(--line); }
-.trending-convo:last-child { border-bottom: var(--line); }
-.trending-convo__counts { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 6px; }
 .review-add { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; }
 .review-add__btn { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 38px; height: 38px; padding: 0 8px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--white); color: var(--ink); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); -webkit-tap-highlight-color: transparent; }
 .review-add__btn.is-on { background: var(--butter); }

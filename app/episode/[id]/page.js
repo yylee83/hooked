@@ -56,6 +56,8 @@ export default async function EpisodePage({ params, searchParams }) {
   const { episode: e, show } = ep.data;
   const card = episodeCard(e, show); // includes our short ids (ref, showRef)
   const shared = from ? await getSharedLog(from, card) : null;
+  // From Home's Featured discussions (?talk=1): their review is the start of a conversation, not a share.
+  const talk = query.talk === "1";
 
   return (
     <>
@@ -77,7 +79,7 @@ export default async function EpisodePage({ params, searchParams }) {
               <Link href={`/u/${shared.profile.handle}`}>
                 <b>{shared.profile.display_name || `@${shared.profile.handle}`}</b>
               </Link>{" "}
-              thinks you'd enjoy this.
+              {talk ? "started this conversation." : "thinks you'd enjoy this."}
             </p>
           </div>
           {shared.log && (shared.log.rating > 0 || shared.log.hook) && (

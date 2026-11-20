@@ -114,17 +114,16 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home (Up next card, "New episodes" swipe row of small cards from your hooked shows (`components/NewEpisodes.js`,
+- **Pages** (`app/`): `/` Home (Trending conversations at the top (built on Erin's `trending_conversations`): a swipe row of reviews and the replies around them, from `trending_conversations` and then recent reviews with the most replies and thumbs; each opens the review's replies on the episode page, `?from=<handle>&talk=1#thread` (`components/FeaturedDiscussions.js`); under it a slim Up next line back to My log → Up next (`components/UpNextHome.js`), then "New episodes" swipe row of small cards from your hooked shows (`components/NewEpisodes.js`,
   `/api/new-episodes`; signed out or nothing hooked: "New from popular shows on Hooked"; icon-only `PlayButton` /
   `QueueButton` with `icon`; the last row is remembered on the device (`hooked:new-eps`, with whose it was; cleared on sign-out) and shown at
   once while the fresh one loads; the top of each hooked show's own feed is read too (`feedNewest` in `lib/catalog.js`, kept 10 minutes), so an episode shows up before Podcast Index lists it: it's saved as one of ours, Podcast Index is asked to re-read the feed (`pubNotify`), and its number later joins the same entry by the feed's episode id), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
   listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
-  Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"), Trending conversations (`components/TrendingConversations.js`, ranked by the
-  `trending_conversations` database function), Just logged; no Apple chart),
+  Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"), Just logged; no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
-  the browser, `components/DraftEditor.js`), `/me` My log (tabs: Episodes, Shows,
+  the browser, `components/DraftEditor.js`), `/me` My log (the big blue Up next card above the tabs, where "Listening now" used to be: first episode with a play button, the next few covers, "See all" opens the Up next tab, `components/UpNextCard.js`; tabs: Episodes, Shows,
   Up next (topped by "Keep listening": episodes started and not finished, from your saved spots, `components/KeepListening.js`; never episodes you've logged), Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
   show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
@@ -144,7 +143,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
   saved it; something playing is never interrupted. An episode started with only Podcast Index's number gets our id
   as soon as it plays (`addRef`); `ensureRefs` (`lib/catalog-client.js`) remembers answers, so it's asked once per visit. A resumed episode shows the length measured from its audio
-  (`savedLength`), not the feed's. A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
+  (`savedLength`), not the feed's. Its X doesn't close it: it tucks the player into a small tab in the bottom-left corner (cover with bouncing sound
+  bars while playing, a caret), which opens it again; it keeps playing, stays tucked across pages and reloads (`hooked:player-min`), and
+  opens back up when you press Play on something (Up next moving on by itself doesn't). A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
   doesn't stop playback. The bottom bar stays pinned on iPhone after the keyboard closes (`useBottomPinned`,
   `components/BottomNav.js`).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
