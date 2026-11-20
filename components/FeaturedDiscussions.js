@@ -133,12 +133,15 @@ export default function FeaturedDiscussions() {
             href={`/episode/${c.ref}?from=${encodeURIComponent(c.person.handle)}&talk=1#thread`}
             className="featured-talk__card"
           >
-            <p className="featured-talk__hook">“{c.hook}”</p>
             <p className="featured-talk__who">
-              <Avatar person={c.person} size={20} />
-              <b>@{c.person.handle}</b>
+              <Avatar person={c.person} size={24} />
+              <span className="featured-talk__name">
+                {c.person.display_name ? <b>{c.person.display_name}</b> : <b>@{c.person.handle}</b>}
+                {c.person.display_name && <span className="featured-talk__handle">@{c.person.handle}</span>}
+              </span>
               {c.rating > 0 && <Stars value={c.rating} size={11} />}
             </p>
+            <p className="featured-talk__hook">{c.hook}</p>
             {c.reply && (
               <p className="featured-talk__reply">
                 <b>@{c.reply.author.handle}</b> {c.reply.body}
