@@ -1,5 +1,5 @@
 "use client";
-// Home's top card: reviews people are talking about, one swipe card each. Tapping one opens that review with its
+// Home's top card, "Trending conversations": reviews and the talk around them, one swipe card each. Tapping one opens that review with its
 // replies on the episode page, ready to join in.
 // First the episodes in Trending conversations (the trending_conversations database function: reviews, replies and
 // sends this week), each with its best review. While Hooked is small that list is often short, so the rest are the
@@ -76,6 +76,7 @@ async function load(db) {
       hook: r.top_hook,
       rating: Number(r.top_rating) || 0,
       replies: under(comments.data, r.top_user_id, r.episode_ref).length,
+      reviews: r.reviews,
       people: r.people,
       reply: newestReply(r.top_user_id, r.episode_ref),
     });
@@ -98,6 +99,7 @@ async function load(db) {
       hook: l.hook,
       rating: Number(l.rating) || 0,
       replies: replies.length,
+      reviews: 0,
       people: 0,
       reply: newestReply(l.user_id, l.episode_ref),
     });
@@ -121,8 +123,8 @@ export default function FeaturedDiscussions() {
 
   if (cards && !cards.length) return null;
   return (
-    <section className="featured-talk" aria-label="Featured discussions">
-      <p className="featured-talk__label mono small">Featured discussions</p>
+    <section className="featured-talk" aria-label="Trending conversations">
+      <h2 className="section-title featured-talk__label">Trending conversations</h2>
       <div className="featured-talk__row">
         {!cards && <div className="featured-talk__card featured-talk__card--ghost" aria-hidden="true" />}
         {cards?.map((c) => (
@@ -151,8 +153,7 @@ export default function FeaturedDiscussions() {
             </div>
             <div className="featured-talk__foot">
               <span className="featured-talk__counts">
-                {c.replies > 0 ? (c.replies === 1 ? "1 reply" : `${c.replies} replies`) : "No replies yet"}
-                {c.people > 1 ? ` · ${c.people} people talking` : ""}
+                {[c.reviews > 1 && `${c.reviews} reviews`, c.replies > 0 && (c.replies === 1 ? "1 reply" : `${c.replies} replies`)].filter(Boolean).join(" · ")}
               </span>
               <span className="featured-talk__join">{c.replies > 0 ? "Join in →" : "Reply →"}</span>
             </div>

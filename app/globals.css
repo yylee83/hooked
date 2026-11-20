@@ -683,7 +683,7 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .taste-cta--sm { margin-top: 28px; padding: 18px; }
 /* ---------- Featured discussions (top of Home) ---------- */
 .featured-talk { margin: 18px 0 6px; }
-.featured-talk__label { color: var(--muted); margin-bottom: 8px; }
+.featured-talk__label { margin: 4px 0 14px; }
 .featured-talk__row { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 2px 8px 10px 2px; margin: 0 -20px 0 -2px; }
 .featured-talk__row::-webkit-scrollbar { display: none; }
 .featured-talk__card { flex: none; width: 86%; max-width: 440px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 10px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 16px 16px 14px; box-shadow: 5px 5px 0 var(--ink); }

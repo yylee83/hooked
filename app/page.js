@@ -30,7 +30,7 @@ export default function FriendsPage() {
 
       <KeysNotice />
 
-      {/* The top of Home: reviews people are talking about (YY, 2026-11-20: discussion is what makes Hooked different).
+      {/* The top of Home: Trending conversations, reviews and the replies around them (YY, 2026-11-20: discussion is what makes Hooked different).
           Up next moved to My log; this slim line under it leads back there. */}
       <FeaturedDiscussions />
       <UpNextHome />
