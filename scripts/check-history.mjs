@@ -129,7 +129,6 @@ check(annL.shows.length === 2 && annL.shows[0].id === "show0001" && annL.shows[0
 check(annL.days.length === 7 && annL.days.reduce((a, b) => a + b, 0) === annL.seconds, "my_listening: seconds by weekday add up");
 check(annL.hours.length === 24 && annL.hours.reduce((a, b) => a + b, 0) === annL.seconds, "my_listening: seconds by hour add up");
 check(annL.oldest?.id === "epB00001" && annL.typical_length === 2300, `my_listening: oldest episode and typical length (got ${annL.oldest?.id}, ${annL.typical_length})`);
-check(annL.age_days === 201 && annL.fresh_pct === 50, `my_listening: listening age (got ${annL.age_days} days, ${annL.fresh_pct}% fresh)`);
 check(annL.categories[0]?.name === "History" && annL.categories[0].seconds === 3500 && annL.categories.length === 4, "my_listening: topics weighted by time");
 check(annL.streak === 1 && annL.listening_days === 1 && annL.best_day?.seconds === annL.seconds && annL.binge === null, "my_listening: streak, best day, no binge from one episode a show");
 check((await mine(2)).seconds === 900 + 180, "my_listening: Bob sees only his own");

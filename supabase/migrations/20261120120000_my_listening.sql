@@ -37,7 +37,7 @@ begin
     order by seconds desc
     limit 80
   ),
-  -- each episode once: when you first played it, and how old it was then
+  -- each episode once
   per_episode as (
     select m.episode_ref, min(m.started_at) as first_play, max(m.published_at) as published_at, max(m.length) as length
     from mine m group by m.episode_ref
@@ -81,12 +81,6 @@ begin
                          'podcastindex_id', s.podcastindex_id, 'seconds', p.seconds, 'episodes', p.episodes)
                        order by p.seconds desc)
                        from per_show p join public.shows s on s.id = p.show_id), '[]'::jsonb),
-    -- listening age: how many days old episodes were when you first played them (middle value), and the share
-    -- you played within a week of release
-    'age_days', (select round(percentile_cont(0.5) within group (order by extract(epoch from (first_play - published_at)) / 86400))::int
-                 from per_episode where published_at is not null and first_play >= published_at),
-    'fresh_pct', (select round(100.0 * avg((first_play - published_at <= interval '7 days')::int))::int
-                  from per_episode where published_at is not null and first_play >= published_at),
     'oldest', (select jsonb_build_object('id', e.id, 'title', e.title, 'show', s.title, 'published_at', e.published_at)
                from per_episode p join public.episodes e on e.id = p.episode_ref join public.shows s on s.id = e.show_id
                where p.published_at is not null order by p.published_at limit 1),

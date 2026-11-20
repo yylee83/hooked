@@ -7,7 +7,8 @@ import Art from "./Art";
 import { genreLabel } from "@/lib/genres";
 import { showHref } from "@/lib/addresses";
 import { findHookedShow, showKey } from "@/lib/store";
-import { listenedHours, useMyListening } from "@/lib/my-listening";
+import { listenedHours, useMyListening, useMyTalk } from "@/lib/my-listening";
+import { logHref } from "@/lib/addresses";
 
 // Checked for colorblind separation; each slice also has an outline and a labeled legend row.
 const COLORS = ["#2340FF", "#F0559F", "#D9A900", "#11957A", "#E8622E", "#7C4DFF"];
@@ -118,14 +119,6 @@ function topicsOf(categories = []) {
   return [...specific, ...broad].slice(0, MAX_TOPICS).map((c) => c.name);
 }
 
-// Your listening age: how old episodes are when you first play them.
-function listeningAge(days) {
-  if (days == null) return null;
-  const when = days < 1 ? "the day they come out" : days < 14 ? `about ${days} ${days === 1 ? "day" : "days"} after they come out` : days < 60 ? `about ${Math.round(days / 7)} weeks after they come out` : days < 730 ? `about ${Math.round(days / 30)} months after they come out` : `about ${Math.round(days / 365)} years after they come out`;
-  const name = days <= 7 ? "Day-one listener" : days <= 60 ? "Keeping up" : days <= 365 ? "Catching up" : "Deep-cuts digger";
-  return { name, line: `You usually play episodes ${when}.` };
-}
-
 const shortDate = (d) => new Date(`${String(d).slice(0, 10)}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 const year = (d) => new Date(d).getFullYear();
 
@@ -144,10 +137,35 @@ function factsOf(L) {
   return out;
 }
 
+// Your reviewer style, from your logs and replies: one light label, then a line saying why.
+function reviewerStyle(logs, talk) {
+  const n = logs.length;
+  if (!n) return null;
+  const rated = logs.filter((l) => l.rating > 0);
+  const avg = rated.length ? rated.reduce((s, l) => s + l.rating, 0) / rated.length : null;
+  const hookShare = logs.filter((l) => l.hook?.trim()).length / n;
+  if (talk && talk.written >= Math.max(5, n)) return ["The conversation starter", "You reply more than you log."];
+  if (talk && talk.got >= Math.max(5, n)) return ["The one people talk to", "Your reviews get people replying."];
+  if (rated.length >= 3 && avg >= 4.3) return ["The cheerleader", "When you like something, you say so."];
+  if (rated.length >= 3 && avg <= 3) return ["The tough critic", "A high rating from you means something."];
+  if (hookShare >= 0.7) return ["The wordsmith", "You write a hook almost every time."];
+  if (hookShare < 0.2) return ["The quiet logger", "You rate and move on."];
+  return ["The steady reviewer", "A rating here, a hook there."];
+}
+
+// Your most common rating, e.g. 4★.
+function goToRating(logs) {
+  const c = {};
+  for (const l of logs) if (l.rating > 0) c[l.rating] = (c[l.rating] || 0) + 1;
+  const top = Object.entries(c).sort((a, b) => b[1] - a[1] || b[0] - a[0])[0];
+  return top && top[1] >= 2 ? Number(top[0]) : null;
+}
+
 export default function Wrapped({ logs, hooked = {}, userId = null }) {
   const [got, setGot] = useState(null); // { ids, genres }
   const [active, setActive] = useState(null);
   const listening = useMyListening(userId);
+  const talk = useMyTalk(userId);
   const fromListening = Boolean(listening && listening.seconds >= MIN_LISTEN);
   // Our show id, or the Podcast Index number for older logs saved on this device.
   const ids = useMemo(
@@ -249,7 +267,16 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
   const lead = slices.find((s) => s.key !== "rest");
   const topShows = fromListening && listening.shows.length > 1 ? listening.shows.slice(0, 5) : [];
   const topics = fromListening ? topicsOf(listening.categories) : [];
-  const age = fromListening ? listeningAge(listening.age_days) : null;
+  const style = reviewerStyle(logs, talk);
+  const goTo = goToRating(logs);
+  const hooksWritten = logs.filter((l) => l.hook?.trim()).length;
+  const talkiestLog = talk?.talkiest ? logs.find((l) => l.ref === talk.talkiest.ref) : null;
+  const talkLines = [];
+  if (fromListening && avg) talkLines.push(`★ ${avg} average${goTo ? `, and your go-to is ${goTo}★` : ""}`);
+  else if (goTo) talkLines.push(`Your go-to rating is ${goTo}★`);
+  if (fromListening && loggedShows.length) talkLines.push(`${hookedRate}% of the shows you've logged got you hooked`);
+  if (talk?.thumbs) talkLines.push(`${talk.thumbs} thumbs up on your reviews`);
+  if (talk?.adds) talkLines.push(`${talk.adds} ${talk.adds === 1 ? "person" : "people"} put an episode on Up next because of your review`);
   const facts = fromListening ? factsOf(listening) : [];
 
   return (
@@ -343,17 +370,6 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
         </div>
       )}
 
-      {age && (
-        <div className="wrapped__section">
-          <p className="mono small">Your listening age</p>
-          <p className="wrapped__age-name">{age.name}</p>
-          <p className="small">
-            {age.line}
-            {listening.fresh_pct != null && ` ${listening.fresh_pct}% within a week of release.`}
-          </p>
-        </div>
-      )}
-
       {facts.length > 0 && (
         <div className="wrapped__section">
           <p className="mono small">Little things</p>
@@ -365,24 +381,39 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
         </div>
       )}
 
-      {fromListening && logs.length > 0 && (
-        <div className="wrapped__fromlog">
-          <p className="mono small">From your log</p>
-          <p className="small">
-            <b>{logs.length}</b> {logs.length === 1 ? "episode" : "episodes"} logged
-            {avg && (
-              <>
-                {" · "}
-                <b>★ {avg}</b> average
-              </>
-            )}
-            {loggedShows.length > 0 && (
-              <>
-                {" · "}
-                <b>{hookedRate}%</b> of your shows got you hooked
-              </>
-            )}
-          </p>
+      {style && (
+        <div className="wrapped__section">
+          <p className="mono small">Your reviews and replies</p>
+          <p className="wrapped__style">{style[0]}</p>
+          <p className="small muted">{style[1]}</p>
+          <div className="wrapped__talk">
+            <div>
+              <b>{fromListening ? logs.length : hooksWritten}</b>
+              <span>{fromListening ? "logged" : "hooks written"}</span>
+            </div>
+            <div>
+              <b>{talk ? talk.written : "–"}</b>
+              <span>replies you wrote</span>
+            </div>
+            <div>
+              <b>{talk ? talk.got : "–"}</b>
+              <span>replies to your reviews</span>
+            </div>
+          </div>
+          {talkiestLog && (
+            <p className="small wrapped__talkiest">
+              Most talked-about review:{" "}
+              <Link href={logHref(talkiestLog.ref, talkiestLog.id)}>{talkiestLog.title}</Link> ({talk.talkiest.replies}{" "}
+              {talk.talkiest.replies === 1 ? "reply" : "replies"})
+            </p>
+          )}
+          {talkLines.length > 0 && (
+            <ul className="wrapped__facts">
+              {talkLines.map((f) => (
+                <li key={f} className="small">{f}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </section>
