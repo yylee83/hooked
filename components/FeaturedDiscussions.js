@@ -57,7 +57,9 @@ async function load(db) {
   const cards = [];
   const seenEp = new Set();
   const seenShow = new Set();
-  const add = (card) => {
+  const candidates = [];
+  const add = (card) => candidates.push(card);
+  const keep = (card) => {
     if (cards.length >= MAX || seenEp.has(card.ref) || (card.showRef && seenShow.has(card.showRef))) return;
     seenEp.add(card.ref);
     if (card.showRef) seenShow.add(card.showRef);
@@ -101,6 +103,9 @@ async function load(db) {
       reply: newestReply(l.user_id, l.episode_ref),
     });
   }
+  // Reviews with replies come first (YY, 2026-11-20); otherwise the order above stays (trending, then liveliest).
+  candidates.sort((a, b) => (b.replies > 0) - (a.replies > 0));
+  candidates.forEach(keep);
   return cards;
 }
 
