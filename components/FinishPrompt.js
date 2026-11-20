@@ -10,6 +10,7 @@ import Art from "./Art";
 import Stars from "./Stars";
 import { RatingInput } from "./LogSheet";
 import { addLog, findLog, sameEpisode, useStore } from "@/lib/store";
+import { haptic } from "@/lib/haptics";
 import { HookShowPill } from "./Social";
 import { logHref } from "@/lib/addresses";
 import { askLater, doneFinished } from "@/lib/finished";
@@ -48,6 +49,7 @@ export default function FinishPrompt({ entry, current }) {
 
   async function save() {
     if (saving) return;
+    haptic("success");
     setSaving(true);
     setError("");
     try {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { PauseIcon, PlayIcon, usePlayer } from "./Player";
 import { sameEpisode, upNext, useStore } from "@/lib/store";
+import { haptic } from "@/lib/haptics";
 
 export default function UpNextHome() {
   const state = useStore();
@@ -16,6 +17,7 @@ export default function UpNextHome() {
   const isThis = !player?.queueMeta && sameEpisode(player?.current, { ref: first.episodeRef, id: first.episodeId });
 
   async function play() {
+    haptic();
     if (isThis) return player.toggle();
     setBusy(true);
     await player?.playItem(first);

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Art from "./Art";
+import { haptic } from "@/lib/haptics";
 
 // The brief's running order. Drag a row by its grip (mouse or finger) to move it; the small arrows
 // do the same one step at a time (and work with a keyboard). Built on pointer events, so phones
@@ -53,6 +54,7 @@ export default function BriefOrder({ items, keyOf, onMove, onRemove }) {
   function start(e, i) {
     if (e.button != null && e.button !== 0) return;
     e.preventDefault();
+    haptic();
     const rowsEls = [...listRef.current.children];
     const rows = rowsEls.map((el) => {
       const r = el.getBoundingClientRect();
@@ -128,10 +130,10 @@ export default function BriefOrder({ items, keyOf, onMove, onRemove }) {
           <Art src={x.image} title={x.show} size={40} radius={9} />
           <span className="min0 grow order__title">{x.episode}</span>
           <span className="order__arrows">
-            <button type="button" onClick={() => onMove(i, i - 1)} disabled={i === 0} aria-label="Move up">
+            <button type="button" onClick={() => (haptic(), onMove(i, i - 1))} disabled={i === 0} aria-label="Move up">
               <Chevron up />
             </button>
-            <button type="button" onClick={() => onMove(i, i + 1)} disabled={i === items.length - 1} aria-label="Move down">
+            <button type="button" onClick={() => (haptic(), onMove(i, i + 1))} disabled={i === items.length - 1} aria-label="Move down">
               <Chevron />
             </button>
           </span>

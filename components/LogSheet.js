@@ -7,6 +7,7 @@ import { STAR_PATH } from "./Stars";
 import { logHref } from "@/lib/addresses";
 import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
 import { HookShowPill } from "./Social";
+import { haptic } from "@/lib/haptics";
 
 export function RatingInput({ value, onChange, size = 52 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // two pickers on a page each need their own gradient ids
@@ -17,6 +18,7 @@ export function RatingInput({ value, onChange, size = 52 }) {
     // Keyboard "clicks" have no position: treat them as the full star.
     const half = e.detail > 0 && e.clientX - box.left < box.width / 2;
     const next = half ? n - 0.5 : n;
+    haptic();
     onChange(next === value ? 0 : next);
   };
   const onKeyDown = (e) => {
@@ -83,6 +85,7 @@ export default function LogSheet({ episode, presetRating = 0 }) {
   const [error, setError] = useState("");
 
   async function save() {
+    haptic("success");
     setSaving(true);
     setError("");
     try {

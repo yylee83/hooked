@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { addToList, findHookedShow, findLog, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
 import { logHref } from "@/lib/addresses";
+import { haptic } from "@/lib/haptics";
 
 // "+ Up next" / "Not for me" on a friend's recommendation.
 export function RecActions({ item }) {
@@ -49,6 +50,7 @@ export function Reactions({ counts = {} }) {
             key={r.key}
             className={`react ${r.cls} ${mine === r.key ? "is-mine" : ""}`}
             onClick={() => {
+              haptic();
               setMine(mine === r.key ? null : r.key);
               setOpen(false);
             }}
@@ -74,7 +76,7 @@ export function HookShowButton({ show }) {
   return (
     <button
       className={`btn btn--display btn--shadow-sm ${on ? "btn--cobalt" : ""}`}
-      onClick={() => toggleHookedShow(show)}
+      onClick={() => (haptic(), toggleHookedShow(show))}
       aria-pressed={on}
     >
       {on ? "I'm hooked on this" : "Hooked on this?"}
@@ -91,7 +93,7 @@ export function HookShowPill({ episode, short = false }) {
   if (!show.showRef && show.feedId == null) return null;
   const on = !!findHookedShow(state, show);
   return (
-    <button type="button" className={`hook-pill ${on ? "is-on" : ""}`} onClick={() => toggleHookedShow(show)} aria-pressed={on}>
+    <button type="button" className={`hook-pill ${on ? "is-on" : ""}`} onClick={() => (haptic(), toggleHookedShow(show))} aria-pressed={on}>
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
         <path d={on ? "M5 12l5 5L20 7" : "M12 5v14M5 12h14"} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -166,7 +168,7 @@ export function LogButton({ episode, shadow = false }) {
   const extra = shadow ? " btn--shadow-sm" : "";
   if (!mine) {
     return (
-      <Link href={href} className={`btn btn--sm btn--cobalt${extra}`}>
+      <Link href={href} className={`btn btn--sm btn--cobalt${extra}`} onClick={() => haptic()}>
         Log it
       </Link>
     );

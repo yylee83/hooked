@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addToList, inUpNext, useStore } from "@/lib/store";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
+import { haptic } from "@/lib/haptics";
 
 // Small black icons for the reactions. Yours are filled in (and + turns into a check).
 const THUMB = "M7 10.5V21H3.5V10.5z M7 10.5l4.2-7.3c1.6 0 2.8 1.3 2.6 2.9L13.3 9.5h5.4a2 2 0 0 1 2 2.4l-1.5 7.3A2.2 2.2 0 0 1 17 21H7";
@@ -101,6 +102,7 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
               className={`react-i ${mine.has(r.kind) ? "is-mine" : ""}`}
               onClick={() => {
                 if (held.current) return void (held.current = false);
+                if (me) haptic();
                 me ? react(r.kind) : setError("signin");
               }}
               onPointerDown={() => hold(r.kind)}
@@ -208,6 +210,7 @@ export function ReviewAdd({ logUserId, episodeRef, episodeId }) {
 
   async function tap() {
     if (!me) return router.push(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    haptic();
     clearTimeout(timer.current);
     setAdded(!on);
     if (!on) timer.current = setTimeout(() => setAdded(false), 3500);
