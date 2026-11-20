@@ -202,7 +202,6 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 .me__stats { font-size: 15px; margin-top: 4px; }
 .hooked-on { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
 .card.np { width: auto; margin-top: 30px; }
-.np__log { display: flex; width: 100%; margin-top: 18px; }
 .log__row { display: grid; grid-template-columns: 26px auto 1fr auto; gap: 12px; align-items: center; padding: 16px 0; border-top: var(--line); }
 .log__day { font-size: 20px; }
 .log__row .sticker { font-size: 12px; padding: 3px 9px; }
@@ -709,6 +708,19 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .featured-talk__ep .art { border: 2px solid var(--ink); }
 .featured-talk__title { font-weight: 700; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .featured-talk__counts { font-size: 12px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Up next card on My log (above the tabs) ---------- */
+.upnext-card { margin: 18px 0 8px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 14px 16px 16px; box-shadow: 5px 5px 0 var(--ink); }
+.upnext-card__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.upnext-card__head .mono { color: var(--butter); }
+.upnext-card__all { color: var(--white); font-weight: 700; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
+.upnext-card__main { display: flex; gap: 14px; align-items: center; }
+.upnext-card__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 18px; line-height: 1.2; color: var(--white); }
+.upnext-card__show { font-size: 14px; opacity: .85; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upnext-card__play { flex: none; width: 58px; height: 58px; border-radius: 999px; background: var(--butter); color: var(--ink); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); display: grid; place-items: center; cursor: pointer; }
+.upnext-card__play:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.upnext-card__play:disabled { opacity: .7; }
+.upnext-card__rest { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 2px solid rgba(255, 255, 255, .25); }
 
 /* Up next on Home: a slim line back to the queue on My log */
 .upnext-line { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 8px 8px 8px 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); }
