@@ -7,7 +7,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
-import Stars from "./Stars";
 import { Avatar } from "./Friends";
 import { supabase } from "@/lib/supabase/client";
 import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
@@ -74,7 +73,6 @@ async function load(db) {
       image: r.image_url || r.show_image,
       person: { id: r.top_user_id, handle: r.top_handle },
       hook: r.top_hook,
-      rating: Number(r.top_rating) || 0,
       replies: under(comments.data, r.top_user_id, r.episode_ref).length,
       reviews: r.reviews,
       people: r.people,
@@ -97,7 +95,6 @@ async function load(db) {
       image: l.image || l.feed_image,
       person: l.who,
       hook: l.hook,
-      rating: Number(l.rating) || 0,
       replies: replies.length,
       reviews: 0,
       people: 0,
@@ -139,7 +136,6 @@ export default function FeaturedDiscussions() {
                 {c.person.display_name ? <b>{c.person.display_name}</b> : <b>@{c.person.handle}</b>}
                 {c.person.display_name && <span className="featured-talk__handle">@{c.person.handle}</span>}
               </span>
-              {c.rating > 0 && <Stars value={c.rating} size={11} />}
             </p>
             <p className="featured-talk__hook">{c.hook}</p>
             {c.reply && (

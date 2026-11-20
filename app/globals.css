@@ -694,9 +694,6 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .featured-talk__name { display: flex; gap: 5px; align-items: baseline; min-width: 0; overflow: hidden; white-space: nowrap; }
 .featured-talk__name b { overflow: hidden; text-overflow: ellipsis; }
 .featured-talk__handle { opacity: .75; }
-.featured-talk__who .stars { flex: none; margin-left: auto; }
-.featured-talk__who .star > svg path { stroke: var(--butter); }
-.featured-talk__who .star__fill path { fill: var(--butter); }
 .featured-talk__reply { font-size: 13px; line-height: 1.3; opacity: .78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .featured-talk__reply b { font-weight: 700; }
 .featured-talk__ep { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 7px; border-top: 2px solid rgba(255, 255, 255, .25); }
