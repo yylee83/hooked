@@ -135,9 +135,9 @@ export default function FeaturedDiscussions() {
           >
             <p className="featured-talk__hook">“{c.hook}”</p>
             <p className="featured-talk__who">
-              <Avatar person={c.person} size={26} />
+              <Avatar person={c.person} size={20} />
               <b>@{c.person.handle}</b>
-              {c.rating > 0 && <Stars value={c.rating} size={14} />}
+              {c.rating > 0 && <Stars value={c.rating} size={11} />}
             </p>
             {c.reply && (
               <p className="featured-talk__reply">
@@ -145,17 +145,14 @@ export default function FeaturedDiscussions() {
               </p>
             )}
             <div className="featured-talk__ep">
-              <Art src={c.image} title={c.show || ""} size={44} radius={10} />
+              <Art src={c.image} title={c.show || ""} size={30} radius={7} />
               <div className="min0 grow">
                 <p className="featured-talk__title">{c.title}</p>
-                <p className="featured-talk__show">{c.show}</p>
+                <p className="featured-talk__counts">
+                  {[c.reviews > 1 && `${c.reviews} reviews`, c.replies > 0 && (c.replies === 1 ? "1 reply" : `${c.replies} replies`)].filter(Boolean).join(" · ") || c.show}
+                </p>
               </div>
-            </div>
-            <div className="featured-talk__foot">
-              <span className="featured-talk__counts">
-                {[c.reviews > 1 && `${c.reviews} reviews`, c.replies > 0 && (c.replies === 1 ? "1 reply" : `${c.replies} replies`)].filter(Boolean).join(" · ")}
-              </span>
-              <span className="featured-talk__join">{c.replies > 0 ? "Join in →" : "Reply →"}</span>
+              <span className="featured-talk__join">{c.replies > 0 ? "Join in" : "Reply"}</span>
             </div>
           </Link>
         ))}
