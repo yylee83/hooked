@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Art from "./Art";
+import BriefOrder from "./BriefOrder";
 import { useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
 import { MAX_ITEMS, UNTITLED, savedItem } from "@/lib/briefs-client";
-import { haptic } from "@/lib/haptics";
 
 const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
@@ -129,14 +129,18 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   const briefMode = result?.mode || mode;
   const briefTopic = result?.topic || topic.trim() || chosen[0]?.show || "";
 
-  function move(key, dir) {
-    haptic();
+  // Move the episode at position `from` to position `to` (by drag, or one step with the arrows).
+  function move(from, to) {
+    const key = chosen[from] && itemKey(chosen[from]);
+    const target = chosen[to] && itemKey(chosen[to]);
+    if (!key || !target || key === target) return;
     setPicked((p) => {
       const i = p.indexOf(key);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= p.length) return p;
+      const j = p.indexOf(target);
+      if (i < 0 || j < 0) return p;
       const next = [...p];
-      [next[i], next[j]] = [next[j], next[i]];
+      next.splice(i, 1);
+      next.splice(j, 0, key);
       return next;
     });
   }
@@ -426,20 +430,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           <p className="mono">
             {chosen.length} {chosen.length === 1 ? "episode" : "episodes"} · {briefMode === "clips" ? clock(total) : minutes(total)} total
           </p>
-          <ol className="order">
-            {chosen.map((x, i) => (
-              <li key={itemKey(x)} className="order__row">
-                <span className="mono order__n">{i + 1}</span>
-                <Art src={x.image} title={x.show} size={40} radius={9} />
-                <span className="min0 grow order__title">{x.episode}</span>
-                <span className="order__btns">
-                  <button type="button" onClick={() => move(itemKey(x), -1)} disabled={i === 0} aria-label="Move up">↑</button>
-                  <button type="button" onClick={() => move(itemKey(x), 1)} disabled={i === chosen.length - 1} aria-label="Move down">↓</button>
-                  <button type="button" onClick={() => toggle(x)} aria-label="Remove from brief">✕</button>
-                </span>
-              </li>
-            ))}
-          </ol>
+          <BriefOrder items={chosen} keyOf={itemKey} onMove={move} onRemove={toggle} />
           <input
             className="input"
             placeholder="Title"
