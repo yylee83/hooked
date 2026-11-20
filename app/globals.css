@@ -399,6 +399,23 @@ body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
 .stat__label { font-weight: 600; font-size: 14px; }
 .wrapped__top { display: flex; gap: 14px; align-items: center; margin-top: 18px; padding-top: 18px; border-top: 2px dashed rgba(21, 19, 29, 0.25); }
 .wrapped__top .mono { color: var(--cobalt); font-size: 12px; }
+.wrapped__nudge { margin: -8px 0 16px; }
+.wrapped__section { margin-top: 18px; padding-top: 16px; border-top: 2px dashed rgba(21, 19, 29, 0.25); }
+.wrapped__section > .mono { color: var(--cobalt); font-size: 12px; margin: 0 0 8px; }
+.wrapped__section p { margin: 0; }
+.wrapped__shows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.wrapped__shows li { display: flex; align-items: center; gap: 10px; }
+.wrapped__rank { width: 14px; text-align: right; color: var(--muted); font-size: 13px; flex: none; }
+.wrapped__show-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wrapped__topics { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.wrapped__topics li { border: 2px solid var(--ink); border-radius: 999px; padding: 3px 10px; font-size: 14px; font-weight: 600; background: var(--cream); }
+.wrapped__style { font-family: var(--display); font-size: 22px; line-height: 1.2; margin-bottom: 2px !important; }
+.wrapped__talk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.wrapped__talk div { display: flex; flex-direction: column; border: 2px solid var(--ink); border-radius: 14px; padding: 8px 10px; background: var(--cream); }
+.wrapped__talk b { font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--cobalt); line-height: 1.1; }
+.wrapped__talk span { font-size: 12px; font-weight: 600; line-height: 1.25; }
+.wrapped__talkiest { margin-bottom: 6px !important; }
+.wrapped__facts { margin: 0; padding-left: 18px; display: grid; gap: 4px; list-style: disc; }
 
 /* ---------- v7: sign in ---------- */
 .auth-tabs { margin-top: 22px; }

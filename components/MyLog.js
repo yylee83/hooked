@@ -5,6 +5,7 @@ import KeepListening from "./KeepListening";
 import HistoryNote from "./HistoryNote";
 import Art from "./Art";
 import Wrapped from "./Wrapped";
+import { listenedHours, useMyListening } from "@/lib/my-listening";
 import PasswordForm from "./PasswordForm";
 import { NotificationBell } from "./Notifications";
 import { supabase as sb } from "@/lib/supabase/client";
@@ -201,13 +202,15 @@ export default function MyLog() {
   const state = useStore();
   const [tab, setTab] = useTab();
   const [settings, setSettings] = useState(false);
+  const listening = useMyListening(state?.user?.id || null);
   if (!state) return <div className="loading" aria-label="Loading" />;
 
   const shows = hookedShows(state);
   const logs = state.logs;
   const showCount = new Set(logs.map((l) => l.feedId || l.feedTitle)).size;
   const stars = starStats(logs);
-  const hours = Math.round(logs.reduce((a, l) => a + (l.duration || 0), 0) / 3600);
+  // Hours actually played in Hooked's player (YY, 2026-11-20), not the length of what you logged.
+  const hours = listening?.seconds >= 360 ? listenedHours(listening.seconds) : 0;
   const queue = state.list.length;
   const needsSetup = !state.user || !state.profile?.handle;
 
@@ -252,13 +255,13 @@ export default function MyLog() {
         </div>
       </header>
 
-      {logs.length > 0 && (
+      {(logs.length > 0 || hours > 0) && (
         <div className="me-stats">
           <span><b>{logs.length}</b> episodes</span>
           <span><b>{showCount}</b> shows</span>
           {stars.count > 0 && <span><b>★ {stars.avg}</b> avg</span>}
           <span><b>{shows.length}</b> hooked</span>
-          {hours > 0 && <span><b>{hours}</b> hrs</span>}
+          {hours > 0 && <span><b>{hours}</b> hrs listened</span>}
         </div>
       )}
 
@@ -306,6 +309,8 @@ export default function MyLog() {
 
       {tab === "upnext" ? (
         <UpNextView state={state} />
+      ) : tab === "stats" ? (
+        <Wrapped logs={logs} hooked={state.shows} userId={state.user?.id || null} />
       ) : logs.length === 0 && !(tab === "shows" && shows.length) ? (
         <section className="empty card" style={{ marginTop: 16 }}>
           <p className="display h-md">Nothing logged yet.</p>
@@ -316,8 +321,6 @@ export default function MyLog() {
         </section>
       ) : tab === "shows" ? (
         <ShowsView logs={logs} hooked={state.shows} />
-      ) : tab === "stats" ? (
-        <Wrapped logs={logs} hooked={state.shows} />
       ) : (
         <Diary logs={logs} />
       )}
