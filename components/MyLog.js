@@ -9,11 +9,12 @@ import PasswordForm from "./PasswordForm";
 import { NotificationBell } from "./Notifications";
 import { supabase as sb } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { hookedShows, initialsOf, sameEpisode, saveProfile, signOut, useStore } from "@/lib/store";
+import { hookedShows, initialsOf, saveProfile, signOut, useStore } from "@/lib/store";
 import { Diary, ShowsView, UpNextView } from "./LogViews";
+import UpNextCard from "./UpNextCard";
 import { myBriefs } from "@/lib/briefs-client";
 import { minutes, plural, starStats } from "@/lib/format";
-import { logHref, showHref } from "@/lib/addresses";
+import { showHref } from "@/lib/addresses";
 
 // Weekly email: a Sunday roundup of what friends logged and sent you.
 function DigestToggle({ state }) {
@@ -204,8 +205,6 @@ export default function MyLog() {
 
   const shows = hookedShows(state);
   const logs = state.logs;
-  const np = state.nowPlaying;
-  const nowPlayingLogged = np && logs.some((l) => sameEpisode(l, np));
   const showCount = new Set(logs.map((l) => l.feedId || l.feedTitle)).size;
   const stars = starStats(logs);
   const hours = Math.round(logs.reduce((a, l) => a + (l.duration || 0), 0) / 3600);
@@ -288,21 +287,9 @@ export default function MyLog() {
         </section>
       )}
 
-      {np && !nowPlayingLogged && (
-        <section className="card np">
-          <p className="mono cobalt small">Listening now</p>
-          <div className="row gap center">
-            <Art src={np.image} title={np.feedTitle} size={64} radius={12} episodeRef={np.ref} episodeId={np.id} />
-            <div className="min0">
-              <p className="title-md">{np.title}</p>
-              <p className="muted">{np.feedTitle}</p>
-            </div>
-          </div>
-          <Link className="btn btn--display btn--cobalt np__log" href={logHref(np.ref, np.id)}>
-            Log it
-          </Link>
-        </section>
-      )}
+      {/* Your Up next queue (moved here from Home, YY 2026-11-20), where "Listening now" used to be: the player already
+          has its own Log it button. */}
+      {tab !== "upnext" && <UpNextCard onSeeAll={() => setTab("upnext")} />}
 
       <div className="tabs me-tabs" role="tablist">
         {TABS.map(([k, label]) => (
