@@ -2,7 +2,7 @@
 export default function HistoryNote({ style }) {
   return (
     <p className="muted small history-note" style={style}>
-      Hooked keeps a private record of what you play and search, to improve Hooked. Only the Hooked team sees it.
+      Hooked keeps a private record of what you play and search, to improve Hooked and to show you your own listening in Wrapped. Only you and the Hooked team see it.
     </p>
   );
 }

@@ -399,6 +399,10 @@ body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
 .stat__label { font-weight: 600; font-size: 14px; }
 .wrapped__top { display: flex; gap: 14px; align-items: center; margin-top: 18px; padding-top: 18px; border-top: 2px dashed rgba(21, 19, 29, 0.25); }
 .wrapped__top .mono { color: var(--cobalt); font-size: 12px; }
+.wrapped__nudge { margin: -8px 0 16px; }
+.wrapped__fromlog { margin-top: 18px; padding-top: 16px; border-top: 2px dashed rgba(21, 19, 29, 0.25); }
+.wrapped__fromlog .mono { color: var(--cobalt); font-size: 12px; margin-bottom: 4px; }
+.wrapped__fromlog p { margin: 0; }
 
 /* ---------- v7: sign in ---------- */
 .auth-tabs { margin-top: 22px; }

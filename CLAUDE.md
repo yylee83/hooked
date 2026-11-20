@@ -164,7 +164,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Listening and search history (team only)**: `lib/history.js` records each play in the player (where it started from,
   how far, skips, finished) and each search with the first result tapped (`components/SearchRecorder.js`, results inside
   `[data-search-results]`). Signed-in people only, written through `record_listen` / `record_search` / `record_search_tap`;
-  the app can't read any of it back. Erin and YY read the `insights_*` views in Supabase (finish rate, drop-off, listening
+  the app can't read any of it back, except each person's own totals through `my_listening` (`lib/my-listening.js`), which lead Wrapped and the "hrs listened" on My log (YY, 2026-11-20: stats come from real listening, logs underneath; before 10 minutes played, Wrapped falls back to logs). Erin and YY read the `insights_*` views in Supabase (finish rate, drop-off, listening
   trend, top searches, search misses, brief ideas). Kept a year (`prune_history`, daily job). Notice: `components/HistoryNote.js`.
   Matching between people uses public logs only. New functions: revoke from `anon, authenticated` too, not just `public`
   (Supabase grants them by default; `scripts/check-history.mjs` mimics that).

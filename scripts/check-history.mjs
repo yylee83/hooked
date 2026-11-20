@@ -115,6 +115,19 @@ check(ideas.some((r) => r.query === "tradwives" && r.people === 2), "brief ideas
 check(!ideas.some((r) => r.query === "midterms"), "brief ideas: not \"midterms\" (a brief covers it)");
 check(ideas.some((r) => r.query === "mandela"), "brief ideas: \"mandela\"");
 
+// ---- your own listening (my_listening, for Wrapped and My log) ----
+const mine = async (user, tz = "UTC") => (await as(user, `select public.my_listening('${tz}') as j`)).rows[0].j;
+const annL = await mine(1);
+check(annL.seconds === 3500 + 150 && annL.episodes === 2 && annL.finished === 1, `my_listening: Ann's own totals (got ${annL.seconds}s, ${annL.episodes} episodes, ${annL.finished} finished)`);
+check(annL.shows.length === 2 && annL.shows[0].id === "show0001" && annL.shows[0].seconds === 3500 && annL.shows[0].title === "Long Talk", "my_listening: shows ranked by time, with title");
+check(annL.days.length === 7 && annL.days.reduce((a, b) => a + b, 0) === annL.seconds, "my_listening: seconds by weekday add up");
+check(annL.hours.length === 24 && annL.hours.reduce((a, b) => a + b, 0) === annL.seconds, "my_listening: seconds by hour add up");
+check((await mine(2)).seconds === 900 + 180, "my_listening: Bob sees only his own");
+check((await mine(1, "Not/AZone")).seconds === annL.seconds, "my_listening: an unknown time zone falls back to UTC");
+check((await mine(1, "Asia/Tokyo")).seconds === annL.seconds, "my_listening: a real time zone works");
+check(await fails(null, "select public.my_listening('UTC')"), "signed-out visitors can't call my_listening");
+check(await fails(1, "select * from public.listening_sessions"), "listening_sessions itself stays closed");
+
 // ---- clean-up ----
 await db.exec(`update public.search_events set created_at = now() - interval '13 months' where id = '${S(16)}'`);
 await db.exec("set role service_role; select public.prune_history(); reset role;");
