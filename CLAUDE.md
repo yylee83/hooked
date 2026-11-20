@@ -143,7 +143,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   tab, the player shows what you played last on any device, 5 seconds early. Newest wins, by the time each device
   saved it; something playing is never interrupted. An episode started with only Podcast Index's number gets our id
   as soon as it plays (`addRef`); `ensureRefs` (`lib/catalog-client.js`) remembers answers, so it's asked once per visit. A resumed episode shows the length measured from its audio
-  (`savedLength`), not the feed's. A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
+  (`savedLength`), not the feed's. Its X doesn't close it: it tucks the player into a small tab in the bottom-left corner (cover with bouncing sound
+  bars while playing, a caret), which opens it again; it keeps playing, stays tucked across pages and reloads (`hooked:player-min`), and
+  opens back up when you press Play on something (Up next moving on by itself doesn't). A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
   doesn't stop playback. The bottom bar stays pinned on iPhone after the keyboard closes (`useBottomPinned`,
   `components/BottomNav.js`).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
