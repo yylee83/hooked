@@ -624,9 +624,18 @@ export function PlayerProvider({ children }) {
       <audio ref={audio} preload="none" />
       {asking && !path.startsWith("/log/") && <FinishPrompt key={asking.at} entry={asking} current={s?.ep || null} />}
       {!hidden && !asking && min && (
-        <button type="button" className="player-tab" onClick={() => minimize(false)} aria-label={`Open player: ${s.ep.title}`} aria-expanded="false">
-          <Art src={s.ep.image} title={s.ep.feedTitle} size={30} radius={7} />
-          {playing && <span className="player-tab__live" aria-hidden="true" />}
+        <button type="button" className="player-tab" onClick={() => minimize(false)} aria-label={`${playing ? "Playing" : "Paused"}: ${s.ep.title}. Open player.`} aria-expanded="false">
+          <span className="player-tab__cover">
+            <Art src={s.ep.image} title={s.ep.feedTitle} size={34} radius={7} />
+            {/* Bouncing sound bars over the cover while it plays, so it's clear where the sound is coming from. */}
+            {playing && (
+              <span className="player-tab__eq" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            )}
+          </span>
           <svg className="player-tab__caret" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
