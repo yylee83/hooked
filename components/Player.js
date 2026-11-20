@@ -49,6 +49,20 @@ export function PlayerProvider({ children }) {
   const [rate, setRate] = useState(1);
   const rateRef = useRef(1);
   const [drag, setDrag] = useState(null); // fraction while dragging the knob
+  // Minimized: the X tucks the player into a small tab in the bottom-left corner (it keeps playing).
+  // Remembered on this device, so it stays tucked away across pages and reloads.
+  const [min, setMin] = useState(false);
+  useEffect(() => {
+    try {
+      setMin(localStorage.getItem(MIN_KEY) === "1");
+    } catch {}
+  }, []);
+  const minimize = useCallback((on) => {
+    setMin(on);
+    try {
+      on ? localStorage.setItem(MIN_KEY, "1") : localStorage.removeItem(MIN_KEY);
+    } catch {}
+  }, []);
   // After a reload the player comes back paused, before its audio has loaded.
   // `pending` holds the spot (in seconds) to start from when you press play.
   const pending = useRef(null);
@@ -595,15 +609,30 @@ export function PlayerProvider({ children }) {
   }, [times, rate]);
 
   const hidden = !s || path.startsWith("/log/");
+
+  // Starting something yourself (a Play button anywhere) opens the player back up; Up next moving on by itself
+  // doesn't, so a tucked-away player stays tucked away.
+  const playOpen = useCallback((...a) => (minimize(false), play(...a)), [minimize, play]);
+  const playQueueOpen = useCallback((...a) => (minimize(false), playQueue(...a)), [minimize, playQueue]);
+  const playItemOpen = useCallback((...a) => (minimize(false), playItem(...a)), [minimize, playItem]);
   const shown = drag ?? progress;
   const shownElapsed = drag !== null ? drag * times.length : times.elapsed;
 
   return (
-    <PlayerContext.Provider value={{ play, playQueue, playItem, toggle, close, current: s?.ep || null, playing, queueMeta: meta }}>
+    <PlayerContext.Provider value={{ play: playOpen, playQueue: playQueueOpen, playItem: playItemOpen, toggle, close, current: s?.ep || null, playing, queueMeta: meta }}>
       {children}
       <audio ref={audio} preload="none" />
       {asking && !path.startsWith("/log/") && <FinishPrompt key={asking.at} entry={asking} current={s?.ep || null} />}
-      {!hidden && !asking && (
+      {!hidden && !asking && min && (
+        <button type="button" className="player-tab" onClick={() => minimize(false)} aria-label={`Open player: ${s.ep.title}`} aria-expanded="false">
+          <Art src={s.ep.image} title={s.ep.feedTitle} size={30} radius={7} />
+          {playing && <span className="player-tab__live" aria-hidden="true" />}
+          <svg className="player-tab__caret" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+      {!hidden && !asking && !min && (
         <div className="mini">
           <div className="mini__inner">
             <div className="mini__top">
@@ -619,7 +648,7 @@ export function PlayerProvider({ children }) {
                 </Link>
                 <p className="mini__show">{s.ep.feedTitle}</p>
               </div>
-              <button className="mini__close" onClick={close} aria-label="Close player">
+              <button className="mini__close" onClick={() => minimize(true)} aria-label="Minimize player" aria-expanded="true">
                 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                   <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                 </svg>
@@ -690,6 +719,8 @@ function LogPill({ ep }) {
     </Link>
   );
 }
+
+const MIN_KEY = "hooked:player-min";
 
 const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75];
 

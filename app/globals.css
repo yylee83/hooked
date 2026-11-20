@@ -442,6 +442,15 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .mini__close:hover { background: var(--cream); }
 .mini__close:active { transform: scale(0.92); }
 
+/* Minimized player: a small tab in the bottom-left corner that opens it back up (Player.js). */
+.player-tab { position: fixed; left: 12px; bottom: calc(88px + env(safe-area-inset-bottom)); translate: 0 var(--vv-shift, 0px); z-index: 19; display: flex; align-items: center; gap: 6px; padding: 5px 9px 5px 5px; background: var(--white); color: var(--ink); border: var(--line); border-radius: 14px; box-shadow: var(--shadow-sm); cursor: pointer; }
+.player-tab:active { transform: translate(2px, 2px); box-shadow: none; }
+.player-tab .art { display: block; border: 2px solid var(--ink); }
+.player-tab__live { position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--bubblegum); border: 2px solid var(--ink); }
+.player-tab__caret { display: block; }
+@media (min-width: 600px) { .player-tab { left: max(12px, calc(50% - 258px)); } }
+body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-bottom)); }
+
 /* ---------- v9: friends, profiles, sharing ---------- */
 .find-friends { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: var(--line); background: var(--white); color: var(--ink); }
 .find-friends:hover { background: var(--butter); }
