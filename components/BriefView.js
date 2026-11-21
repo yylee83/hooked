@@ -118,7 +118,11 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
             ) : (
               <p className="brief__ep">{it.episode}</p>
             )}
-            {it.angle && <span className={`pill ${i % 2 ? "pill--butter" : "pill--bubblegum"}`}>{it.angle}</span>}
+            {it.caption ? (
+              <p className="brief__caption">{it.caption}</p>
+            ) : (
+              it.angle && <span className={`pill ${i % 2 ? "pill--butter" : "pill--bubblegum"}`}>{it.angle}</span>
+            )}
 
             {partial && (
               <>
