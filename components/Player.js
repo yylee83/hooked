@@ -551,9 +551,10 @@ export function PlayerProvider({ children }) {
     };
     set("play", () => audio.current?.play().catch(() => {}));
     set("pause", () => audio.current?.pause());
-    // Always the player's own −15 / +30: iPhone's lock screen asks for 10 seconds (Erin, 2026-11-19).
-    set("seekbackward", () => actions.current.skip(-15));
-    set("seekforward", () => actions.current.skip(30));
+    // The lock screen skips 10 seconds each way, matching the "10" its buttons show: websites can't change that picture,
+    // so the player's own −15 / +30 would jump further than the button says (Erin, 2026-11-21).
+    set("seekbackward", () => actions.current.skip(-10));
+    set("seekforward", () => actions.current.skip(10));
     set("seekto", (d) => {
       const t = actions.current.total();
       const el = audio.current;
