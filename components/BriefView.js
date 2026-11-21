@@ -46,7 +46,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
           ← Back
         </Link>
         <div className="brief__top-end">
-          {brief.sharePath && <BriefShareButton title={brief.title} path={brief.sharePath} count={usable.length} />}
+          {brief.sharePath && <BriefShareButton title={brief.title} path={brief.sharePath} count={usable.length} briefId={brief.id || brief.slug} />}
           <span className={`sticker ${onCobalt ? "" : "sticker--cobalt"}`}>Brief</span>
         </div>
       </div>
