@@ -7,6 +7,7 @@ import UpNextHome from "@/components/UpNextHome";
 import NewEpisodes from "@/components/NewEpisodes";
 import ListeningOnHooked from "@/components/ListeningOnHooked";
 import FeaturedDiscussions from "@/components/FeaturedDiscussions";
+import TrendingEpisodes from "@/components/TrendingEpisodes";
 import { NotificationBell } from "@/components/Notifications";
 
 // Home: what's happening on Hooked. Apple's chart lives on Search.
@@ -30,6 +31,9 @@ export default function FriendsPage() {
 
       <KeysNotice />
 
+      {/* The top of Home: the episodes with the most going on lately (Erin, 2026-11-21). */}
+      <TrendingEpisodes />
+
       {/* Up next lives on My log; this slim line leads back there. */}
       <UpNextHome />
 
@@ -41,8 +45,8 @@ export default function FriendsPage() {
 
       <FriendsFeed />
 
-      {/* Trending conversations: reviews and the replies around them. At the top of Home from 2026-11-20 (YY); moved under
-          "From people you follow", and Just logged removed (Erin, 2026-11-21). */}
+      {/* Trending conversations: reviews and the replies around them, as a list. At the top of Home from 2026-11-20 (YY);
+          moved under "From people you follow", and Just logged removed (Erin, 2026-11-21). */}
       <FeaturedDiscussions />
     </>
   );
