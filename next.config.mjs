@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Plain /search and /briefs are made ahead of time so they open fully loaded; a search (?q=…) or a filter
+  // (?type=…) is answered by the find pages instead, with the same address in the browser.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/search", has: [{ type: "query", key: "q" }], destination: "/search/find" },
+        { source: "/search", has: [{ type: "query", key: "type" }], destination: "/search/find" },
+        { source: "/briefs", has: [{ type: "query", key: "q" }], destination: "/briefs/find" },
+      ],
+    };
+  },
   // Make sure the share-image fonts ship with the server code.
   outputFileTracingIncludes: {
     "/api/og/episode": ["./assets/**"],
