@@ -257,7 +257,7 @@ export default async function SearchPage({ searchParams }) {
           type="search"
           name="q"
           defaultValue={query}
-          placeholder="People, shows, topics, or paste a link"
+          placeholder="People, shows, topics"
           aria-label="Search podcasts"
           autoFocus={!query}
         />
@@ -265,6 +265,10 @@ export default async function SearchPage({ searchParams }) {
           Search
         </button>
       </Form>
+      {/* Pasting a link still works; the placeholder was too long to show this on phones (YY, 2026-11-21). */}
+      <p className="search-paste-hint muted small">
+        Can't find what you're looking for? Paste the Spotify or Apple Podcasts link here to add a show or podcast.
+      </p>
 
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
       <SearchFilters key={type} type={type} signedInHint={signedInHint} />

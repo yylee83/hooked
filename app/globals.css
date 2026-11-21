@@ -899,3 +899,6 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
   .me-sections__tab { padding: 7px 11px 8px; font-size: 14px; }
   .me-sections__tab.is-on { padding-bottom: 11px; }
 }
+/* Room for the whole placeholder on a phone (16px keeps iPhone from zooming in). */
+.search .input { font-size: 16px; padding-left: 14px; padding-right: 14px; }
+.search-paste-hint { margin: 0 0 8px; line-height: 1.35; }
