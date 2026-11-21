@@ -466,7 +466,6 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .player-tab__open { position: absolute; inset: 0; border-radius: inherit; cursor: pointer; }
 .player-tab__play { position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cobalt); color: var(--white); border: 2.5px solid var(--ink); }
 .player-tab__play:active { transform: scale(0.92); }
-.player-tab:has(.player-tab__open:active) { transform: translate(2px, 2px); box-shadow: none; }
 .player-tab .art { display: block; border: 2px solid var(--ink); }
 .player-tab__cover { position: relative; display: block; flex: none; pointer-events: none; }
 .player-tab__eq { position: absolute; inset: 2px; display: flex; align-items: flex-end; justify-content: center; gap: 2px; padding-bottom: 6px; border-radius: 5px; background: rgba(21, 19, 29, 0.5); }
