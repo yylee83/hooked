@@ -178,10 +178,15 @@ export function PeopleFinder() {
 }
 
 // The friends section of the Home tab, built from the people you follow.
+// "From people you follow": 15 at first, then Show more adds 15 at a time (Erin, 2026-11-21), up to the newest 60.
+const FRIEND_LOGS_PAGE = 15;
+const FRIEND_LOGS_MAX = 60;
+
 export function FriendsFeed() {
   const state = useStore();
   const [data, setData] = useState(null);
   const [allSent, setAllSent] = useState(false);
+  const [shownLogs, setShownLogs] = useState(FRIEND_LOGS_PAGE);
   const ids = (state?.following || []).map((f) => f.id).sort().join(",");
 
   useEffect(() => {
@@ -210,7 +215,7 @@ export function FriendsFeed() {
             .select(`user_id, episode_ref, rating, hook, logged_at, who:profiles!logs_user_id_fkey!inner(id, handle, display_name), ${LOG_EPISODE}`)
             .in("user_id", followIds)
             .order("logged_at", { ascending: false })
-            .limit(30)
+            .limit(FRIEND_LOGS_MAX)
         : Promise.resolve({ data: [] }),
     ]).then(async ([r, n, l]) => {
       const listening = (n.data || []).filter((p) => p.now_playing?.id || p.now_playing?.ref);
@@ -311,7 +316,7 @@ export function FriendsFeed() {
           </div>
           {data && data.logs.length === 0 && <p className="muted">Nothing logged yet. Nudge them.</p>}
           <ul>
-            {(data?.logs || []).map((l) => (
+            {(data?.logs || []).slice(0, shownLogs).map((l) => (
               <li key={`${l.who.id}-${l.episode_ref || l.episode_id}`} className="fresh">
                 <Art src={l.image || l.feed_image} title={l.feed_title || ""} size={60} radius={12} episodeRef={l.episode_ref} episodeId={l.episode_id} />
                 <div className="min0 grow">
@@ -342,6 +347,11 @@ export function FriendsFeed() {
               </li>
             ))}
           </ul>
+          {(data?.logs?.length || 0) > shownLogs && (
+            <button className="btn friends-feed__more" onClick={() => setShownLogs((n) => n + FRIEND_LOGS_PAGE)}>
+              Show more
+            </button>
+          )}
         </>
       )}
     </>
