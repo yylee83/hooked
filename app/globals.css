@@ -461,11 +461,8 @@ body:has(.mini) .app { padding-bottom: 300px; }
 .mini__close:active { transform: scale(0.92); }
 
 /* Minimized player: a small tab in the bottom-left corner that opens it back up (Player.js). */
-.player-tab { position: fixed; left: 12px; right: 12px; bottom: calc(88px + env(safe-area-inset-bottom)); translate: 0 var(--vv-shift, 0px); z-index: 19; max-width: 516px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; background: var(--white); color: var(--ink); border: var(--line); border-radius: 16px; box-shadow: var(--shadow-sm); }
+.player-tab { position: fixed; left: 12px; bottom: calc(88px + env(safe-area-inset-bottom)); translate: 0 var(--vv-shift, 0px); z-index: 19; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; background: var(--white); color: var(--ink); border: var(--line); border-radius: 16px; box-shadow: var(--shadow-sm); }
 .player-tab__open { position: absolute; inset: 0; border-radius: inherit; cursor: pointer; }
-.player-tab__text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; pointer-events: none; }
-.player-tab__title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-tab__show { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-tab__play { position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cobalt); color: var(--white); border: 2.5px solid var(--ink); }
 .player-tab__play:active { transform: scale(0.92); }
 .player-tab:has(.player-tab__open:active) { transform: translate(2px, 2px); box-shadow: none; }
@@ -478,6 +475,7 @@ body:has(.mini) .app { padding-bottom: 300px; }
 @keyframes player-eq { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .player-tab__eq i { animation: none; transform: scaleY(0.7); } }
 .player-tab__caret { display: block; flex: none; pointer-events: none; }
+@media (min-width: 600px) { .player-tab { left: max(12px, calc(50% - 258px)); } }
 body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-bottom)); }
 
 /* ---------- v9: friends, profiles, sharing ---------- */

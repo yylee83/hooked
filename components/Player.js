@@ -625,8 +625,8 @@ export function PlayerProvider({ children }) {
       <audio ref={audio} preload="none" />
       {asking && !path.startsWith("/log/") && <FinishPrompt key={asking.at} entry={asking} current={s?.ep || null} />}
       {!hidden && !asking && min && (
-        // A slim bar the width of the open player, just above the bottom bar, so it reads as part of the frame rather
-        // than something stuck on the page (YY, 2026-11-21: the small corner tab bumped into Play buttons on Home).
+        // A small rectangle in the bottom-left corner: cover, Play/Pause, caret. Wider than the first square tab, which
+        // sat awkwardly against the Play buttons on Home's cards (YY, 2026-11-21: "slightly wider, not the whole bar").
         <div className="player-tab">
           {/* The whole bar opens the player; the Play/Pause button sits above it. */}
           <button type="button" className="player-tab__open" onClick={() => minimize(false)} aria-label={`${playing ? "Playing" : "Paused"}: ${s.ep.title}. Open player.`} aria-expanded="false" />
@@ -640,10 +640,6 @@ export function PlayerProvider({ children }) {
                 <i />
               </span>
             )}
-          </span>
-          <span className="player-tab__text" aria-hidden="true">
-            <span className="player-tab__title">{s.ep.title}</span>
-            <span className="player-tab__show">{s.ep.feedTitle}</span>
           </span>
           <button type="button" className="player-tab__play" onClick={() => (haptic(), toggle())} aria-label={playing ? "Pause" : "Play"}>
             {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
