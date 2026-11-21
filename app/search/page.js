@@ -17,6 +17,7 @@ import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
 import { isPodcastLink, linkTarget, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
@@ -51,6 +52,97 @@ function href(q, type, max) {
   return `/search?${p}`;
 }
 
+async function Trending() {
+  return <TrendingBar topics={await trendingTopics(12)} inSearch />;
+}
+
+// A label with a soft placeholder row, while a list loads.
+function SectionLoading({ label }) {
+  return (
+    <>
+      <h2 className="label">{label}</h2>
+      <div className="page-loading__rows" aria-hidden="true" style={{ marginTop: 8 }}>
+        <span />
+      </div>
+    </>
+  );
+}
+
+async function PopularOnHooked() {
+  const popular = await popularOnHooked(30, 15);
+  return (
+    <>
+          <h2 className="label">Popular on Hooked</h2>
+          <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
+            The shows people here logged most in the last 30 days.
+          </p>
+          {popular.length === 0 ? (
+            <p className="muted">
+              Nothing logged yet this month. <Link href="/" className="more-link">Log an episode</Link> to start the list.
+            </p>
+          ) : (
+            <ol className="pop-list">
+              {popular.map((s, i) => (
+                <li key={s.showRef || s.feedId}>
+                  <Link href={showHref(s.showRef, s.feedId)} className="results__row">
+                    <span className="pop-list__rank display">{i + 1}</span>
+                    <Art src={s.image} title={s.title} size={60} radius={14} />
+                    <div className="min0">
+                      <p className="title-sm">{s.title}</p>
+                      <p className="mono small muted">
+                        {[
+                          plural(s.listeners, "listener"),
+                          s.logs > s.listeners ? plural(s.logs, "log") : null,
+                          `${s.hookedPct}% hooked`,
+                          s.avg ? `★ ${s.avg.toFixed(1)}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
+        </>
+  );
+}
+
+async function AppleCharts() {
+  const [chartEps, chart] = await Promise.all([topChartEpisodes(0, 10), topCharts(9)]);
+  if (!chart.length && !chartEps.episodes.length) return null;
+  return (
+    <section style={{ marginTop: 28 }}>
+          <h2 className="label">Top on Apple Podcasts</h2>
+          <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
+            The top shows in the US, updated daily.
+          </p>
+          {chart.length > 0 && (
+            <div className="trend">
+              {chart.map((s, i) => (
+                <Link
+                  key={s.itunesId}
+                  href={s.feedId ? showHref(s.showRef, s.feedId) : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
+                  className="trend__item"
+                >
+                  <span className="trend__rank display">{s.rank}</span>
+                  <Art src={s.image} title={s.title} size="100%" radius={18} tilt={[-1.5, 1, -0.5][i % 3]} className="art--fluid" />
+                  <p>{s.title}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+          {chartEps.episodes.length > 0 && (
+            <>
+              <h3 className="label" style={{ marginTop: 24 }}>Latest from the top shows</h3>
+              <TopEpisodes initial={chartEps.episodes} next={chartEps.next} />
+            </>
+          )}
+        </section>
+  );
+}
+
 export default async function SearchPage({ searchParams }) {
   const sp = await searchParams;
   // Does this browser have a sign-in cookie? Only a hint (not checked with the database), so the Friends pill
@@ -72,7 +164,6 @@ export default async function SearchPage({ searchParams }) {
     linkError = r;
   }
 
-  const topicsPromise = trendingTopics(12);
   const wantPeople = query && !linkError && (type === "all" || type === "people");
   const wantBriefs = query && !linkError && (type === "all" || type === "briefs");
   const peoplePromise = wantPeople ? searchPeople(query, type === "people" ? 30 : 3) : null;
@@ -80,10 +171,6 @@ export default async function SearchPage({ searchParams }) {
   let error = null;
   let episodes = [];
   let shows = [];
-  let topics = [];
-  let popular = [];
-  let chartEps = { episodes: [], next: null };
-  let chart = [];
 
   if (linkError) {
     // fall through to the message below
@@ -110,11 +197,7 @@ export default async function SearchPage({ searchParams }) {
     // Ours first only when it's as good a match: an exact name further down beats a loose match of ours.
     const exactAt = shows.findIndex((x) => namedShow(query, x));
     if (exactAt > 0 && !namedShow(query, shows[0])) shows.unshift(...shows.splice(exactAt, 1));
-  } else {
-    [popular, chartEps, chart] = await Promise.all([popularOnHooked(30, 15), topChartEpisodes(0, 10), topCharts(9)]);
   }
-
-  topics = await topicsPromise;
   const found = { people: [], exact: false, more: false, ...(await peoplePromise) };
   const foundBriefs = { briefs: [], total: 0, ...(await briefsPromise) };
   const moreEpisodes = type === "episodes" && episodes.length > max;
@@ -273,7 +356,11 @@ export default async function SearchPage({ searchParams }) {
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
       <SearchFilters key={type} type={type} signedInHint={signedInHint} />
 
-      <TrendingBar topics={topics} inSearch />
+      {/* Trending topics and the lists below come in as they're ready, so the page itself opens at once
+          (YY, 2026-11-21: Search was slow to open while all of them loaded first). */}
+      <Suspense fallback={null}>
+        <Trending />
+      </Suspense>
 
 
       <KeysNotice error={error} />
@@ -292,73 +379,17 @@ export default async function SearchPage({ searchParams }) {
       )}
 
       {!query && (
-        <>
-          <h2 className="label">Popular on Hooked</h2>
-          <p className="muted small" style={{ marginTop: -4, marginBottom: 8 }}>
-            The shows people here logged most in the last 30 days.
-          </p>
-          {popular.length === 0 ? (
-            <p className="muted">
-              Nothing logged yet this month. <Link href="/" className="more-link">Log an episode</Link> to start the list.
-            </p>
-          ) : (
-            <ol className="pop-list">
-              {popular.map((s, i) => (
-                <li key={s.showRef || s.feedId}>
-                  <Link href={showHref(s.showRef, s.feedId)} className="results__row">
-                    <span className="pop-list__rank display">{i + 1}</span>
-                    <Art src={s.image} title={s.title} size={60} radius={14} />
-                    <div className="min0">
-                      <p className="title-sm">{s.title}</p>
-                      <p className="mono small muted">
-                        {[
-                          plural(s.listeners, "listener"),
-                          s.logs > s.listeners ? plural(s.logs, "log") : null,
-                          `${s.hookedPct}% hooked`,
-                          s.avg ? `★ ${s.avg.toFixed(1)}` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          )}
-        </>
+        <Suspense fallback={<SectionLoading label="Popular on Hooked" />}>
+          <PopularOnHooked />
+        </Suspense>
       )}
 
       {!query && <ForYou compact />}
 
-      {!query && (chart.length > 0 || chartEps.episodes.length > 0) && (
-        <section style={{ marginTop: 28 }}>
-          <h2 className="label">Top on Apple Podcasts</h2>
-          <p className="muted small" style={{ marginTop: -4, marginBottom: 12 }}>
-            The top shows in the US, updated daily.
-          </p>
-          {chart.length > 0 && (
-            <div className="trend">
-              {chart.map((s, i) => (
-                <Link
-                  key={s.itunesId}
-                  href={s.feedId ? showHref(s.showRef, s.feedId) : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
-                  className="trend__item"
-                >
-                  <span className="trend__rank display">{s.rank}</span>
-                  <Art src={s.image} title={s.title} size="100%" radius={18} tilt={[-1.5, 1, -0.5][i % 3]} className="art--fluid" />
-                  <p>{s.title}</p>
-                </Link>
-              ))}
-            </div>
-          )}
-          {chartEps.episodes.length > 0 && (
-            <>
-              <h3 className="label" style={{ marginTop: 24 }}>Latest from the top shows</h3>
-              <TopEpisodes initial={chartEps.episodes} next={chartEps.next} />
-            </>
-          )}
-        </section>
+      {!query && (
+        <Suspense fallback={null}>
+          <AppleCharts />
+        </Suspense>
       )}
 
       {query && !linkError && (

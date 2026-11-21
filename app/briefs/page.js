@@ -8,6 +8,7 @@ import { recentBriefs } from "@/lib/supabase/public";
 import { searchBriefs } from "@/lib/search-community";
 import { curatedSummary } from "@/lib/briefs-server";
 import { minutes, plural } from "@/lib/format";
+import { Suspense } from "react";
 
 export const metadata = { title: "Briefs" };
 
@@ -24,22 +25,42 @@ const briefMeta = ({ shows, seconds, mode, by }) =>
 const listenerMeta = (b) =>
   briefMeta({ shows: b.shows ?? (b.items || []).length, seconds: b.seconds ?? b.total_seconds, mode: b.mode, by: b.author ? `@${b.author}` : null });
 
-export default async function BriefsPage({ searchParams }) {
-  const query = String((await searchParams)?.q || "").trim().slice(0, 100);
-
-  // Built-in briefs list shows and episodes by name: their covers, show count and length are worked out
-  // (and kept for a few hours) by curatedSummary.
-  const [community, summaries, found] = await Promise.all([
-    query ? [] : recentBriefs(40),
-    Promise.all(briefs.map((b) => curatedSummary(b.slug).catch(() => null))),
-    query ? searchBriefs(query, 60) : null,
-  ]);
-  const curated = Object.fromEntries(
+// Built-in briefs list shows and episodes by name: their covers, show count and length are worked out (and kept for a
+// few hours) by curatedSummary. That can be slow when it isn't kept yet, so the page doesn't wait for it (below).
+async function curatedCards() {
+  const summaries = await Promise.all(briefs.map((b) => curatedSummary(b.slug).catch(() => null)));
+  return Object.fromEntries(
     briefs.map((b, i) => {
       const s = summaries[i];
       return [b.slug, { covers: s?.covers || [], meta: briefMeta({ shows: s?.shows || b.items.length, seconds: s?.seconds, mode: b.mode, by: "Hooked" }) }];
     })
   );
+}
+
+function FeaturedRow({ curated = {} }) {
+  return (
+    <div className="selects" role="list">
+      {briefs.map((b) => (
+        <div key={b.slug} role="listitem" className="selects__item">
+          <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={FEATURED} covers={curated[b.slug]?.covers} meta={curated[b.slug]?.meta} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function FeaturedRowLoaded() {
+  return <FeaturedRow curated={await curatedCards()} />;
+}
+
+export default async function BriefsPage({ searchParams }) {
+  const query = String((await searchParams)?.q || "").trim().slice(0, 100);
+
+  const [community, found, curated] = await Promise.all([
+    query ? [] : recentBriefs(40),
+    query ? searchBriefs(query, 60) : null,
+    query ? curatedCards() : {},
+  ]);
 
   return (
     <>
@@ -95,13 +116,11 @@ export default async function BriefsPage({ searchParams }) {
       ) : (
         <>
           <h2 className="section-title">Featured briefs</h2>
-          <div className="selects" role="list">
-            {briefs.map((b) => (
-              <div key={b.slug} role="listitem" className="selects__item">
-                <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={FEATURED} covers={curated[b.slug].covers} meta={curated[b.slug].meta} />
-              </div>
-            ))}
-          </div>
+          {/* The cards show right away with their titles; covers and lengths fill in when they're worked out
+              (YY, 2026-11-21: Briefs was slow to open while it waited for them). */}
+          <Suspense fallback={<FeaturedRow />}>
+            <FeaturedRowLoaded />
+          </Suspense>
 
           {community.length > 0 && (
             <>
