@@ -169,6 +169,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   trend, top searches, search misses, brief ideas). Kept a year (`prune_history`, daily job). Notice: `components/HistoryNote.js`.
   Matching between people uses public logs only. New functions: revoke from `anon, authenticated` too, not just `public`
   (Supabase grants them by default; `scripts/check-history.mjs` mimics that).
+- **Shares (team only, 2026-11-22)**: each tap on "Share anywhere" for an episode or brief (share menu, Copy link, Messages,
+  Email, WhatsApp, X; a closed share menu doesn't count) is saved in `share_events` through `record_share` (`recordShare` in
+  `lib/history.js`, called from `components/Share.js`); in-app sends are `recommendations`. Same rules as history: signed in
+  only, never read back, kept a year. Views: `insights_shares_daily`, `insights_shares_top` (inside and outside together).
+  Both trending functions count an outside share of an episode as sharing, like a send. Test: `node scripts/check-shares.mjs`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Plain /search and /briefs are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/briefs/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. A search or filter (`?q=`, `?type=`) is rewritten to

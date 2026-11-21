@@ -8,6 +8,7 @@ import Stars from "./Stars";
 import { findLog, sendRecommendation, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
+import { recordShare } from "@/lib/history";
 
 export function starText(rating) {
   if (!rating) return "";
@@ -80,9 +81,14 @@ export function ShareSheet({ episode, onClose }) {
   const full = `${text}\n${url}`;
   const enc = encodeURIComponent;
 
+  // Each way of sharing outside Hooked is saved for the team and counts in trending (lib/history.js, recordShare).
+  const withReview = !!(review && (review.rating > 0 || review.hook));
+  const noteShare = (method) => recordShare({ ep: episode, method, withReview });
+
   async function nativeShare() {
     try {
       await navigator.share({ title: `${episode.title} · ${site.name}`, text, url });
+      noteShare("share_menu"); // only once the share went through (closing the menu throws)
     } catch {}
   }
 
@@ -91,6 +97,7 @@ export function ShareSheet({ episode, onClose }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      noteShare("copy");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setError("Couldn't copy. Press and hold the link to copy it.");
@@ -198,16 +205,16 @@ export function ShareSheet({ episode, onClose }) {
             <button className="share-opt" onClick={copy}>
               {copied ? "Copied ✓" : "Copy link"}
             </button>
-            <a className="share-opt" href={`sms:?&body=${enc(full)}`}>
+            <a className="share-opt" href={`sms:?&body=${enc(full)}`} onClick={() => noteShare("messages")}>
               Messages
             </a>
-            <a className="share-opt" href={`mailto:?subject=${enc(`A podcast for you: ${episode.title}`)}&body=${enc(full)}`}>
+            <a className="share-opt" href={`mailto:?subject=${enc(`A podcast for you: ${episode.title}`)}&body=${enc(full)}`} onClick={() => noteShare("email")}>
               Email
             </a>
-            <a className="share-opt" href={`https://wa.me/?text=${enc(full)}`} target="_blank" rel="noopener noreferrer">
+            <a className="share-opt" href={`https://wa.me/?text=${enc(full)}`} target="_blank" rel="noopener noreferrer" onClick={() => noteShare("whatsapp")}>
               WhatsApp
             </a>
-            <a className="share-opt" href={`https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(url)}`} target="_blank" rel="noopener noreferrer">
+            <a className="share-opt" href={`https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(url)}`} target="_blank" rel="noopener noreferrer" onClick={() => noteShare("x")}>
               X
             </a>
           </div>
@@ -222,7 +229,7 @@ export function ShareSheet({ episode, onClose }) {
 // Share a brief. On phones this opens the phone's own share menu (Messages, WhatsApp, Mail…);
 // where there isn't one (most computers), a small sheet with Copy link and a few apps.
 // The link opens the brief for anyone, signed in or not.
-export function BriefShareButton({ title, path, count }) {
+export function BriefShareButton({ title, path, count, briefId }) {
   const [open, setOpen] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}${path}`;
@@ -232,6 +239,7 @@ export function BriefShareButton({ title, path, count }) {
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ title: `${title} · ${site.name}`, text, url });
+        recordShare({ briefId, method: "share_menu" });
         return;
       } catch (e) {
         if (e?.name === "AbortError") return; // they closed the menu
@@ -246,13 +254,22 @@ export function BriefShareButton({ title, path, count }) {
         <ShareIcon size={15} />
         Share
       </button>
-      {open && <LinkSheet title="Share this brief" url={url} text={text} subject={`A podcast brief for you: ${title}`} onClose={() => setOpen(false)} />}
+      {open && (
+        <LinkSheet
+          title="Share this brief"
+          url={url}
+          text={text}
+          subject={`A podcast brief for you: ${title}`}
+          onShare={(method) => recordShare({ briefId, method })}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   );
 }
 
 // Copy link, Messages, Email, WhatsApp and X for a link.
-function LinkSheet({ title, url, text, subject, onClose }) {
+function LinkSheet({ title, url, text, subject, onShare = () => {}, onClose }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const full = `${text}\n${url}`;
@@ -273,6 +290,7 @@ function LinkSheet({ title, url, text, subject, onClose }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      onShare("copy");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setError("Couldn't copy. Press and hold the link to copy it.");
@@ -295,13 +313,13 @@ function LinkSheet({ title, url, text, subject, onClose }) {
           <button className="share-opt share-opt--main" onClick={copy}>
             {copied ? "Copied ✓" : "Copy link"}
           </button>
-          <a className="share-opt" href={`sms:?&body=${enc(full)}`}>
+          <a className="share-opt" href={`sms:?&body=${enc(full)}`} onClick={() => onShare("messages")}>
             Messages
           </a>
-          <a className="share-opt" href={`mailto:?subject=${enc(subject)}&body=${enc(full)}`}>
+          <a className="share-opt" href={`mailto:?subject=${enc(subject)}&body=${enc(full)}`} onClick={() => onShare("email")}>
             Email
           </a>
-          <a className="share-opt" href={`https://wa.me/?text=${enc(full)}`} target="_blank" rel="noopener noreferrer">
+          <a className="share-opt" href={`https://wa.me/?text=${enc(full)}`} target="_blank" rel="noopener noreferrer" onClick={() => onShare("whatsapp")}>
             WhatsApp
           </a>
         </div>
