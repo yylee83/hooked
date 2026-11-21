@@ -135,7 +135,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `genres`, `new-episodes`, `listening-now`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
 - **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
   localStorage when signed out (moved into the account on sign-in).
-- **Player**: `components/Player.js` (queue/clips, skip −15/+30 (the lock screen too, whatever interval the phone asks for), speed, drag the playhead,
+- **Player**: `components/Player.js` (queue/clips, skip −15/+30 (the lock screen skips 10 each way, to match the "10" its buttons show), speed, drag the playhead,
   auto-advance through Up next; an episode on Up next comes off it as soon as it starts playing, from anywhere, and
   finishing any episode (not a brief) starts the next one on Up next; the next one is looked up two minutes before the
   end, so it starts at once on a locked phone). It remembers where you stopped in `lib/progress.js` (this browser) and,
