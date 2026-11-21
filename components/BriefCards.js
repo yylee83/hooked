@@ -1,20 +1,7 @@
 // Brief cards for the Briefs page: "Featured briefs" (a sideways-swipe row) and the grid of listener briefs.
 // Both show a small stack of show covers, the title and one line of details (no description, to stay compact).
 import Link from "next/link";
-
-// Up to three covers, overlapping and slightly tilted, inside the card.
-export function CoverStack({ covers = [] }) {
-  const list = covers.filter(Boolean).slice(0, 3);
-  if (!list.length) return <span className="cover-stack cover-stack--empty" aria-hidden="true" />;
-  return (
-    <span className="cover-stack" aria-hidden="true">
-      {list.map((src, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img key={i} src={src} alt="" className={`cover-stack__img cover-stack__img--${i}`} loading="lazy" />
-      ))}
-    </span>
-  );
-}
+import CoverStack from "./CoverStack";
 
 /** One brief. variant "select" = a card in the Featured briefs row; "cell" = a tile in the grid. */
 export function BriefCard({ href, title, color = "cobalt", covers, meta, variant = "cell" }) {
