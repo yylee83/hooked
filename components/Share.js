@@ -218,3 +218,96 @@ export function ShareSheet({ episode, onClose }) {
     </div>
   );
 }
+
+// Share a brief. On phones this opens the phone's own share menu (Messages, WhatsApp, Mail…);
+// where there isn't one (most computers), a small sheet with Copy link and a few apps.
+// The link opens the brief for anyone, signed in or not.
+export function BriefShareButton({ title, path, count }) {
+  const [open, setOpen] = useState(false);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const url = `${origin}${path}`;
+  const text = `A podcast brief for you: "${title}"${count ? `, ${count} ${count === 1 ? "episode" : "episodes"}` : ""}.`;
+
+  async function share() {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: `${title} · ${site.name}`, text, url });
+        return;
+      } catch (e) {
+        if (e?.name === "AbortError") return; // they closed the menu
+      }
+    }
+    setOpen(true);
+  }
+
+  return (
+    <>
+      <button type="button" className="btn btn--sm brief-share" onClick={share}>
+        <ShareIcon size={15} />
+        Share
+      </button>
+      {open && <LinkSheet title="Share this brief" url={url} text={text} subject={`A podcast brief for you: ${title}`} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+// Copy link, Messages, Email, WhatsApp and X for a link.
+function LinkSheet({ title, url, text, subject, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+  const full = `${text}\n${url}`;
+  const enc = encodeURIComponent;
+
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy. Press and hold the link to copy it.");
+    }
+  }
+
+  return (
+    <div className="plus-sheet share-sheet" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
+      <div className="plus-sheet__panel" onClick={(e) => e.stopPropagation()}>
+        <div className="row center" style={{ justifyContent: "space-between" }}>
+          <p className="display plus-sheet__title" style={{ margin: 0 }}>{title}</p>
+          <button className="mini__close" onClick={onClose} aria-label="Close">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <p className="muted small">Anyone with the link can open it and listen. No sign-up needed.</p>
+        <div className="share-grid">
+          <button className="share-opt share-opt--main" onClick={copy}>
+            {copied ? "Copied ✓" : "Copy link"}
+          </button>
+          <a className="share-opt" href={`sms:?&body=${enc(full)}`}>
+            Messages
+          </a>
+          <a className="share-opt" href={`mailto:?subject=${enc(subject)}&body=${enc(full)}`}>
+            Email
+          </a>
+          <a className="share-opt" href={`https://wa.me/?text=${enc(full)}`} target="_blank" rel="noopener noreferrer">
+            WhatsApp
+          </a>
+        </div>
+        <p className="share-preview">{full}</p>
+        {error && <p className="nudge small">{error}</p>}
+      </div>
+    </div>
+  );
+}

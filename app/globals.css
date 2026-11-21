@@ -510,6 +510,10 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .share-opt--main { background: var(--cobalt); color: var(--white); grid-column: span 3; font-size: 17px; }
 .share-opt--main:hover { background: var(--cobalt); }
 .share-preview { margin-top: 12px; font-size: 13px; color: var(--muted); background: var(--white); border-radius: 12px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; border: 1.5px solid rgba(21,19,29,.15); }
+/* Share on a brief page (BriefShareButton in components/Share.js) */
+.brief__top-end { display: flex; align-items: center; gap: 10px; }
+.brief-share { gap: 6px; color: var(--ink); }
+.brief .share-sheet { color: var(--ink); }
 .share-ok { margin-top: 10px; font-weight: 700; color: #11795f; }
 /* "+ Brief" on an episode page (components/AddToBrief.js) */
 .add-brief .plus-sheet__panel { max-height: 86vh; overflow-y: auto; }
