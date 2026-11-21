@@ -746,7 +746,8 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .me-stats b { margin: 0 0 2px; font-size: 20px; }
 .taste-cta--sm { margin-top: 28px; padding: 18px; }
 /* ---------- Featured discussions (top of Home) ---------- */
-.featured-talk { margin: 18px 0 6px; }
+/* Room above it, so it doesn't run into the friends feed (or its Show more) right before it (Erin, 2026-11-21). */
+.featured-talk { margin: 40px 0 6px; }
 .featured-talk__label { margin: 4px 0 14px; }
 /* A list (Erin, 2026-11-21): one row per conversation, divided by thin lines. */
 .featured-talk__row { display: flex; flex-direction: column; }
@@ -934,4 +935,4 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 @keyframes page-loading-pulse { 50% { opacity: 0.45; } }
 @media (prefers-reduced-motion: reduce) { .page-loading__rows span { animation: none; } }
 
-.friends-feed__more { display: block; margin: 6px auto 8px; }
+.friends-feed__more { display: block; margin: 10px auto 4px; }
