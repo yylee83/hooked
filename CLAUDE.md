@@ -61,7 +61,7 @@ off Home).
 - `CRON_SECRET`: protects the scheduled jobs (daily catalog refresh, weekly digest). Vercel sends it automatically.
 - `RESEND_API_KEY`, `DIGEST_FROM`: only for the weekly digest (not set yet)
 - Test-only overrides, which point external calls at a local mock: `PODCASTINDEX_BASE_URL`, `CHARTS_FEED_URL`,
-  `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`, and
+  `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `APPLE_PODCASTS_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`, and
   `SAFE_FETCH_ALLOW_PRIVATE=1` (lets `safeFetch` reach local mocks; never set it on Vercel)
 
 For local development, put the required keys in `.env.local` (it's gitignored), then run `npm install` and `npm run dev`.
