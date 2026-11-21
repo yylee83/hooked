@@ -267,7 +267,7 @@ export default async function SearchPage({ searchParams }) {
       </Form>
       {/* Pasting a link still works; the placeholder was too long to show this on phones (YY, 2026-11-21). */}
       <p className="search-paste-hint muted small">
-        Can't find what you're looking for? Paste the Spotify or Apple Podcasts link here to add a show or podcast.
+        Not finding it? Paste a Spotify or Apple Podcasts link to add it.
       </p>
 
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
