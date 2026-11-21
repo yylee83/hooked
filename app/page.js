@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
 import KeysNotice from "@/components/KeysNotice";
-import { AvatarLink, FreshLogs } from "@/components/Account";
+import { AvatarLink } from "@/components/Account";
 import { FriendsFeed } from "@/components/Friends";
 import UpNextHome from "@/components/UpNextHome";
 import NewEpisodes from "@/components/NewEpisodes";
@@ -30,9 +30,7 @@ export default function FriendsPage() {
 
       <KeysNotice />
 
-      {/* The top of Home: Trending conversations, reviews and the replies around them (YY, 2026-11-20: discussion is what makes Hooked different).
-          Up next moved to My log; this slim line under it leads back there. */}
-      <FeaturedDiscussions />
+      {/* Up next lives on My log; this slim line leads back there. */}
       <UpNextHome />
 
       {/* The newest episodes of your hooked shows (signed out: of popular shows), ready to play. */}
@@ -43,7 +41,9 @@ export default function FriendsPage() {
 
       <FriendsFeed />
 
-      <FreshLogs />
+      {/* Trending conversations: reviews and the replies around them. At the top of Home from 2026-11-20 (YY); moved under
+          "From people you follow", and Just logged removed (Erin, 2026-11-21). */}
+      <FeaturedDiscussions />
     </>
   );
 }
