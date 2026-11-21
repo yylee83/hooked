@@ -37,6 +37,18 @@ function DigestToggle({ state }) {
   );
 }
 
+// Log out, at the bottom of settings (the gear on My log). YY, 2026-11-21: there was no clear way to log out.
+function LogOutButton() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="me-logout">
+      <button type="button" className="btn btn--sm" disabled={busy} onClick={() => (setBusy(true), signOut().finally(() => setBusy(false)))}>
+        {busy ? "Logging out…" : "Log out"}
+      </button>
+    </div>
+  );
+}
+
 // Sign-in prompt, first-time handle setup, or profile controls.
 function ProfilePanel({ state }) {
   const [editing, setEditing] = useState(false);
@@ -90,12 +102,10 @@ function ProfilePanel({ state }) {
         <button className="btn btn--sm" onClick={() => (setPwOpen(!pwOpen), setPwSaved(false))} aria-expanded={pwOpen}>
           {pwSaved ? "Password saved ✓" : "Set password"}
         </button>
-        <button className="link-btn small" onClick={() => signOut()}>
-          Sign out
-        </button>
       </div>
       <DigestToggle state={state} />
       <HistoryNote style={{ marginTop: 10 }} />
+      <LogOutButton />
       {pwOpen && (
         <div className="card" style={{ marginTop: 16 }}>
           <p className="label" style={{ marginTop: 0 }}>Set a password</p>
@@ -216,16 +226,21 @@ export default function MyLog() {
 
   return (
     <>
-      <div className="me__bell">
-        {state.user && state.profile?.handle && (
-          <button className={`icon-btn ${settings ? "is-on" : ""}`} onClick={() => setSettings(!settings)} aria-label="Settings" aria-expanded={settings}>
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3.2" />
-              <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
-            </svg>
-          </button>
-        )}
-        <NotificationBell />
+      {/* "My log" and its buttons share the top row, like the other pages' headers, so the buttons never sit on
+          the title (YY, 2026-11-21). */}
+      <div className="me-top">
+        <h1 className="display me__title">My log</h1>
+        <div className="me__bell">
+          {state.user && state.profile?.handle && (
+            <button className={`icon-btn ${settings ? "is-on" : ""}`} onClick={() => setSettings(!settings)} aria-label="Settings" aria-expanded={settings}>
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+          )}
+          <NotificationBell />
+        </div>
       </div>
       <header className="me">
         <div className="avatar avatar--lg" aria-hidden={!state.user}>
@@ -239,7 +254,6 @@ export default function MyLog() {
           )}
         </div>
         <div className="min0">
-          <h1 className="display me__title">My log</h1>
           {state.profile?.handle && (
             <p className="me__handle">
               <Link href={`/u/${state.profile.handle}`}>@{state.profile.handle}</Link>
@@ -294,11 +308,13 @@ export default function MyLog() {
           has its own Log it button. */}
       {tab !== "upnext" && <UpNextCard onSeeAll={() => setTab("upnext")} />}
 
-      <div className="tabs me-tabs" role="tablist">
+      {/* Sections, drawn like browser tabs sitting on a line, so they don't look like the filter pills inside them
+          (YY, 2026-11-21). */}
+      <div className="me-sections" role="tablist">
         {TABS.map(([k, label]) => (
-          <button key={k} className={`tab ${tab === k ? "is-on" : ""}`} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}>
+          <button key={k} className={`me-sections__tab ${tab === k ? "is-on" : ""}`} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}>
             {label}
-            {k === "upnext" && queue > 0 && <span className="tab__n">{queue}</span>}
+            {k === "upnext" && queue > 0 && <span className="me-sections__n">{queue}</span>}
           </button>
         ))}
       </div>
