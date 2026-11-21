@@ -1,6 +1,6 @@
 "use client";
-// Home's top card, "Trending conversations": reviews and the talk around them, one swipe card each. Tapping one opens that review with its
-// replies on the episode page, ready to join in.
+// Home, under "From people you follow": "Trending conversations", reviews and the talk around them, as a list (Erin,
+// 2026-11-21; it was a swipe row at the top). Tapping one opens that review with its replies on the episode page, ready to join in.
 // First the episodes in Trending conversations (the trending_conversations database function: reviews, replies and
 // sends this week), each with its best review. While Hooked is small that list is often short, so the rest are the
 // recent reviews with the most going on (replies, thumbs, "+"), newest counting most.

@@ -720,6 +720,20 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .new-eps__when { font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .new-eps__acts { display: flex; gap: 5px; flex: none; }
 .new-eps__acts .icon-act { width: 30px; height: 30px; border-width: 2px; }
+.trending-eps { margin: 18px 0 6px; }
+.trending-eps__row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 -2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.trending-eps__row::-webkit-scrollbar { display: none; }
+.trending-eps__card { flex: none; width: 140px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
+.trending-eps__card .art { box-shadow: 3px 3px 0 var(--ink); }
+.trending-eps__card--ghost { animation: new-eps-breathe 1.2s ease-in-out infinite alternate; }
+.trending-eps__ghost-art { display: block; aspect-ratio: 1; border-radius: 12px; background: rgba(21, 19, 29, 0.09); }
+.trending-eps__ghost-line { display: block; height: 12px; margin-top: 4px; border-radius: 6px; background: rgba(21, 19, 29, 0.09); }
+@media (prefers-reduced-motion: reduce) { .trending-eps__card--ghost { animation: none; } }
+.trending-eps__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 14px; line-height: 1.2; margin-top: 4px; }
+.trending-eps__show { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -3px; }
+.trending-eps__activity { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--cobalt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trending-eps__acts { display: flex; gap: 5px; margin-top: auto; }
+.trending-eps__acts .icon-act { width: 30px; height: 30px; border-width: 2px; }
 /* Round icon-only buttons on small cards (PlayButton / QueueButton with `icon`). */
 .icon-act { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 2.5px solid var(--ink); border-radius: 50%; background: var(--white); color: var(--ink); }
 .icon-act--play { background: var(--cobalt); color: var(--white); }
@@ -734,22 +748,24 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 /* ---------- Featured discussions (top of Home) ---------- */
 .featured-talk { margin: 18px 0 6px; }
 .featured-talk__label { margin: 4px 0 14px; }
-.featured-talk__row { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 2px 8px 8px 2px; margin: 0 -20px 0 -2px; }
-.featured-talk__row::-webkit-scrollbar { display: none; }
-.featured-talk__card { flex: none; width: 250px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 7px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 16px; padding: 11px 12px 10px; box-shadow: 3px 3px 0 var(--ink); }
-.featured-talk__card--ghost { min-height: 150px; background: rgba(35, 64, 255, 0.35); box-shadow: none; animation: new-eps-breathe 1.2s ease-in-out infinite alternate; }
-.featured-talk__hook { font-weight: 500; font-size: 14.5px; line-height: 1.38; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+/* A list (Erin, 2026-11-21): one row per conversation, divided by thin lines. */
+.featured-talk__row { display: flex; flex-direction: column; }
+.featured-talk__card { display: flex; flex-direction: column; gap: 7px; padding: 14px 0; border-bottom: 2px solid rgba(21, 19, 29, 0.1); }
+.featured-talk__card:first-child { padding-top: 4px; }
+.featured-talk__card:last-child { border-bottom: none; }
+.featured-talk__card--ghost { min-height: 110px; border-radius: 12px; background: rgba(21, 19, 29, 0.06); border: none; animation: new-eps-breathe 1.2s ease-in-out infinite alternate; }
+.featured-talk__hook { font-weight: 600; font-size: 15px; line-height: 1.38; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .featured-talk__who { display: flex; align-items: center; gap: 6px; font-size: 13px; min-width: 0; }
-.featured-talk__who .avatar { border-width: 2px; color: var(--ink); }
+.featured-talk__who .avatar { border-width: 2px; }
 .featured-talk__name { display: flex; gap: 5px; align-items: baseline; min-width: 0; overflow: hidden; white-space: nowrap; }
 .featured-talk__name b { overflow: hidden; text-overflow: ellipsis; }
-.featured-talk__handle { opacity: .75; }
-.featured-talk__reply { font-size: 13px; line-height: 1.3; opacity: .78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__handle { color: var(--muted); }
+.featured-talk__reply { font-size: 13px; line-height: 1.3; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .featured-talk__reply b { font-weight: 700; }
-.featured-talk__ep { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 7px; border-top: 2px solid rgba(255, 255, 255, .25); }
+.featured-talk__ep { display: flex; gap: 8px; align-items: center; }
 .featured-talk__ep .art { border: 2px solid var(--ink); }
 .featured-talk__title { font-weight: 700; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.featured-talk__counts { font-size: 12px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.featured-talk__counts { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Up next card on My log (above the tabs) ---------- */
 .upnext-card { margin: 18px 0 8px; background: var(--cobalt); color: var(--white); border: var(--line); border-radius: 22px; padding: 14px 16px 16px; box-shadow: 5px 5px 0 var(--ink); }
@@ -917,3 +933,5 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .page-loading__rows span:nth-child(3) { animation-delay: 0.3s; }
 @keyframes page-loading-pulse { 50% { opacity: 0.45; } }
 @media (prefers-reduced-motion: reduce) { .page-loading__rows span { animation: none; } }
+
+.friends-feed__more { display: block; margin: 6px auto 8px; }
