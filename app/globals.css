@@ -376,6 +376,15 @@ body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
 .ep-notes p { margin: 0 0 12px; color: var(--muted); font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
 .ep-notes__link { color: var(--cobalt); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 .ep-notes__link:hover { text-decoration-thickness: 2.5px; }
+/* "Featured in": the briefs an episode is in, at the bottom of its page. A slim card with the brief's color on the left. */
+.ep-briefs__list { display: flex; flex-direction: column; gap: 10px; }
+.ep-briefs__item { display: flex; flex-direction: column; gap: 3px; background: var(--white); border: 2px solid var(--ink); border-left-width: 10px; border-radius: 14px; padding: 11px 14px; }
+.ep-briefs__item--cobalt { border-left-color: var(--cobalt); }
+.ep-briefs__item--bubblegum { border-left-color: var(--bubblegum); }
+.ep-briefs__item--butter { border-left-color: var(--butter); }
+.ep-briefs__title { font-weight: 700; font-size: 17px; line-height: 1.25; }
+.ep-briefs__note { color: var(--muted); font-size: 15px; line-height: 1.4; }
+.ep-briefs__by { color: var(--muted); font-family: var(--mono); font-size: 12px; text-transform: uppercase; }
 
 /* ---------- v6: listening wrapped ---------- */
 .wrapped { margin-top: 40px; background: var(--white); border: var(--line); border-radius: 28px; box-shadow: var(--shadow); padding: 24px 20px; }
