@@ -625,22 +625,33 @@ export function PlayerProvider({ children }) {
       <audio ref={audio} preload="none" />
       {asking && !path.startsWith("/log/") && <FinishPrompt key={asking.at} entry={asking} current={s?.ep || null} />}
       {!hidden && !asking && min && (
-        <button type="button" className="player-tab" onClick={() => minimize(false)} aria-label={`${playing ? "Playing" : "Paused"}: ${s.ep.title}. Open player.`} aria-expanded="false">
-          <span className="player-tab__cover">
-            <Art src={s.ep.image} title={s.ep.feedTitle} size={34} radius={7} />
+        // A slim bar the width of the open player, just above the bottom bar, so it reads as part of the frame rather
+        // than something stuck on the page (YY, 2026-11-21: the small corner tab bumped into Play buttons on Home).
+        <div className="player-tab">
+          {/* The whole bar opens the player; the Play/Pause button sits above it. */}
+          <button type="button" className="player-tab__open" onClick={() => minimize(false)} aria-label={`${playing ? "Playing" : "Paused"}: ${s.ep.title}. Open player.`} aria-expanded="false" />
+          <span className="player-tab__cover" aria-hidden="true">
+            <Art src={s.ep.image} title={s.ep.feedTitle} size={36} radius={7} />
             {/* Bouncing sound bars over the cover while it plays, so it's clear where the sound is coming from. */}
             {playing && (
-              <span className="player-tab__eq" aria-hidden="true">
+              <span className="player-tab__eq">
                 <i />
                 <i />
                 <i />
               </span>
             )}
           </span>
+          <span className="player-tab__text" aria-hidden="true">
+            <span className="player-tab__title">{s.ep.title}</span>
+            <span className="player-tab__show">{s.ep.feedTitle}</span>
+          </span>
+          <button type="button" className="player-tab__play" onClick={() => (haptic(), toggle())} aria-label={playing ? "Pause" : "Play"}>
+            {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
+          </button>
           <svg className="player-tab__caret" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </button>
+        </div>
       )}
       {!hidden && !asking && !min && (
         <div className="mini">

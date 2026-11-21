@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import PasteLink from "./PasteLink";
 
@@ -11,6 +11,13 @@ const tabs = [
   { href: "/search", label: "Search" },
   { href: "/me", label: "My log" },
 ];
+
+// A tab's name turns blue the moment it's tapped, even while a slower page (Search) is still loading, so a tap never
+// looks ignored (YY, 2026-11-21: "sometimes hitting Search doesn't work").
+function NavLabel({ children }) {
+  const { pending } = useLinkStatus();
+  return <span className={`nav__label ${pending ? "is-pending" : ""}`}>{children}</span>;
+}
 
 // The + button: write a review, or make a brief.
 function PlusSheet({ onClose }) {
@@ -109,7 +116,7 @@ export default function BottomNav() {
               </button>
             ) : (
               <Link key={t.label} href={t.href} className={`nav__link ${active(t.href) ? "is-active" : ""}`}>
-                {t.label}
+                <NavLabel>{t.label}</NavLabel>
               </Link>
             )
           )}
