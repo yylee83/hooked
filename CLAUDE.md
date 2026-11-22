@@ -174,7 +174,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `lib/history.js`, called from `components/Share.js`); in-app sends are `recommendations`. Same rules as history: signed in
   only, never read back, kept a year. Views: `insights_shares_daily`, `insights_shares_top` (inside and outside together).
   Both trending functions count an outside share of an episode as sharing, like a send. Test: `node scripts/check-shares.mjs`.
-- **Unread notifications (YY, 2026-11-22)**: a red count on the bell (Home, My log) and on the My log tab in the bottom bar,
+- **Unread notifications (YY, 2026-11-22)**: a pink count on the bell (YY first asked for red, then kept pink) (Home, My log) and on the My log tab in the bottom bar,
   from one shared count (`lib/unread.js`, asked on opening, signing in, changing pages, coming back to the tab and every
   minute). On opening Hooked with something new, a small note at the top ("@ana followed you and 2 more",
   `NotificationToast` in `components/Notifications.js`) shows once per notification (`hooked:note-toast`). Opening

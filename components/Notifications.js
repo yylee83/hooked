@@ -10,7 +10,7 @@ import { episodeHref } from "@/lib/addresses";
 import { fetchNotifications, markAllRead, timeAgo, REACTION_WORDS } from "@/lib/social";
 import { useUnread, badgeText } from "@/lib/unread";
 
-// The bell, with a red count of unread notifications (YY, 2026-11-22).
+// The bell, with a pink count of unread notifications.
 export function NotificationBell() {
   const state = useStore();
   const path = usePathname();

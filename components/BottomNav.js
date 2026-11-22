@@ -103,7 +103,7 @@ export default function BottomNav() {
   const path = usePathname() || "/";
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
-  // New notifications show as a red count on My log, so you see them from any page (the bell lives on Home and My log).
+  // New notifications show as a pink count on My log, so you see them from any page (the bell lives on Home and My log).
   const uid = useStore()?.user?.id;
   const { count: unread } = useUnread(uid, path);
   useBottomPinned();
