@@ -3,6 +3,7 @@
 // - Suggested follows: people into the same shows as you (shows you hooked or logged an episode of), then the most
 //   active reviewers of the past month. Built from public logs and hooked shows only.
 // - New on Hooked on Pods: the newest accounts.
+// Also the "Follow a few people" step right after picking a handle (app/welcome/people).
 // Both leave out you and anyone you already followed when the page opened. Someone you follow here stays in the list
 // (the button turns to "Following") so it doesn't jump around.
 import { useEffect, useMemo, useState } from "react";
@@ -12,8 +13,6 @@ import { useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 
 const WHO = "id, handle, display_name, created_at";
-const SUGGESTED = 5;
-const NEW_PAGE = 8;
 const NEW_MAX = 40;
 const DAY = 86400 * 1000;
 
@@ -48,7 +47,8 @@ function myShows(state) {
   return names;
 }
 
-export default function DiscoverPeople() {
+// `suggested` and `newPage`: how many of each to show (the welcome step shows more suggestions).
+export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage = 8 }) {
   const state = useStore();
   const me = state?.user?.id || null;
   const ready = !!state;
@@ -62,8 +62,8 @@ export default function DiscoverPeople() {
   const showKey = [...shows.keys()].sort().join(",");
 
   const [fresh, setFresh] = useState(null);
-  const [suggested, setSuggested] = useState(null);
-  const [shownNew, setShownNew] = useState(NEW_PAGE);
+  const [found, setFound] = useState(null);
+  const [shownNew, setShownNew] = useState(newPage);
 
   // New on Hooked on Pods.
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function DiscoverPeople() {
         .filter((uid) => uid !== me)
         .sort((a, b) => (shared.get(b)?.size || 0) - (shared.get(a)?.size || 0) || (reviews.get(b) || 0) - (reviews.get(a) || 0))
         .slice(0, 60);
-      if (!ranked.length) return live && setSuggested([]);
+      if (!ranked.length) return live && setFound([]);
       const { data: people } = await db.from("profiles").select(WHO).in("id", ranked).not("handle", "is", null);
       const byId = new Map((people || []).map((p) => [p.id, p]));
       const out = ranked
@@ -128,7 +128,7 @@ export default function DiscoverPeople() {
           return { p, why };
         })
         .filter(Boolean);
-      if (live) setSuggested(out);
+      if (live) setFound(out);
     });
     return () => {
       live = false;
@@ -139,10 +139,19 @@ export default function DiscoverPeople() {
 
   if (!hide) return null;
   const keep = (p) => !hide.has(p.id);
-  const picks = (suggested || []).filter((s) => keep(s.p)).slice(0, SUGGESTED);
+  const picks = (found || []).filter((s) => keep(s.p)).slice(0, suggestedCount);
   const pickIds = new Set(picks.map((s) => s.p.id));
   // Someone already suggested above isn't repeated under New.
   const newest = (fresh || []).filter((p) => keep(p) && !pickIds.has(p.id)).slice(0, NEW_MAX);
+
+  // Everyone here is already followed (Hooked is small and invite-only for now): say so instead of showing nothing.
+  if (fresh && found && !picks.length && !newest.length) {
+    return (
+      <p className="muted discover__empty">
+        You're following everyone on Hooked on Pods so far. Invite a friend and they'll show up here.
+      </p>
+    );
+  }
 
   return (
     <>
@@ -165,7 +174,7 @@ export default function DiscoverPeople() {
             ))}
           </ul>
           {newest.length > shownNew && (
-            <button className="btn btn--sm discover__more" onClick={() => setShownNew((n) => n + NEW_PAGE)}>
+            <button className="btn btn--sm discover__more" onClick={() => setShownNew((n) => n + newPage)}>
               Show more
             </button>
           )}
