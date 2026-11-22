@@ -4,8 +4,12 @@
 --
 -- The handle comes from the person's name if their sign-in gave one (Google does), otherwise from the part of their
 -- email before the @ (YY chose this). Letters, numbers, dots and underscores only; a number is added if it's taken.
--- Anyone can change theirs on My log → settings (the gear) → Edit profile.
+-- They're told once, with a choice to keep or change it (handle_auto, components/PickedHandle.js).
 -- No email addresses are written here: they're read from the database when this runs.
+
+-- Marks a handle Hooked picked. Those people see a one-time note ("We picked @… for you") to keep or change it;
+-- it turns off when they do. Everyone else chose their own.
+alter table public.profiles add column handle_auto boolean not null default false;
 
 create function public.make_handle(source text)
 returns text
@@ -55,6 +59,7 @@ begin
   meta := coalesce(account -> 'raw_user_meta_data', '{}'::jsonb);
   full_name := nullif(trim(coalesce(meta ->> 'full_name', meta ->> 'name', '')), '');
   new.handle := public.make_handle(coalesce(full_name, split_part(split_part(account ->> 'email', '@', 1), '+', 1)));
+  new.handle_auto := true;
   if new.display_name is null and full_name is not null then
     new.display_name := left(full_name, 60);
   end if;
