@@ -2,18 +2,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { sendLoginLink, sendPasswordReset, signInWithPassword, signUpWithPassword, useStore } from "@/lib/store";
+import { joinWaitlist, sendLoginLink, sendPasswordReset, signInWithPassword, signUpWithPassword, useStore } from "@/lib/store";
 
 // Sign in with a password (default), create an account, get a one-time link, or reset a password.
-export default function LoginForm({ next = "/me", linkError, startMode = "signin" }) {
+export default function LoginForm({ next = "/me", linkError, startMode = "signin", startEmail = "" }) {
   const router = useRouter();
   const state = useStore();
-  const [mode, setMode] = useState(startMode); // signin | signup | link | forgot
-  const [email, setEmail] = useState("");
+  const [mode, setMode] = useState(startMode); // signin | signup | link | forgot | waitlist
+  const [email, setEmail] = useState(startEmail);
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset"
+  const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset", or "waitlist"
   const [error, setError] = useState(linkError ? "That link expired or was already used. Sign in below, or get a new link." : "");
 
   if (state && !state.accounts) {
@@ -44,16 +44,24 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
       link: ["Check your email.", "We sent a sign-in link to"],
       confirm: ["Confirm your email.", "Almost there. We sent a confirmation link to"],
       reset: ["Check your email.", "We sent a link to set a new password to"],
+      waitlist: ["You're on the list.", "We'll email"],
     }[sent];
     return (
       <div className="card">
         <p className="display h-md" style={{ marginTop: 0 }}>{copy[0]}</p>
         <p style={{ fontSize: 19 }}>
-          {copy[1]} <b>{email}</b>. Open it on this device.
+          {copy[1]} <b>{email}</b>
+          {sent === "waitlist" ? " when there's room. Keep exploring Hooked in the meantime." : ". Open it on this device."}
         </p>
-        <button className="link-btn small" style={{ marginTop: 14 }} onClick={() => (setSent(null), setMode("signin"))}>
-          Back to sign in
-        </button>
+        {sent === "waitlist" ? (
+          <Link href="/" className="btn btn--cobalt btn--shadow-sm" style={{ marginTop: 14 }}>
+            Explore Hooked
+          </Link>
+        ) : (
+          <button className="link-btn small" style={{ marginTop: 14 }} onClick={() => (setSent(null), setMode("signin"))}>
+            Back to sign in
+          </button>
+        )}
       </div>
     );
   }
@@ -76,6 +84,9 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         const ready = await signUpWithPassword(addr, password, next);
         if (ready) router.push(next);
         else setSent("confirm");
+      } else if (mode === "waitlist") {
+        await joinWaitlist(addr);
+        setSent("waitlist");
       } else if (mode === "forgot") {
         await sendPasswordReset(addr);
         setSent("reset");
@@ -91,7 +102,8 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
   }
 
   const needsPassword = mode === "signin" || mode === "signup";
-  const cta = { signin: "Sign in", signup: "Create account", link: "Email me a link", forgot: "Send reset link" }[mode];
+  const cta = { signin: "Sign in", signup: "Create account", link: "Email me a link", forgot: "Send reset link", waitlist: "Join the waitlist" }[mode];
+  const notInvited = mode === "signup" && error.includes("invite-only");
 
   return (
     <>
@@ -111,6 +123,12 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         <p className="muted" style={{ margin: "14px 0 0" }}>
           Hooked is invite-only for now. Use the email you were invited with.
         </p>
+      )}
+      {mode === "waitlist" && (
+        <>
+          <p className="display h-md" style={{ margin: "18px 0 6px" }}>Join the waitlist</p>
+          <p className="muted" style={{ marginBottom: 6 }}>We're letting people in a few at a time. We'll email you when there's room.</p>
+        </>
       )}
       {(mode === "forgot" || mode === "link") && (
         <p className="muted" style={{ marginBottom: 6 }}>
@@ -168,6 +186,11 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
           {busy ? "One sec…" : cta}
         </button>
         {error && <p className="nudge" role="alert">{error}</p>}
+        {notInvited && (
+          <button type="button" className="btn" onClick={() => switchTo("waitlist")}>
+            Join the waitlist instead
+          </button>
+        )}
       </form>
 
       <div className="auth-alt">
@@ -176,7 +199,19 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
             Email me a sign-in link instead
           </button>
         )}
-        {mode === "signup" && <p className="muted small">Already have an account? Use the Sign in tab.</p>}
+        {mode === "signup" && (
+          <p className="muted small">
+            Not invited yet?{" "}
+            <button type="button" className="link-btn small" onClick={() => switchTo("waitlist")}>
+              Join the waitlist
+            </button>
+          </p>
+        )}
+        {mode === "waitlist" && (
+          <button type="button" className="link-btn small" onClick={() => switchTo("signup")}>
+            ← Back to create account
+          </button>
+        )}
         {(mode === "forgot" || mode === "link") && (
           <button type="button" className="link-btn small" onClick={() => switchTo("signin")}>
             ← Back to sign in with a password
