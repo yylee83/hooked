@@ -497,6 +497,7 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .person__name { display: block; font-weight: 700; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .person__handle { display: block; color: var(--muted); font-size: 15px; }
 .person .avatar { flex: none; }
+.discover__more { margin-top: 10px; }
 .follow { display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .profile__name { font-size: clamp(32px, 9vw, 46px); color: var(--cobalt); overflow-wrap: anywhere; }
 .me__handle a { text-decoration: underline; text-decoration-color: rgba(21,19,29,.25); text-underline-offset: 3px; }
