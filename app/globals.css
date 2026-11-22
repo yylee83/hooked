@@ -759,6 +759,13 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .featured-talk__label { margin: 4px 0 14px; }
 /* A list (Erin, 2026-11-21): one row per conversation, divided by thin lines. */
 .featured-talk__row { display: flex; flex-direction: column; }
+/* More than 4 conversations: the list scrolls inside a box (about 500px, so a cut-off card shows there is more), with a fade at the bottom
+   that hints at more and goes away at the end. */
+.featured-talk__row--scroll {
+  max-height: 500px; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); mask-image: linear-gradient(to bottom, #000 82%, transparent);
+}
+.featured-talk__row--scroll.is-end { -webkit-mask-image: none; mask-image: none; }
 .featured-talk__card { display: flex; flex-direction: column; gap: 7px; padding: 14px 0; border-bottom: 2px solid rgba(21, 19, 29, 0.1); }
 .featured-talk__card:first-child { padding-top: 4px; }
 .featured-talk__card:last-child { border-bottom: none; }
