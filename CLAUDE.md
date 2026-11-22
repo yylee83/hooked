@@ -11,7 +11,7 @@ TypeScript for new code) and the order of work.
 **Hooked** (hookedonpods.com; `hooked-nu.vercel.app` and `www.` forward to it) is "Letterboxd for podcasts." People find podcast episodes, log them
 (hooked or not hooked, optional 0.5–5 stars, and "What's the hook?", a one-line review), keep a diary
 of what they listened to, follow friends, send and discuss episodes, and make **Briefs**: topic
-collections that can be cut down to just the parts of each episode where the topic comes up.
+collections that can be cut down to just the parts of each episode where the topic comes up. **On screen they are called "Lists"** (YY, 2026-11-22); the code, addresses (`/briefs/…`) and database still say briefs, so shared links keep working.
 
 Hooked is **Erin and YY (Youyoung Lee)**'s project, built together; the repo just lives under YY's GitHub
 account. YY is not a developer, so explain changes in plain language, without code jargon. The current focus is the **review/logging experience**. Keep things simple, and

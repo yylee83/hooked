@@ -1,5 +1,5 @@
 "use client";
-// "+ Brief" on an episode page: add the episode to one of your briefs (drafts first), or start a new draft with it.
+// "+ List" on an episode page: add the episode to one of your briefs (drafts first), or start a new draft with it.
 // Adding to a published brief changes it for everyone right away, so the sheet says so.
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,13 +15,13 @@ export function AddToBriefButton({ episode }) {
   if (!state.user)
     return (
       <Link href={`/login?next=${encodeURIComponent(path)}`} className="btn btn--sm">
-        + Brief
+        + List
       </Link>
     );
   return (
     <>
-      <button className="btn btn--sm" onClick={() => setOpen(true)} title="Add to a brief">
-        + Brief
+      <button className="btn btn--sm" onClick={() => setOpen(true)} title="Add to a list">
+        + List
       </button>
       {open && <AddToBriefSheet episode={episode} userId={state.user.id} onClose={() => setOpen(false)} />}
     </>
@@ -51,7 +51,7 @@ function AddToBriefSheet({ episode, userId, onClose }) {
     let live = true;
     myBriefs(userId).then(
       (b) => live && setBriefs(b),
-      () => live && (setBriefs([]), setError("Couldn't load your briefs. Try again."))
+      () => live && (setBriefs([]), setError("Couldn't load your lists. Try again."))
     );
     return () => {
       live = false;
@@ -72,10 +72,10 @@ function AddToBriefSheet({ episode, userId, onClose }) {
   }
 
   return (
-    <div className="plus-sheet add-brief" role="dialog" aria-modal="true" aria-label="Add to a brief" onClick={onClose}>
+    <div className="plus-sheet add-brief" role="dialog" aria-modal="true" aria-label="Add to a list" onClick={onClose}>
       <div className="plus-sheet__panel" onClick={(e) => e.stopPropagation()}>
         <div className="row center" style={{ justifyContent: "space-between" }}>
-          <p className="display plus-sheet__title" style={{ margin: 0 }}>Add to a brief</p>
+          <p className="display plus-sheet__title" style={{ margin: 0 }}>Add to a list</p>
           <button className="mini__close" onClick={onClose} aria-label="Close">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
@@ -96,7 +96,7 @@ function AddToBriefSheet({ episode, userId, onClose }) {
         {error && <p className="add-brief__error">{error}</p>}
 
         {briefs === null ? (
-          <p className="muted">Loading your briefs…</p>
+          <p className="muted">Loading your lists…</p>
         ) : (
           <ul className="add-brief__list">
             {briefs.map((b) => {
@@ -126,7 +126,7 @@ function AddToBriefSheet({ episode, userId, onClose }) {
             <li>
               <button className="add-brief__row add-brief__new" disabled={!!busy} onClick={() => run("new", () => startDraft(episode))}>
                 <span className="add-brief__plus" aria-hidden="true">＋</span>
-                <span className="grow">{busy === "new" ? "Starting a draft…" : "Start a new brief with this episode"}</span>
+                <span className="grow">{busy === "new" ? "Starting a draft…" : "Start a new list with this episode"}</span>
               </button>
             </li>
           </ul>

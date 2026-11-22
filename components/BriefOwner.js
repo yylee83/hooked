@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 
-// "Edit brief" and "Delete brief" for the person who made it. Deleting asks you to tap twice.
+// "Edit list" and "Delete list" for the person who made it. Deleting asks you to tap twice.
 export default function BriefOwner({ authorId, briefId }) {
   const state = useStore();
   const router = useRouter();

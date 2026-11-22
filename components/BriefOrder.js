@@ -137,7 +137,7 @@ export default function BriefOrder({ items, keyOf, onMove, onRemove }) {
               <Chevron />
             </button>
           </span>
-          <button type="button" className="order__remove" onClick={() => onRemove(x)} aria-label="Remove from brief">
+          <button type="button" className="order__remove" onClick={() => onRemove(x)} aria-label="Remove from list">
             <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true">
               <path d="M2 2l8 8M10 2l-8 8" />
             </svg>

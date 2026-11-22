@@ -81,7 +81,7 @@ export default async function ProfilePage({ params }) {
 
       {briefs.length > 0 && (
         <section>
-          <h2 className="label">Briefs</h2>
+          <h2 className="label">Lists</h2>
           <div className="row gap wrap">
             {briefs.map((b) => (
               <Link key={b.id} href={`/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>

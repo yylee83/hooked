@@ -36,7 +36,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
     feedId: it.feedId,
     feedTitle: it.show,
     image: it.image,
-    from: `${brief.title} brief`,
+    from: `${brief.title} list`,
   }));
 
   return (
@@ -47,7 +47,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
         </Link>
         <div className="brief__top-end">
           {brief.sharePath && <BriefShareButton title={brief.title} path={brief.sharePath} count={usable.length} briefId={brief.id || brief.slug} />}
-          <span className={`sticker ${onCobalt ? "" : "sticker--cobalt"}`}>Brief</span>
+          <span className={`sticker ${onCobalt ? "" : "sticker--cobalt"}`}>List</span>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function BriefView({ brief, items, backHref = "/briefs" }) {
               <div className="brief__actions">
                 <PlayButton episode={ep} />
                 <LogButton episode={ep} />
-                <QueueButton episode={ep} from={`${brief.title} brief`} />
+                <QueueButton episode={ep} from={`${brief.title} list`} />
               </div>
             )}
           </article>

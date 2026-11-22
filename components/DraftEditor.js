@@ -33,7 +33,7 @@ export default function DraftEditor({ id }) {
         <Link href={`/login?next=/briefs/b/${id}/edit`} className="u-link">Sign in</Link> to edit this brief.
       </p>
     );
-  if (brief === undefined) return <p className="muted" style={{ marginTop: 40 }}>Loading your brief…</p>;
+  if (brief === undefined) return <p className="muted" style={{ marginTop: 40 }}>Loading your list…</p>;
   if (!brief)
     return (
       <p className="muted" style={{ marginTop: 40 }}>

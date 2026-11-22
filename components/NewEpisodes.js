@@ -78,7 +78,7 @@ export default function NewEpisodes() {
 
   return (
     <section className="new-eps">
-      <h2 className="section-title">{hooked ? "New episodes" : "New from popular shows on Hooked"}</h2>
+      <h2 className="section-title">{hooked ? "New episodes from shows you listen to" : "New from popular shows on Hooked"}</h2>
       {!hooked && state?.user && <p className="muted small new-eps__hint">Hook the shows you love and their new episodes land here.</p>}
       {!shown ? (
         <div className="new-eps__row" aria-label="Loading">

@@ -66,7 +66,7 @@ function ProfilePanel({ state }) {
       <div className="card profile-cta">
         <p className="display h-md" style={{ margin: 0 }}>Make it yours.</p>
         <p style={{ margin: "8px 0 16px" }}>
-          Your log is only saved on this device. Make a profile to keep it, share it, and make briefs.
+          Your log is only saved on this device. Make a profile to keep it, share it, and make lists.
         </p>
         <Link href="/login?mode=signup&next=/me" className="btn btn--cobalt btn--shadow-sm">
           Make a profile
@@ -168,7 +168,7 @@ function MyBriefs({ userId }) {
   if (!briefs?.length) return null;
   return (
     <section>
-      <h2 className="label">My briefs</h2>
+      <h2 className="label">My lists</h2>
       <div className="row gap wrap">
         {briefs.map((b) => (
           <Link key={b.id} href={b.draft ? `/briefs/b/${b.id}/edit` : `/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>

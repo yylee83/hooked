@@ -6,7 +6,7 @@ import PasteLink from "./PasteLink";
 
 const tabs = [
   { href: "/", label: "Home" },
-  { href: "/briefs", label: "Briefs" },
+  { href: "/briefs", label: "Lists" },
   { plus: true },
   { href: "/search", label: "Search" },
   { href: "/me", label: "My log" },
@@ -36,7 +36,7 @@ function PlusSheet({ onClose }) {
         </Link>
         <PasteLink onDone={onClose} />
         <Link href="/briefs/new" className="plus-option tone-bubblegum" onClick={onClose}>
-          <span className="display">Make a brief</span>
+          <span className="display">Make a list</span>
           <span>Pick a topic. We'll find the best episodes about it.</span>
         </Link>
         <button className="link-btn" style={{ marginTop: 6 }} onClick={onClose}>

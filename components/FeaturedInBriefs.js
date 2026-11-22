@@ -21,7 +21,7 @@ export default async function FeaturedInBriefs({ episode }) {
         {list.map((b) => (
           <Link key={b.key} href={b.href} className={`ep-briefs__item ep-briefs__item--${b.color || "cobalt"}`}>
             <span className="ep-briefs__title">{b.title}</span>
-            {b.note ? <span className="ep-briefs__note">{b.note}</span> : b.by && <span className="ep-briefs__by">A brief by @{b.by}</span>}
+            {b.note ? <span className="ep-briefs__note">{b.note}</span> : b.by && <span className="ep-briefs__by">A list by @{b.by}</span>}
           </Link>
         ))}
       </div>
