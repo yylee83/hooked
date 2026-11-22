@@ -2,7 +2,8 @@
 // Home: "New episodes from shows you listen to", a swipe row of small cards with play and + Up next icons. "Shows you
 // listen to" (YY, 2026-11-22): shows you've hooked, shows with an episode you rated 4+ stars, and shows you've played at
 // least 5 minutes of in Hooked's player (lib/my-listening.js, signed in only), in that order.
-// Signed out, or with none of those: "New from popular shows on Hooked" instead. Data: /api/new-episodes.
+// Signed out, or with none of those, the row is left out (YY, 2026-11-22: "popular on Hooked" repeated Trending
+// episodes). Data: /api/new-episodes.
 // The last row shown is remembered on this device (`hooked:new-eps`, with whose it was), so Home shows it at once and
 // swaps in the fresh list when it arrives, instead of blank tiles while the account and the episodes load.
 import Link from "next/link";
@@ -65,9 +66,9 @@ export default function NewEpisodes() {
   const listening = useMyListening(state?.user?.id);
   // Signed in, wait for your listening totals so the row is asked for once, with all your shows.
   const ready = state && !(state.user && listening === undefined);
-  const shows = ready && state.user ? yourShows(state, listening) : []; // signed out: always popular on Hooked (YY)
+  const shows = ready && state.user ? yourShows(state, listening) : [];
   const logged = state ? state.logs.map((l) => String(l.ref || l.id || "")).filter(Boolean) : [];
-  const key = ready ? JSON.stringify({ shows, logged }) : "";
+  const key = shows.length ? JSON.stringify({ shows, logged }) : "";
 
   // Read after the first render (the server has no saved row), so the page the server sent and this one match.
   useEffect(() => setSaved(readSaved()), []);
@@ -91,16 +92,14 @@ export default function NewEpisodes() {
   // Someone else's saved row (another account, or from before signing in/out) is never shown.
   const usable = saved && (who === null || saved.who === who) ? saved : null;
   const shown = data || usable;
-  if (!state && !usable) return null;
+  // Only for signed-in people with shows of their own. Before the account loads, only a saved row of theirs shows.
+  if (ready ? !shows.length : usable?.mode !== "hooked") return null;
 
-  const hooked = ready ? shows.length > 0 : usable?.mode === "hooked";
   const episodes = shown?.episodes || [];
-  if (data && !episodes.length && !hooked) return null;
 
   return (
     <section className="new-eps">
-      <h2 className="section-title">{hooked ? "New episodes from shows you listen to" : "New from popular shows on Hooked"}</h2>
-      {!hooked && state?.user && <p className="muted small new-eps__hint">Play, rate or hook shows and their new episodes land here.</p>}
+      <h2 className="section-title">New episodes from shows you listen to</h2>
       {!shown ? (
         <div className="new-eps__row" aria-label="Loading">
           {[0, 1, 2].map((i) => (
@@ -112,7 +111,7 @@ export default function NewEpisodes() {
           ))}
         </div>
       ) : !episodes.length ? (
-        <p className="muted">Nothing new from your hooked shows yet. You’ve caught up.</p>
+        <p className="muted">Nothing new from your shows yet. You’ve caught up.</p>
       ) : (
         <div className="new-eps__row">
           {episodes.map((ep) => (

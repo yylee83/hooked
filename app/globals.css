@@ -711,7 +711,6 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .foryou__actions { margin-top: auto; flex-wrap: wrap; }
 .foryou__actions .btn { padding-left: 10px; padding-right: 10px; }
 /* Home: "New episodes" (components/NewEpisodes.js): a swipe row of small cards. */
-.new-eps__hint { margin: -6px 0 10px; }
 .new-eps__row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 -2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .new-eps__row::-webkit-scrollbar { display: none; }
 .new-eps__card { flex: none; width: 140px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
