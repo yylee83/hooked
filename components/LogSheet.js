@@ -131,6 +131,9 @@ export default function LogSheet({ episode, presetRating = 0 }) {
         rows={4}
         maxLength={280}
         placeholder="One line. What got you?"
+        spellCheck
+        autoCorrect="on"
+        autoCapitalize="sentences"
         value={hook}
         onChange={(e) => setHook(e.target.value)}
       />
