@@ -1,11 +1,12 @@
 "use client";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
 import { logHref } from "@/lib/addresses";
-import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
+import { addLog, findLog, needsAccount, sendRecommendation, useStore } from "@/lib/store";
+import { signInHref } from "@/lib/sign-in-first";
 import { HookShowPill } from "./Social";
 import { haptic } from "@/lib/haptics";
 
@@ -83,6 +84,13 @@ export default function LogSheet({ episode, presetRating = 0 }) {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Logging needs an account: signed out, sign in first and come straight back here.
+  const signedOut = needsAccount(state);
+  useEffect(() => {
+    if (signedOut) router.replace(signInHref(window.location.pathname + window.location.search));
+  }, [signedOut, router]);
+  if (signedOut) return null;
 
   async function save() {
     haptic("success");
@@ -172,11 +180,6 @@ export default function LogSheet({ episode, presetRating = 0 }) {
         {saving ? "Saving…" : "Log it"}
       </button>
       {error && <p className="nudge" style={{ marginTop: 14 }}>{error}</p>}
-      {state?.accounts && !state.user && (
-        <p className="muted small" style={{ marginTop: 14, textAlign: "center" }}>
-          Saved on this device for now. <Link href={`/login?mode=signup&next=${logHref(episode.ref, episode.id)}`} className="u-link">Make a profile</Link> to keep it everywhere.
-        </p>
-      )}
     </div>
   );
 }

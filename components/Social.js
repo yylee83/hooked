@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { addToList, findHookedShow, findLog, inUpNext, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
+import { addToList, findHookedShow, findLog, inUpNext, needsAccount, removeFromList, toggleHookedShow, useStore } from "@/lib/store";
 import { logHref } from "@/lib/addresses";
 import { haptic } from "@/lib/haptics";
+import { signInHref, useSignInFirst } from "@/lib/sign-in-first";
 
 // "+ Up next" / "Not for me" on a friend's recommendation.
 export function RecActions({ item }) {
   const state = useStore();
+  const { guard } = useSignInFirst();
   const [dismissed, setDismissed] = useState(false);
   const key = item.episodeId || item.title;
   const saved = state?.list.some((i) => (i.episodeId || i.title) === key);
@@ -16,7 +18,7 @@ export function RecActions({ item }) {
     <div className="row gap">
       <button
         className={`btn btn--shadow-sm ${saved ? "btn--butter" : "btn--cobalt"}`}
-        onClick={() => (saved ? removeFromList(item) : addToList(item))}
+        onClick={guard(() => (saved ? removeFromList(item) : addToList(item)))}
       >
         {saved ? "✓ Up next" : "+ Up next"}
       </button>
@@ -72,11 +74,12 @@ export function Reactions({ counts = {} }) {
 // The "I'm hooked on this show" toggle on a show page.
 export function HookShowButton({ show }) {
   const state = useStore();
+  const { guard } = useSignInFirst();
   const on = !!findHookedShow(state, show);
   return (
     <button
       className={`btn btn--display btn--shadow-sm ${on ? "btn--cobalt" : ""}`}
-      onClick={() => (haptic(), toggleHookedShow(show))}
+      onClick={guard(() => (haptic(), toggleHookedShow(show)))}
       aria-pressed={on}
     >
       {on ? "I'm hooked on this" : "Hooked on this?"}
@@ -89,11 +92,12 @@ export function HookShowButton({ show }) {
 // button, so Cancel on the log doesn't undo it. `episode` is an episode card ({ showRef, feedId, feedTitle, … }).
 export function HookShowPill({ episode, short = false }) {
   const state = useStore();
+  const { guard } = useSignInFirst();
   const show = { showRef: episode.showRef, feedId: episode.feedId, title: episode.feedTitle, image: episode.feedImage };
   if (!show.showRef && show.feedId == null) return null;
   const on = !!findHookedShow(state, show);
   return (
-    <button type="button" className={`hook-pill ${on ? "is-on" : ""}`} onClick={() => (haptic(), toggleHookedShow(show))} aria-pressed={on}>
+    <button type="button" className={`hook-pill ${on ? "is-on" : ""}`} onClick={guard(() => (haptic(), toggleHookedShow(show)))} aria-pressed={on}>
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
         <path d={on ? "M5 12l5 5L20 7" : "M12 5v14M5 12h14"} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -105,6 +109,7 @@ export function HookShowPill({ episode, short = false }) {
 // "+ Up next" on any episode: saves it to your queue (it plays after whatever's on).
 export function QueueButton({ episode, from, icon = false }) {
   const state = useStore();
+  const { guard } = useSignInFirst();
   const item = {
     episodeId: episode.id,
     episodeRef: episode.ref,
@@ -122,7 +127,7 @@ export function QueueButton({ episode, from, icon = false }) {
       <button
         type="button"
         className={`icon-act ${on ? "is-on" : ""}`}
-        onClick={() => (on ? removeFromList(item) : addToList(item))}
+        onClick={guard(() => (on ? removeFromList(item) : addToList(item)))}
         aria-pressed={on}
         aria-label={on ? `Remove ${episode.title} from Up next` : `Add ${episode.title} to Up next`}
       >
@@ -134,7 +139,7 @@ export function QueueButton({ episode, from, icon = false }) {
   return (
     <button
       className={`btn btn--sm ${on ? "btn--butter" : ""}`}
-      onClick={() => (on ? removeFromList(item) : addToList(item))}
+      onClick={guard(() => (on ? removeFromList(item) : addToList(item)))}
       aria-pressed={on}
       title={on ? "Remove from Up next" : "Add to Up next"}
     >
@@ -145,14 +150,15 @@ export function QueueButton({ episode, from, icon = false }) {
 
 // "Queue all 4" at the bottom of a brief.
 export function QueueAll({ items, tone }) {
+  const { guard } = useSignInFirst();
   const [done, setDone] = useState(false);
   return (
     <button
       className={`btn btn--big btn--display ${tone === "cobalt" ? "btn--butter" : "btn--cobalt"}`}
-      onClick={() => {
+      onClick={guard(() => {
         items.forEach((i) => addToList(i));
         setDone(true);
-      }}
+      })}
     >
       {done ? "Added to Up next. See My log." : `Add all ${items.length} to Up next`}
     </button>
@@ -164,7 +170,8 @@ export function QueueAll({ items, tone }) {
 export function LogButton({ episode, shadow = false }) {
   const state = useStore();
   const mine = findLog(state, episode);
-  const href = logHref(episode.ref, episode.id);
+  // Signed out: sign in first, then straight on to the log sheet.
+  const href = needsAccount(state) ? signInHref(logHref(episode.ref, episode.id)) : logHref(episode.ref, episode.id);
   const extra = shadow ? " btn--shadow-sm" : "";
   if (!mine) {
     return (

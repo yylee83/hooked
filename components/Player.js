@@ -6,7 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Art from "./Art";
 import FinishPrompt from "./FinishPrompt";
-import { findLog, getState, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
+import { findLog, getState, needsAccount, removeFromList, sameEpisode, setNowPlaying, upNext, useStore } from "@/lib/store";
+import { signInHref } from "@/lib/sign-in-first";
 import { episodeHref, logHref } from "@/lib/addresses";
 import { clearLast, clearProgress, loadLast, resumeAt, savedLength, saveLast, saveProgress } from "@/lib/progress";
 import { flushSpots, pullSpots } from "@/lib/progress-sync";
@@ -25,7 +26,8 @@ const finished = (ep) => {
   const key = ep?.ref || ep?.id;
   if (!key || marked.has(key)) return;
   marked.add(key);
-  if (!findLog(getState(), ep)) markFinished(ep);
+  const st = getState();
+  if (!findLog(st, ep) && !needsAccount(st)) markFinished(ep); // signed out: nothing to log it to
 };
 
 // Where a play started, for listening history (lib/history.js): the page you were on.
@@ -730,9 +732,11 @@ export function PlayerProvider({ children }) {
 // the player hides on the Log it page). Yellow "Logged" once it is (no ✓: the row has no room for it on a phone),
 // which opens your log to edit.
 function LogPill({ ep }) {
-  const logged = !!findLog(useStore(), ep);
+  const state = useStore();
+  const logged = !!findLog(state, ep);
+  const href = needsAccount(state) ? signInHref(logHref(ep.ref, ep.id)) : logHref(ep.ref, ep.id);
   return (
-    <Link href={logHref(ep.ref, ep.id)} className={`mini__log ${logged ? "is-logged" : ""}`} onClick={() => haptic()}>
+    <Link href={href} className={`mini__log ${logged ? "is-logged" : ""}`} onClick={() => haptic()}>
       {logged ? "Logged" : "Log it"}
     </Link>
   );

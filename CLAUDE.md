@@ -134,8 +134,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   sits in page headers when signed out.
 - **API routes** (`app/api/`): `resolve` (paste a link), `episode`, `for-you`, `top-episodes`,
   `genres`, `new-episodes`, `listening-now`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
-- **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
-  localStorage when signed out (moved into the account on sign-in).
+- **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase. **Logging, Up next and hooking a show
+  need an account** (Erin, 2026-11-21): signed out, those buttons open sign-in and come back (`useSignInFirst` /
+  `signInHref` in `lib/sign-in-first.js`; the log page redirects), the player doesn't ask "Log it?", and the store
+  refuses the save (`needsAccount`). Signed out, people browse and listen. Anything saved in a browser before that is
+  still moved into the account on sign-in.
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30 (the lock screen skips 10 each way, to match the "10" its buttons show), speed, drag the playhead,
   auto-advance through Up next; an episode on Up next comes off it as soon as it starts playing, from anywhere, and
   finishing any episode (not a brief) starts the next one on Up next; the next one is looked up two minutes before the
