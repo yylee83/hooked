@@ -75,7 +75,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - For migrations that change saved data, also rehearse on a copy of live: export it (`scripts/export-live.sql`, saved
   outside the repo), then `node scripts/rehearse-migrations.mjs <export.json> <last applied migration> <checks.sql>`.
   It loads the copy in memory, applies the newer migrations and runs the checks (see `scripts/checks/`).
-- To apply new migrations to the live database: `supabase db push` (the project must be linked once
+- To apply new migrations to the live database: `supabase db push` (Supabase CLI 3.x: `supabase db push --remote`; the project must be linked once
   with `supabase link --project-ref ltdjzjbqhojhtahewgtd`). Merge the PR first, then push, so the live
   code and database change together. Back up before anything that changes or deletes data.
 - **Two databases.** The live site uses `hooked` (`ltdjzjbqhojhtahewgtd`). Preview links use `hooked-test`
