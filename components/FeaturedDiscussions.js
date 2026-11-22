@@ -125,8 +125,8 @@ export default function FeaturedDiscussions() {
 
   if (cards && !cards.length) return null;
   return (
-    <section className="featured-talk" aria-label="Trending conversations">
-      <h2 className="section-title featured-talk__label">Trending conversations</h2>
+    <section className="featured-talk" aria-label="Top conversations">
+      <h2 className="section-title featured-talk__label">Top conversations</h2>
       <div className="featured-talk__row">
         {!cards && <div className="featured-talk__card featured-talk__card--ghost" aria-hidden="true" />}
         {cards?.map((c) => (
