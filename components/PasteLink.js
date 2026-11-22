@@ -61,7 +61,7 @@ export default function PasteLink({ onDone, autoFocus = false }) {
         <p className="paste__msg">
           {msg.text}{" "}
           {msg.query && (
-            <a href={`/search?q=${encodeURIComponent(msg.query)}&type=episodes`} className="more-link">
+            <a href={`/search/find?q=${encodeURIComponent(msg.query)}&type=episodes`} className="more-link">
               Search for it →
             </a>
           )}
