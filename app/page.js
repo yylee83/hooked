@@ -9,11 +9,12 @@ import ListeningOnHooked from "@/components/ListeningOnHooked";
 import FeaturedDiscussions from "@/components/FeaturedDiscussions";
 import TrendingEpisodes from "@/components/TrendingEpisodes";
 import { NotificationBell } from "@/components/Notifications";
+import HomeRefresh from "@/components/HomeRefresh";
 
 // Home: what's happening on Hooked. Apple's chart lives on Search.
 export default function FriendsPage() {
   return (
-    <>
+    <HomeRefresh>
       <header className="topbar">
         <Wordmark size={34} />
         <div className="row gap center">
@@ -48,6 +49,6 @@ export default function FriendsPage() {
       {/* Trending conversations: reviews and the replies around them, as a list. At the top of Home from 2026-11-20 (YY);
           moved under "From people you follow", and Just logged removed (Erin, 2026-11-21). */}
       <FeaturedDiscussions />
-    </>
+    </HomeRefresh>
   );
 }

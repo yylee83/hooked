@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Art from "./Art";
 import { Avatar } from "./Friends";
 import { useStore } from "@/lib/store";
+import { useRefreshTick } from "@/lib/home-refresh";
 import { episodeHref } from "@/lib/addresses";
 import { fetchNotifications, markAllRead, timeAgo, unreadCount, REACTION_WORDS } from "@/lib/social";
 
@@ -13,6 +14,7 @@ export function NotificationBell() {
   const state = useStore();
   const path = usePathname();
   const [count, setCount] = useState(0);
+  const tick = useRefreshTick();
   const uid = state?.user?.id;
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export function NotificationBell() {
       window.removeEventListener("hooked-notes-read", onRead);
       document.removeEventListener("visibilitychange", check);
     };
-  }, [uid, path]);
+  }, [uid, path, tick]);
 
   if (!uid) return null;
   return (

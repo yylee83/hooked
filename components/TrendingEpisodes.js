@@ -10,6 +10,7 @@ import { QueueButton } from "./Social";
 import { supabase } from "@/lib/supabase/client";
 import { episodeHref } from "@/lib/addresses";
 import { plural } from "@/lib/format";
+import { useRefreshTick } from "@/lib/home-refresh";
 
 const MAX = 10;
 
@@ -25,6 +26,7 @@ function activity(r) {
 
 export default function TrendingEpisodes() {
   const [rows, setRows] = useState(null);
+  const tick = useRefreshTick();
 
   useEffect(() => {
     const db = supabase();
@@ -36,7 +38,7 @@ export default function TrendingEpisodes() {
     return () => {
       live = false;
     };
-  }, []);
+  }, [tick]);
 
   if (rows && rows.length < 2) return null;
   return (
