@@ -7,32 +7,16 @@ import { Avatar } from "./Friends";
 import { useStore } from "@/lib/store";
 import { useRefreshTick } from "@/lib/home-refresh";
 import { episodeHref } from "@/lib/addresses";
-import { fetchNotifications, markAllRead, timeAgo, unreadCount, REACTION_WORDS } from "@/lib/social";
+import { fetchNotifications, markAllRead, timeAgo, REACTION_WORDS } from "@/lib/social";
+import { useUnread, badgeText } from "@/lib/unread";
 
-// The bell, with a count of unread notifications. Checks every minute while the tab is open.
+// The bell, with a pink count of unread notifications.
 export function NotificationBell() {
   const state = useStore();
   const path = usePathname();
-  const [count, setCount] = useState(0);
   const tick = useRefreshTick();
   const uid = state?.user?.id;
-
-  useEffect(() => {
-    if (!uid) return;
-    let live = true;
-    const check = () => document.visibilityState === "visible" && unreadCount(uid).then((n) => live && setCount(n));
-    check();
-    const t = setInterval(check, 60000);
-    const onRead = () => setCount(0);
-    window.addEventListener("hooked-notes-read", onRead);
-    document.addEventListener("visibilitychange", check);
-    return () => {
-      live = false;
-      clearInterval(t);
-      window.removeEventListener("hooked-notes-read", onRead);
-      document.removeEventListener("visibilitychange", check);
-    };
-  }, [uid, path, tick]);
+  const { count } = useUnread(uid, `${path}|${tick}`);
 
   if (!uid) return null;
   return (
@@ -41,11 +25,64 @@ export function NotificationBell() {
         <path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z" />
         <path d="M10 20a2.2 2.2 0 0 0 4 0" />
       </svg>
-      {count > 0 && <span className="bell__n">{count > 9 ? "9+" : count}</span>}
+      {count > 0 && <span className="bell__n">{badgeText(count)}</span>}
     </Link>
   );
 }
 
+const TOASTED = "hooked:note-toast";
+
+// On opening Hooked or signing in (and when one arrives while you're here), a small note says what's new, once per
+// notification: "@ana followed you", or "and 2 more". Tap to open them; it tucks away by itself after a few seconds.
+export function NotificationToast() {
+  const state = useStore();
+  const path = usePathname() || "/";
+  const uid = state?.user?.id;
+  const { count, newest } = useUnread(uid, path);
+  const [shown, setShown] = useState(null);
+
+  useEffect(() => {
+    if (!uid || !newest || path.startsWith("/notifications") || path.startsWith("/log/")) return;
+    const mark = `${uid}:${newest.id}`;
+    let seen = null;
+    try {
+      seen = localStorage.getItem(TOASTED);
+    } catch {}
+    if (seen === mark) return;
+    try {
+      localStorage.setItem(TOASTED, mark);
+    } catch {}
+    setShown({ note: newest, count });
+  }, [uid, newest, count, path]);
+
+  useEffect(() => {
+    if (!shown) return;
+    const t = setTimeout(() => setShown(null), 7000);
+    return () => clearTimeout(t);
+  }, [shown]);
+
+  useEffect(() => {
+    if (path.startsWith("/notifications")) setShown(null);
+  }, [path]);
+
+  if (!shown || !uid) return null;
+  const d = describe(shown.note, state.profile?.handle);
+  const more = shown.count - 1;
+  return (
+    <div className="note-toast" role="status">
+      <Link href="/notifications" className="note-toast__body" onClick={() => setShown(null)}>
+        <span className="note-toast__n">{badgeText(shown.count)}</span>
+        <span className="note-toast__text">
+          {d.text}
+          {more > 0 && <span className="note-toast__more"> and {more} more</span>}
+        </span>
+      </Link>
+      <button className="note-toast__x" aria-label="Dismiss" onClick={() => setShown(null)}>
+        ×
+      </button>
+    </div>
+  );
+}
 
 function describe(n, myHandle) {
   const who = n.actor?.handle ? `@${n.actor.handle}` : "Someone";

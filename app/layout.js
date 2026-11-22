@@ -4,6 +4,7 @@ import "@fontsource/bagel-fat-one/400.css";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import HandleGate from "@/components/HandleGate";
+import { NotificationToast } from "@/components/Notifications";
 import PickedHandle from "@/components/PickedHandle";
 import { PlayerProvider } from "@/components/Player";
 import { site } from "@/lib/site";
@@ -46,6 +47,7 @@ export default function RootLayout({ children }) {
           </main>
           <BottomNav />
           <HandleGate />
+          <NotificationToast />
         </PlayerProvider>
       </body>
     </html>

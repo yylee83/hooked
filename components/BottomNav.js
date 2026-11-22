@@ -4,6 +4,8 @@ import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import PasteLink from "./PasteLink";
 import { HOME_TAP } from "@/lib/home-refresh";
+import { useStore } from "@/lib/store";
+import { useUnread, badgeText } from "@/lib/unread";
 
 const tabs = [
   { href: "/", label: "Home" },
@@ -101,6 +103,9 @@ export default function BottomNav() {
   const path = usePathname() || "/";
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
+  // New notifications show as a pink count on My log, so you see them from any page (the bell lives on Home and My log).
+  const uid = useStore()?.user?.id;
+  const { count: unread } = useUnread(uid, path);
   useBottomPinned();
   if (path.startsWith("/log/")) return null; // the Log it sheet is full-screen
   const active = (href) => (href === "/" ? path === "/" : path.startsWith(href));
@@ -123,7 +128,14 @@ export default function BottomNav() {
                 // Home, tapped while on Home: back to the top and refresh, instead of a page change that does nothing.
                 onClick={t.href === "/" && path === "/" ? (e) => (e.preventDefault(), window.dispatchEvent(new Event(HOME_TAP))) : undefined}
               >
-                <NavLabel>{t.label}</NavLabel>
+                <NavLabel>
+                  {t.label}
+                  {t.href === "/me" && unread > 0 && (
+                    <span className="nav__badge" aria-label={`${unread} new notifications`}>
+                      {badgeText(unread)}
+                    </span>
+                  )}
+                </NavLabel>
               </Link>
             )
           )}
