@@ -9,7 +9,7 @@ import { findLog, sendRecommendation, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
 import { recordShare } from "@/lib/history";
-import { briefPreviewPath, episodePreviewPath, warmPreview } from "@/lib/og-paths";
+import { briefPreviewPath, episodePreviewPath, reviewVersion, warmPreview } from "@/lib/og-paths";
 
 export function starText(rating) {
   if (!rating) return "";
@@ -77,7 +77,10 @@ export function ShareSheet({ episode, onClose }) {
   const handle = state?.profile?.handle;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   // Our short address when we know it; otherwise the Podcast Index number, which redirects to it.
-  const url = `${origin}${episodeHref(episode.ref, episode.id)}${handle ? `?from=${encodeURIComponent(handle)}` : ""}`;
+  // With a review, `v` changes whenever the review does, so Messages treats it as a new link and shows the new preview
+  // instead of one it saved earlier (the page itself ignores it).
+  const v = handle ? reviewVersion(review) : "";
+  const url = `${origin}${episodeHref(episode.ref, episode.id)}${handle ? `?from=${encodeURIComponent(handle)}${v ? `&v=${v}` : ""}` : ""}`;
   const text = shareText(episode, review);
   const full = `${text}\n${url}`;
   const enc = encodeURIComponent;
@@ -125,8 +128,8 @@ export function ShareSheet({ episode, onClose }) {
   // Get the link's preview picture drawn now, so it's ready when Messages (or anything else) asks for it. A phone
   // gives up after a few seconds and shows only a small icon.
   useEffect(() => {
-    if (episode.ref) warmPreview(episodePreviewPath(episode.ref, handle));
-  }, [episode.ref, handle]);
+    if (episode.ref) warmPreview(episodePreviewPath(episode.ref, handle, review));
+  }, [episode.ref, handle, review?.rating, review?.hook]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canNative = typeof navigator !== "undefined" && !!navigator.share;
 
