@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Plain /search and /briefs are made ahead of time so they open fully loaded; a search (?q=…) or a filter
-  // (?type=…) is answered by the find pages instead, with the same address in the browser.
+  // Plain /search and /briefs are made ahead of time so they open fully loaded; searches live at /search/find and
+  // /briefs/find. These rewrites only keep old /search?q=… links working when opened from outside: inside the app, a
+  // link to /search?q=… reuses the ready-made page and shows no results, so always link to the find pages.
   async rewrites() {
     return {
       beforeFiles: [

@@ -78,7 +78,7 @@ export default async function BriefsPage({ searchParams }) {
       </p>
 
       {/* Searches briefs only (built-in and listeners'), by title, topic, description and the episodes inside. */}
-      <Form className="search briefs-search" action="/briefs" role="search">
+      <Form className="search briefs-search" action="/briefs/find" role="search">
         <input className="input" type="search" name="q" defaultValue={query} placeholder="Search briefs" aria-label="Search briefs" />
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search

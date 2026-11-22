@@ -9,7 +9,9 @@ export const metadata = { title: "Search" };
 
 // Plain /search (nothing typed yet) is made ahead of time and kept for 30 minutes, then remade in the background, so
 // it opens fully loaded (YY, 2026-11-21: it was slow while it waited on Google, Apple and Podcast Index each visit).
-// A search (/search?q=…) or a filter (?type=…) goes to app/search/find/page.js instead (next.config.mjs).
+// A search or a filter goes to its own address, /search/find?q=… (app/search/find/page.js). Inside the app it must link
+// there directly: a link to /search?q=… reuses this ready-made page and shows no results (2026-11-22). Old
+// /search?q=… links opened from outside still work, through next.config.mjs.
 export const revalidate = 1800;
 
 export default function SearchHome() {
@@ -24,7 +26,7 @@ export default function SearchHome() {
       </p>
 
       {/* Searching changes the page without reloading the site, so whatever is playing keeps playing (Erin, 2026-11-19). */}
-      <Form id="search-form" className="search" action="/search" role="search">
+      <Form id="search-form" className="search" action="/search/find" role="search">
         <input className="input" type="search" name="q" placeholder="People, shows, topics" aria-label="Search podcasts" autoFocus />
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search

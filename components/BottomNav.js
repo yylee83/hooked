@@ -30,7 +30,7 @@ function PlusSheet({ onClose }) {
     <div className="plus-sheet" role="dialog" aria-modal="true" aria-label="Create" onClick={onClose}>
       <div className="plus-sheet__panel" onClick={(e) => e.stopPropagation()}>
         <p className="display plus-sheet__title">What are we making?</p>
-        <Link href="/search?type=episodes" className="plus-option tone-cobalt" onClick={onClose}>
+        <Link href="/search/find?type=episodes" className="plus-option tone-cobalt" onClick={onClose}>
           <span className="display">Log a review</span>
           <span>Find an episode, rate it, say what you thought.</span>
         </Link>

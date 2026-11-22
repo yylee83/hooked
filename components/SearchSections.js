@@ -80,7 +80,7 @@ export async function AppleCharts() {
               {chart.map((s, i) => (
                 <Link
                   key={s.itunesId}
-                  href={s.feedId ? showHref(s.showRef, s.feedId) : `/search?q=${encodeURIComponent(s.title)}&type=shows`}
+                  href={s.feedId ? showHref(s.showRef, s.feedId) : `/search/find?q=${encodeURIComponent(s.title)}&type=shows`}
                   className="trend__item"
                 >
                   <span className="trend__rank display">{s.rank}</span>

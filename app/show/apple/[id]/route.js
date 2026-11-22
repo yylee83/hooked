@@ -9,5 +9,5 @@ export async function GET(request, { params }) {
   const apple = `https://podcasts.apple.com/us/podcast/id${id}`;
   const go = await linkTarget(await resolveLink(apple));
   // Couldn't bring it in: Search shows why ("We couldn't find that show yet").
-  redirect(go || `/search?q=${encodeURIComponent(apple)}`);
+  redirect(go || `/search/find?q=${encodeURIComponent(apple)}`);
 }

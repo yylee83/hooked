@@ -46,11 +46,12 @@ function href(q, type, max) {
   const p = new URLSearchParams({ q });
   if (type) p.set("type", type);
   if (max) p.set("max", String(max));
-  return `/search?${p}`;
+  return `/search/find?${p}`;
 }
 
-// Search with a query or a filter. Plain /search is app/search/page.js, made ahead of time; next.config.mjs sends
-// /search?q=… and /search?type=… here, keeping the address.
+// Search with a query or a filter, at /search/find?q=…. Plain /search is app/search/page.js, made ahead of time.
+// Link here directly: inside the app, /search?q=… reuses the ready-made page and shows no results (2026-11-22).
+// next.config.mjs still sends /search?q=… here for links opened from outside.
 export default async function SearchPage({ searchParams }) {
   const sp = await searchParams;
   // Does this browser have a sign-in cookie? Only a hint (not checked with the database), so the Friends pill
@@ -242,7 +243,7 @@ export default async function SearchPage({ searchParams }) {
         Find your next listen. Search a show, an episode, or anyone who's been a guest.
       </p>
 
-      <Form id="search-form" className="search" action="/search" role="search">
+      <Form id="search-form" className="search" action="/search/find" role="search">
         <input
           className="input"
           type="search"

@@ -33,7 +33,7 @@ export default async function TrendingPage() {
                 </a>
               )}
               <div className="row gap wrap" style={{ marginTop: 14 }}>
-                <Link href={`/search?${new URLSearchParams({ q: t.topic, type: "episodes" })}`} className="btn btn--sm btn--cobalt">
+                <Link href={`/search/find?${new URLSearchParams({ q: t.topic, type: "episodes" })}`} className="btn btn--sm btn--cobalt">
                   Hear about it
                 </Link>
                 <Link href={`/briefs/new?${new URLSearchParams({ topic: t.topic })}`} className="btn btn--sm">

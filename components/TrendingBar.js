@@ -7,7 +7,7 @@ export const trendingLabel = (topics) => (topics?.[0]?.source === "wikipedia" ? 
 
 export default function TrendingBar({ topics, inSearch = false }) {
   if (!topics?.length) return null;
-  const searchHref = (t) => `/search?${new URLSearchParams({ q: t.topic, type: "episodes" })}`;
+  const searchHref = (t) => `/search/find?${new URLSearchParams({ q: t.topic, type: "episodes" })}`;
   const label = trendingLabel(topics);
   return (
     <section className={`trending ${inSearch ? "trending--search" : ""}`} aria-label={label}>
