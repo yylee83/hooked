@@ -1,6 +1,6 @@
 "use client";
 // Home: "New episodes" (from your hooked shows), a swipe row of small cards with play and + Up next icons.
-// Signed out (or nothing hooked yet): "New from popular shows on Hooked" instead. Data: /api/new-episodes.
+// Signed out (or nothing hooked yet): "New from shows you listen to" instead. Data: /api/new-episodes.
 // The last row shown is remembered on this device (`hooked:new-eps`, with whose it was), so Home shows it at once and
 // swaps in the fresh list when it arrives, instead of blank tiles while the account and the episodes load.
 import Link from "next/link";
@@ -78,7 +78,7 @@ export default function NewEpisodes() {
 
   return (
     <section className="new-eps">
-      <h2 className="section-title">{hooked ? "New episodes from shows you listen to" : "New from popular shows on Hooked"}</h2>
+      <h2 className="section-title">{hooked ? "New episodes from shows you listen to" : "New from shows you listen to"}</h2>
       {!hooked && state?.user && <p className="muted small new-eps__hint">Hook the shows you love and their new episodes land here.</p>}
       {!shown ? (
         <div className="new-eps__row" aria-label="Loading">

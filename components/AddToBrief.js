@@ -28,7 +28,7 @@ export function AddToBriefButton({ episode }) {
   );
 }
 
-const briefHref = (b) => (b.draft ? `/briefs/b/${b.id}/edit` : `/briefs/b/${b.id}`);
+const briefHref = (b) => (b.draft ? `/lists/b/${b.id}/edit` : `/lists/b/${b.id}`);
 
 function AddToBriefSheet({ episode, userId, onClose }) {
   const [briefs, setBriefs] = useState(null);

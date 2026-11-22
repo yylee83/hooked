@@ -171,7 +171,7 @@ function MyBriefs({ userId }) {
       <h2 className="label">My lists</h2>
       <div className="row gap wrap">
         {briefs.map((b) => (
-          <Link key={b.id} href={b.draft ? `/briefs/b/${b.id}/edit` : `/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
+          <Link key={b.id} href={b.draft ? `/lists/b/${b.id}/edit` : `/lists/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
             <span className="display">{b.title}</span>
             <span className="mono small">
               {b.draft ? "Draft · " : ""}

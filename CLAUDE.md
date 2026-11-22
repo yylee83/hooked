@@ -11,7 +11,7 @@ TypeScript for new code) and the order of work.
 **Hooked** (hookedonpods.com; `hooked-nu.vercel.app` and `www.` forward to it) is "Letterboxd for podcasts." People find podcast episodes, log them
 (hooked or not hooked, optional 0.5–5 stars, and "What's the hook?", a one-line review), keep a diary
 of what they listened to, follow friends, send and discuss episodes, and make **Briefs**: topic
-collections that can be cut down to just the parts of each episode where the topic comes up. **On screen they are called "Lists"** (YY, 2026-11-22); the code, addresses (`/briefs/…`) and database still say briefs, so shared links keep working.
+collections that can be cut down to just the parts of each episode where the topic comes up. **On screen they are called "Lists"** (YY, 2026-11-22); pages live at `/lists/…` (old `/lists/…` links forward there, `next.config.mjs`), while the code, API routes and database still say briefs.
 
 Hooked is **Erin and YY (Youyoung Lee)**'s project, built together; the repo just lives under YY's GitHub
 account. YY is not a developer, so explain changes in plain language, without code jargon. The current focus is the **review/logging experience**. Keep things simple, and
@@ -123,7 +123,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"); no Just logged (removed 2026-11-21) and no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
-  `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
+  `/lists` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/lists/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/lists/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (the big blue Up next card above the tabs, where "Listening now" used to be: first episode with a play button, the next few covers, "See all" opens the Up next tab, `components/UpNextCard.js`; tabs: Episodes, Shows,
   Up next (topped by "Keep listening": episodes started and not finished, from your saved spots, `components/KeepListening.js`; never episodes you've logged), Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
   show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
@@ -175,9 +175,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   only, never read back, kept a year. Views: `insights_shares_daily`, `insights_shares_top` (inside and outside together).
   Both trending functions count an outside share of an episode as sharing, like a send. Test: `node scripts/check-shares.mjs`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
-- **Plain /search and /briefs are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/briefs/page.js`, 10
+- **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and
-  `/briefs/find?q=…`: **link and submit forms there directly**. Inside the app, a link to `/search?q=…` reuses the
+  `/lists/find?q=…`: **link and submit forms there directly**. Inside the app, a link to `/search?q=…` reuses the
   ready-made page and shows no results (broke live 2026-11-21 to 22); `next.config.mjs` only keeps old `/search?q=…`
   links working when opened from outside. Their shared lists are in
   `components/SearchSections.js`.

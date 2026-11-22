@@ -11,7 +11,7 @@ export default async function FeaturedInBriefs({ episode }) {
   ]);
   const list = [
     ...featured,
-    ...listeners.map((b) => ({ key: b.id, href: `/briefs/b/${b.id}`, title: b.title, color: b.color, by: b.author?.handle })),
+    ...listeners.map((b) => ({ key: b.id, href: `/lists/b/${b.id}`, title: b.title, color: b.color, by: b.author?.handle })),
   ];
   if (!list.length) return null;
   return (

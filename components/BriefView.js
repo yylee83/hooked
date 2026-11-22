@@ -14,7 +14,7 @@ function Dek({ text = "" }) {
 }
 
 // One page for every brief, hand-made or made with the + button.
-export default function BriefView({ brief, items, backHref = "/briefs" }) {
+export default function BriefView({ brief, items, backHref = "/lists" }) {
   const mode = brief.mode || "clips";
   const usable = items.filter((it) => it.found !== false);
   const segs = briefQueue(usable, mode);

@@ -30,14 +30,14 @@ export default function DraftEditor({ id }) {
   if (state?.ready && !userId)
     return (
       <p className="muted" style={{ marginTop: 40 }}>
-        <Link href={`/login?next=/briefs/b/${id}/edit`} className="u-link">Sign in</Link> to edit this brief.
+        <Link href={`/login?next=/lists/b/${id}/edit`} className="u-link">Sign in</Link> to edit this list.
       </p>
     );
   if (brief === undefined) return <p className="muted" style={{ marginTop: 40 }}>Loading your list…</p>;
   if (!brief)
     return (
       <p className="muted" style={{ marginTop: 40 }}>
-        We couldn’t find that brief, or it isn’t one of yours. <Link href="/briefs" className="u-link">See all briefs</Link>
+        We couldn’t find that list, or it isn’t one of yours. <Link href="/lists" className="u-link">See all lists</Link>
       </p>
     );
   return <BriefBuilder editing={editingFrom(brief)} />;

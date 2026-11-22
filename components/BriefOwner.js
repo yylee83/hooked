@@ -32,7 +32,7 @@ export default function BriefOwner({ authorId, briefId }) {
   return (
     <>
       <div className="brief__owner">
-        <Link href={`/briefs/b/${briefId}/edit`} className="btn btn--sm btn--shadow-sm">
+        <Link href={`/lists/b/${briefId}/edit`} className="btn btn--sm btn--shadow-sm">
           Edit brief
         </Link>
         <button type="button" className={`btn btn--sm btn--shadow-sm brief__delete ${confirm ? "is-confirm" : ""}`} onClick={remove} disabled={busy}>

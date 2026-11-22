@@ -159,7 +159,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setError("Couldn't delete. Try again.");
       return;
     }
-    router.push(isDraft ? "/me" : "/briefs");
+    router.push(isDraft ? "/me" : "/lists");
     router.refresh();
   }
   const isDraft = !!draftId || !!editing?.draft;
@@ -241,7 +241,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         job.id = data.id;
         setDraftId(data.id);
         // Reloading (or coming back later) opens this draft.
-        window.history.replaceState(null, "", `/briefs/b/${data.id}/edit`);
+        window.history.replaceState(null, "", `/lists/b/${data.id}/edit`);
         try {
           sessionStorage.removeItem(DRAFT);
         } catch {}
@@ -264,7 +264,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       try {
         sessionStorage.setItem(DRAFT, JSON.stringify({ topic, mode, result, picked, pool, title, titleTouched, dek, color }));
       } catch {}
-      router.push("/login?next=/briefs/new");
+      router.push("/login?next=/lists/new");
       return;
     }
     setSaving(true);
@@ -286,7 +286,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     try {
       sessionStorage.removeItem(DRAFT);
     } catch {}
-    router.push(`/briefs/b/${data.id}`);
+    router.push(`/lists/b/${data.id}`);
     router.refresh();
   }
 
@@ -296,7 +296,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
   return (
     <>
-      <Link href={isPublished ? `/briefs/b/${editing.id}` : "/briefs"} className="back">
+      <Link href={isPublished ? `/lists/b/${editing.id}` : "/lists"} className="back">
         ← {isPublished ? "Back to list" : "Lists"}
       </Link>
       <h1 className="display h-lg" style={{ margin: "18px 0 8px" }}>
