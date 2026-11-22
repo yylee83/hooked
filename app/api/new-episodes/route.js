@@ -1,9 +1,10 @@
-// "New episodes from your hooked shows" on Home (components/NewEpisodes.js).
-// POST { shows: [our ids or Podcast Index numbers], logged: [episode ids] }:
-//   - with hooked shows: up to 2 of the newest episodes from each (up to 12 shows), newest first, skipping episodes
+// "New episodes from shows you listen to" on Home (components/NewEpisodes.js).
+// POST { shows: [our ids or Podcast Index numbers], logged: [episode ids] }. `shows` are yours, most important first:
+// hooked, then rated 4+ stars, then played in Hooked's player (YY, 2026-11-22).
+//   - with shows: up to 2 of the newest episodes from each (up to 20 shows), the 12 newest overall, skipping episodes
 //     you've logged. Asked fresh, and the top of each show's own feed is read too (lib/catalog.js `feedNewest`), so an
 //     episode that just came out shows up before Podcast Index lists it.
-//   - without (signed out, or nothing hooked yet): the newest episode of each popular show on Hooked.
+//   - without (signed out, or nothing hooked, rated or played yet): the newest episode of each popular show on Hooked.
 // Spotify-only episodes can't play here, so only episodes with audio are returned.
 import { getEpisodes, episodeCard, safe } from "@/lib/podcastindex";
 import { popularOnHooked } from "@/lib/charts";
@@ -11,7 +12,8 @@ import { REF, feedNewest, newestOfShow, showRowsFor, withRefs } from "@/lib/cata
 
 const PI_ID = /^\d{1,15}$/;
 const ids = (a, max) => [...new Set((Array.isArray(a) ? a : []).map(String).filter((x) => REF.test(x) || PI_ID.test(x)))].slice(0, max);
-const MAX = 12;
+const MAX = 12; // episodes shown
+const MAX_SHOWS = 20;
 const PER_SHOW = 2;
 
 export async function POST(req) {
@@ -19,7 +21,7 @@ export async function POST(req) {
   try {
     body = await req.json();
   } catch {}
-  const shows = ids(body.shows, MAX);
+  const shows = ids(body.shows, MAX_SHOWS);
   const logged = new Set(ids(body.logged, 2000));
   const isLogged = (c) => (c.ref && logged.has(c.ref)) || (c.id != null && logged.has(String(c.id)));
 
