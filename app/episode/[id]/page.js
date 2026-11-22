@@ -33,7 +33,7 @@ export async function generateMetadata({ params, searchParams }) {
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
   const title = who ? `${who} thinks you'd enjoy "${data.title}"` : data.title;
   const description = shared?.log?.hook ? `“${shared.log.hook}” Listen free on ${site.name}.` : `${data.feedTitle || "A podcast"} · Listen free on ${site.name}.`;
-  const image = episodePreviewPath(data.ref || data.id, shared?.profile?.handle);
+  const image = episodePreviewPath(data.ref || data.id, shared?.profile?.handle, shared?.log);
   return {
     title: data.title,
     description,
