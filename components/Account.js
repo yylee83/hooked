@@ -128,7 +128,15 @@ export function EpisodeLogs({ episodeId, episodeRef }) {
       live = false;
     };
   }, [episodeId, episodeRef, me]);
-  if (!logs?.length) return null;
+  if (!logs) return null;
+  // A brand-new episode has no reviews yet: say so, so the page doesn't just stop under the buttons.
+  if (!logs.length)
+    return (
+      <section>
+        <h2 className="label">What listeners think</h2>
+        <p className="muted small">No reviews yet. Log it to be the first.</p>
+      </section>
+    );
   const stars = starStats(logs);
   // Your own review first.
   if (me) logs = [...logs.filter((l) => l.user_id === me), ...logs.filter((l) => l.user_id !== me)];
