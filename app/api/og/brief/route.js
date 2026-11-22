@@ -37,7 +37,7 @@ export async function GET(request) {
           <div style={{ display: "flex", alignItems: "center" }}>
             <div style={{ display: "flex", fontFamily: "Bagel", fontSize: 44, color: tone.fg, lineHeight: 1 }}>hooked</div>
             <div style={{ display: "flex", marginLeft: 18, fontSize: 24, fontWeight: 700, background: C.butter, color: C.ink, border: `4px solid ${C.ink}`, borderRadius: 999, padding: "4px 18px", transform: "rotate(-4deg)" }}>
-              Brief
+              List
             </div>
           </div>
           <div style={{ display: "flex", fontFamily: "Bagel", fontSize: info.title.length > 28 ? 64 : 80, lineHeight: 1.02, marginTop: 44 }}>{clip(info.title, 60)}</div>

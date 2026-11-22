@@ -31,7 +31,7 @@ const finished = (ep) => {
 // Where a play started, for listening history (lib/history.js): the page you were on.
 function sourceOf(path) {
   if (path === "/") return "home";
-  for (const [start, source] of [["/search", "search"], ["/episode", "episode"], ["/show", "show"], ["/briefs", "brief"], ["/u/", "profile"], ["/me", "my_log"]]) {
+  for (const [start, source] of [["/search", "search"], ["/episode", "episode"], ["/show", "show"], ["/lists", "brief"], ["/u/", "profile"], ["/me", "my_log"]]) {
     if (path.startsWith(start)) return source;
   }
   return "other";

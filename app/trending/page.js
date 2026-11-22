@@ -36,8 +36,8 @@ export default async function TrendingPage() {
                 <Link href={`/search/find?${new URLSearchParams({ q: t.topic, type: "episodes" })}`} className="btn btn--sm btn--cobalt">
                   Hear about it
                 </Link>
-                <Link href={`/briefs/new?${new URLSearchParams({ topic: t.topic })}`} className="btn btn--sm">
-                  Make a brief
+                <Link href={`/lists/new?${new URLSearchParams({ topic: t.topic })}`} className="btn btn--sm">
+                  Make a list
                 </Link>
               </div>
             </li>

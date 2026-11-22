@@ -1,14 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Plain /search and /briefs are made ahead of time so they open fully loaded; searches live at /search/find and
-  // /briefs/find. These rewrites only keep old /search?q=… links working when opened from outside: inside the app, a
+  // Plain /search and /lists are made ahead of time so they open fully loaded; searches live at /search/find and
+  // /lists/find. These rewrites only keep old /search?q=… links working when opened from outside: inside the app, a
   // link to /search?q=… reuses the ready-made page and shows no results, so always link to the find pages.
+  // Briefs became Lists (YY, 2026-11-22): old /briefs links, shared before the rename, forward to the same page.
+  async redirects() {
+    return [
+      { source: "/briefs", destination: "/lists", permanent: true },
+      { source: "/briefs/:path*", destination: "/lists/:path*", permanent: true },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: [
         { source: "/search", has: [{ type: "query", key: "q" }], destination: "/search/find" },
         { source: "/search", has: [{ type: "query", key: "type" }], destination: "/search/find" },
-        { source: "/briefs", has: [{ type: "query", key: "q" }], destination: "/briefs/find" },
+        { source: "/lists", has: [{ type: "query", key: "q" }], destination: "/lists/find" },
       ],
     };
   },
