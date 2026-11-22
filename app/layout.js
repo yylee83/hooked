@@ -3,6 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import "@fontsource/bagel-fat-one/400.css";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import HandleGate from "@/components/HandleGate";
 import { PlayerProvider } from "@/components/Player";
 import { site } from "@/lib/site";
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }) {
         <PlayerProvider>
           <main className="app">{children}</main>
           <BottomNav />
+          <HandleGate />
         </PlayerProvider>
       </body>
     </html>
