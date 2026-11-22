@@ -9,6 +9,7 @@ import { findLog, sendRecommendation, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
 import { recordShare } from "@/lib/history";
+import { briefPreviewPath, episodePreviewPath, warmPreview } from "@/lib/og-paths";
 
 export function starText(rating) {
   if (!rating) return "";
@@ -120,6 +121,12 @@ export function ShareSheet({ episode, onClose }) {
       setSending(false);
     }
   }
+
+  // Get the link's preview picture drawn now, so it's ready when Messages (or anything else) asks for it. A phone
+  // gives up after a few seconds and shows only a small icon.
+  useEffect(() => {
+    if (episode.ref) warmPreview(episodePreviewPath(episode.ref, handle));
+  }, [episode.ref, handle]);
 
   const canNative = typeof navigator !== "undefined" && !!navigator.share;
 
@@ -234,6 +241,14 @@ export function BriefShareButton({ title, path, count, briefId }) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}${path}`;
   const text = `A podcast brief for you: "${title}"${count ? `, ${count} ${count === 1 ? "episode" : "episodes"}` : ""}.`;
+
+  // The phone's share menu opens straight away, so get the preview picture ready while the page is open: a phone gives
+  // up on a slow one after a few seconds and shows only a small icon.
+  useEffect(() => {
+    const key = path.split("?")[0].split("/").filter(Boolean).pop();
+    const t = setTimeout(() => warmPreview(briefPreviewPath(key)), 2000);
+    return () => clearTimeout(t);
+  }, [path]);
 
   async function share() {
     if (typeof navigator !== "undefined" && navigator.share) {

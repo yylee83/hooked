@@ -1,45 +1,11 @@
 // The preview image for a shared episode link: the cover, the episode, and the sharer's take.
 import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import { artOf } from "@/lib/podcastindex";
 import { REF, loadEpisode } from "@/lib/catalog";
 import { getSharedLog } from "@/lib/supabase/public";
-import { safeFetch } from "@/lib/safe-fetch";
+import { asJpeg, coverDataUrl, loadFonts } from "@/lib/og-image";
 
 const C = { cobalt: "#2340FF", pink: "#FF7AC6", butter: "#FFE14D", ink: "#15131D", cream: "#FFF7EE", muted: "#55526A" };
-
-let fonts;
-async function loadFonts() {
-  if (!fonts) {
-    const dir = join(process.cwd(), "assets");
-    const [bagel, medium, bold] = await Promise.all([
-      readFile(join(dir, "BagelFatOne.woff")),
-      readFile(join(dir, "Geist-Medium.ttf")),
-      readFile(join(dir, "Geist-Bold.ttf")),
-    ]);
-    fonts = [
-      { name: "Bagel", data: bagel, weight: 400, style: "normal" },
-      { name: "Geist", data: medium, weight: 500, style: "normal" },
-      { name: "Geist", data: bold, weight: 700, style: "normal" },
-    ];
-  }
-  return fonts;
-}
-
-// Download the cover ourselves so a slow or broken image never breaks the preview.
-// The address comes from the podcast's feed, so it goes through safeFetch.
-async function coverDataUrl(url) {
-  if (!url || !/^https?:\/\//.test(url)) return null;
-  try {
-    const res = await safeFetch(url, { timeoutMs: 4000, maxBytes: 4_000_000 });
-    const type = res.headers.get("content-type") || "";
-    if (!res.ok || !/image\/(png|jpe?g|gif|webp)/.test(type)) return null;
-    return `data:${type.split(";")[0]};base64,${res.body.toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
 
 const clip = (s = "", n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 const STAR = "M12 2.5l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.4l-6.1 3.5 1.5-6.8L2.2 9.5l6.9-.7z";
@@ -81,8 +47,11 @@ export async function GET(request) {
   const cover = await coverDataUrl(ep.image || ep.feedImage || artOf(show));
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
   const log = shared?.log;
+  const title = clip(ep.title || "", 80);
+  const titleSize = title.length > 50 ? 40 : title.length > 32 ? 46 : 52;
 
-  return new ImageResponse(
+  return asJpeg(
+    new ImageResponse(
     (
       <div style={{ width: 1200, height: 630, display: "flex", background: C.cream, fontFamily: "Geist", color: C.ink, padding: "56px 64px", position: "relative" }}>
         {/* left: cover */}
@@ -125,7 +94,8 @@ export async function GET(request) {
           <div style={{ display: "flex", fontSize: 30, fontWeight: 700, marginTop: 40, color: C.cobalt }}>
             {who ? clip(`${who} thinks you'd enjoy this`, 44) : "A podcast for you"}
           </div>
-          <div style={{ display: "flex", fontFamily: "Bagel", fontSize: 52, lineHeight: 1.05, marginTop: 14 }}>{clip(ep.title || "", 70)}</div>
+          {/* long titles get smaller type so they stay within two or three lines */}
+          <div style={{ display: "flex", fontFamily: "Bagel", fontSize: titleSize, lineHeight: 1.12, marginTop: 14 }}>{title}</div>
           <div style={{ display: "flex", fontSize: 28, fontWeight: 500, color: C.muted, marginTop: 14 }}>{clip(ep.feedTitle || show?.title || "", 46)}</div>
 
           {log && (log.rating > 0 || log.hook) && (
@@ -150,12 +120,18 @@ export async function GET(request) {
             padding: "8px 22px",
             transform: "rotate(-4deg)",
             boxShadow: `5px 5px 0 ${C.ink}`,
+            alignItems: "center",
           }}
         >
-          ▶ Listen free
+          {/* a drawn triangle: the ▶ character isn't in our fonts, and fetching a font for it slowed the image down */}
+          <svg width="18" height="20" viewBox="0 0 18 20" style={{ marginRight: 10 }}>
+            <path d="M2 1.5 L16.5 10 L2 18.5 Z" fill={C.ink} />
+          </svg>
+          Listen free
         </div>
       </div>
     ),
-    { width: 1200, height: 630, fonts: f, headers: { "Cache-Control": "public, max-age=600, s-maxage=3600" } }
+    { width: 1200, height: 630, fonts: f }
+    )
   );
 }
