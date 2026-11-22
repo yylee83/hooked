@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Art from "@/components/Art";
@@ -15,6 +16,7 @@ import { episodeCard, artOf } from "@/lib/podcastindex";
 import { REF, episodeRefFor, loadEpisode } from "@/lib/catalog";
 import { showHref, withQuery } from "@/lib/addresses";
 import Notes from "@/components/Notes";
+import FeaturedInBriefs from "@/components/FeaturedInBriefs";
 import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -129,6 +131,11 @@ export default async function EpisodePage({ params, searchParams }) {
           <Notes text={e.description} />
         </section>
       )}
+
+      {/* Shown once the briefs are looked up, so the rest of the page never waits on it. */}
+      <Suspense fallback={null}>
+        <FeaturedInBriefs episode={card} />
+      </Suspense>
     </>
   );
 }
