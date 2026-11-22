@@ -74,7 +74,7 @@ export default async function BriefsPage({ searchParams }) {
         </div>
       </div>
       <p className="muted" style={{ margin: "8px 0 16px", fontSize: 19 }}>
-        The best episodes on a topic, all in one place.
+        Episode playlists, picked by people who listen.
       </p>
 
       {/* Searches briefs only (built-in and listeners'), by title, topic, description and the episodes inside. */}
