@@ -13,6 +13,7 @@ import { episodeHref } from "@/lib/addresses";
 import { LOG_EPISODE, episodeOf, withEpisode } from "@/lib/log-episode";
 import { site } from "@/lib/site";
 import DiscoverPeople from "./DiscoverPeople";
+import { useRefreshTick } from "@/lib/home-refresh";
 
 const HOUR = 3600 * 1000;
 
@@ -170,6 +171,7 @@ export function FriendsFeed() {
   const [allSent, setAllSent] = useState(false);
   const [shownLogs, setShownLogs] = useState(FRIEND_LOGS_PAGE);
   const ids = (state?.following || []).map((f) => f.id).sort().join(",");
+  const tick = useRefreshTick();
 
   useEffect(() => {
     const db = supabase();
@@ -213,7 +215,7 @@ export function FriendsFeed() {
     return () => {
       live = false;
     };
-  }, [state?.user?.id, ids]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state?.user?.id, ids, tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!state || !state.accounts) return null;
 

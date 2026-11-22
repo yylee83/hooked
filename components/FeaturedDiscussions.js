@@ -5,12 +5,13 @@
 // First the episodes in Trending conversations (the trending_conversations database function: reviews, replies and
 // sends this week), each with its best review. While Hooked is small that list is often short, so the rest are the
 // recent reviews with the most going on (replies, thumbs, "+"), newest counting most.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { Avatar } from "./Friends";
 import { supabase } from "@/lib/supabase/client";
 import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
+import { useRefreshTick } from "@/lib/home-refresh";
 
 const MAX = 15; // conversations loaded
 const SCROLL_FROM = 4; // more than this many: the list scrolls inside its own box (YY, 2026-11-22)
@@ -114,7 +115,11 @@ async function load(db) {
 export default function FeaturedDiscussions() {
   const [cards, setCards] = useState(null);
   const [atEnd, setAtEnd] = useState(false); // scrolled to the bottom of the box: drop the fade
+  const tick = useRefreshTick();
+  const box = useRef(null);
   useEffect(() => {
+    // A refresh starts the box back at the top, like the page.
+    if (tick && box.current) box.current.scrollTop = 0;
     const db = supabase();
     if (!db) return setCards([]);
     let live = true;
@@ -124,7 +129,7 @@ export default function FeaturedDiscussions() {
     return () => {
       live = false;
     };
-  }, []);
+  }, [tick]);
 
   if (cards && !cards.length) return null;
   const scrolls = (cards?.length || 0) > SCROLL_FROM;
@@ -132,6 +137,7 @@ export default function FeaturedDiscussions() {
     <section className="featured-talk" aria-label="Top conversations">
       <h2 className="section-title featured-talk__label">Top conversations</h2>
       <div
+        ref={box}
         className={`featured-talk__row ${scrolls ? "featured-talk__row--scroll" : ""} ${scrolls && atEnd ? "is-end" : ""}`}
         onScroll={scrolls ? (e) => setAtEnd(e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 8) : undefined}
       >

@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import Art from "./Art";
 import { useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
+import { useRefreshTick } from "@/lib/home-refresh";
 
 export default function ListeningOnHooked({ always = false }) {
   const state = useStore();
   const [episodes, setEpisodes] = useState(null);
+  const tick = useRefreshTick();
   const shown = !!state && (always || !state.user);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function ListeningOnHooked({ always = false }) {
     return () => {
       live = false;
     };
-  }, [shown]);
+  }, [shown, tick]);
 
   if (!shown || !episodes?.length) return null;
   return (

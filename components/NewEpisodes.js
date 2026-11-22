@@ -15,6 +15,7 @@ import { hookedShows, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { shortDate } from "@/lib/format";
 import { useMyListening } from "@/lib/my-listening";
+import { useRefreshTick } from "@/lib/home-refresh";
 
 const SAVED = "hooked:new-eps";
 const LOVED = 4; // stars: a rating this high counts the show as one you listen to
@@ -62,6 +63,7 @@ export default function NewEpisodes() {
   const state = useStore();
   const [data, setData] = useState(null); // { mode, episodes }: the fresh answer
   const [saved, setSaved] = useState(null); // the last answer on this device, until the fresh one arrives
+  const tick = useRefreshTick();
   const who = state ? state.user?.id || "out" : null;
   const listening = useMyListening(state?.user?.id);
   // Signed in, wait for your listening totals so the row is asked for once, with all your shows.
@@ -87,7 +89,7 @@ export default function NewEpisodes() {
     return () => {
       live = false;
     };
-  }, [key, who]);
+  }, [key, who, tick]);
 
   // Someone else's saved row (another account, or from before signing in/out) is never shown.
   const usable = saved && (who === null || saved.who === who) ? saved : null;

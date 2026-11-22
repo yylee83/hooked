@@ -952,3 +952,25 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 @media (prefers-reduced-motion: reduce) { .page-loading__rows span { animation: none; } }
 
 .friends-feed__more { display: block; margin: 10px auto 4px; }
+
+/* ---------- Home: refresh by pulling down or tapping Home again (components/HomeRefresh.js) ---------- */
+html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
+.home-pull {
+  position: fixed; z-index: 15; left: 50%; top: calc(env(safe-area-inset-top) + 4px);
+  width: 38px; height: 38px; margin-left: -19px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--cobalt);
+  background: var(--cream); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+  transform: translateY(calc(var(--pull, 0px) - 44px));
+  transition: transform 0.25s ease, opacity 0.25s ease, background 0.15s ease;
+  pointer-events: none;
+}
+.home-pull.is-dragging, .home-pull__body.is-dragging { transition: none; }
+.home-pull.is-ready { background: var(--butter); }
+.home-pull.is-busy svg { animation: home-pull-spin 0.8s linear infinite; }
+@keyframes home-pull-spin { to { transform: rotate(360deg); } }
+.home-pull__body { transition: transform 0.25s ease; }
+.home-pull__status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .home-pull.is-busy svg { animation: none; }
+  .home-pull, .home-pull__body { transition: none; }
+}

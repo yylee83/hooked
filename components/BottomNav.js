@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import PasteLink from "./PasteLink";
+import { HOME_TAP } from "@/lib/home-refresh";
 
 const tabs = [
   { href: "/", label: "Home" },
@@ -115,7 +116,13 @@ export default function BottomNav() {
                 </svg>
               </button>
             ) : (
-              <Link key={t.label} href={t.href} className={`nav__link ${active(t.href) ? "is-active" : ""}`}>
+              <Link
+                key={t.label}
+                href={t.href}
+                className={`nav__link ${active(t.href) ? "is-active" : ""}`}
+                // Home, tapped while on Home: back to the top and refresh, instead of a page change that does nothing.
+                onClick={t.href === "/" && path === "/" ? (e) => (e.preventDefault(), window.dispatchEvent(new Event(HOME_TAP))) : undefined}
+              >
                 <NavLabel>{t.label}</NavLabel>
               </Link>
             )
