@@ -1,9 +1,7 @@
 // The preview image for a shared brief link: the brief's title, a fan of its covers, and who made it.
 import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import { briefShareInfo, countText } from "@/lib/brief-share";
-import { safeFetch } from "@/lib/safe-fetch";
+import { asJpeg, coverDataUrl, loadFonts } from "@/lib/og-image";
 
 const C = { cobalt: "#2340FF", pink: "#FF7AC6", butter: "#FFE14D", ink: "#15131D", cream: "#FFF7EE" };
 // Background and text for each brief color, like the brief page.
@@ -12,37 +10,6 @@ const TONE = {
   bubblegum: { bg: C.pink, fg: C.ink, accent: C.ink },
   butter: { bg: C.butter, fg: C.ink, accent: C.cobalt },
 };
-
-let fonts;
-async function loadFonts() {
-  if (!fonts) {
-    const dir = join(process.cwd(), "assets");
-    const [bagel, medium, bold] = await Promise.all([
-      readFile(join(dir, "BagelFatOne.woff")),
-      readFile(join(dir, "Geist-Medium.ttf")),
-      readFile(join(dir, "Geist-Bold.ttf")),
-    ]);
-    fonts = [
-      { name: "Bagel", data: bagel, weight: 400, style: "normal" },
-      { name: "Geist", data: medium, weight: 500, style: "normal" },
-      { name: "Geist", data: bold, weight: 700, style: "normal" },
-    ];
-  }
-  return fonts;
-}
-
-// Covers come from podcast feeds, so they go through safeFetch. A slow or broken one is just left out.
-async function coverDataUrl(url) {
-  if (!url || !/^https?:\/\//.test(url)) return null;
-  try {
-    const res = await safeFetch(url, { timeoutMs: 4000, maxBytes: 4_000_000 });
-    const type = res.headers.get("content-type") || "";
-    if (!res.ok || !/image\/(png|jpe?g|gif|webp)/.test(type)) return null;
-    return `data:${type.split(";")[0]};base64,${res.body.toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
 
 const clip = (s = "", n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 const KEY = /^([0-9a-f-]{36}|[a-z0-9-]{1,60})$/i;
@@ -59,10 +26,11 @@ export async function GET(request) {
   const [info, f] = await Promise.all([briefShareInfo(key).catch(() => null), loadFonts()]);
   if (!info) return new Response("Not found", { status: 404 });
   const tone = TONE[info.color] || TONE.cobalt;
-  const covers = (await Promise.all(info.covers.slice(0, 4).map(coverDataUrl))).filter(Boolean);
+  const covers = (await Promise.all(info.covers.slice(0, 4).map((u) => coverDataUrl(u, 240)))).filter(Boolean);
   const line = info.author ? `${countText(info.count)} · picked by @${info.author}` : countText(info.count);
 
-  return new ImageResponse(
+  return asJpeg(
+    new ImageResponse(
     (
       <div style={{ width: 1200, height: 630, display: "flex", background: tone.bg, fontFamily: "Geist", color: tone.fg, padding: "56px 64px", position: "relative" }}>
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, paddingRight: 40 }}>
@@ -108,6 +76,7 @@ export async function GET(request) {
         )}
       </div>
     ),
-    { width: 1200, height: 630, fonts: f, headers: { "Cache-Control": "public, max-age=600, s-maxage=3600" } }
+    { width: 1200, height: 630, fonts: f }
+    )
   );
 }
