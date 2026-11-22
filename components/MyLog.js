@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import FinishedNotLogged from "./FinishedNotLogged";
 import KeepListening from "./KeepListening";
 import HistoryNote from "./HistoryNote";
@@ -58,6 +59,7 @@ function ProfilePanel({ state }) {
   const [busy, setBusy] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
   const [pwSaved, setPwSaved] = useState(false);
+  const router = useRouter();
 
   if (!state.accounts) return null;
 
@@ -124,6 +126,8 @@ function ProfilePanel({ state }) {
     try {
       await saveProfile({ handle, displayName: name });
       setEditing(false);
+      // A brand-new account: next, follow a few people.
+      if (needsHandle) router.push("/welcome/people");
     } catch (err) {
       setError(err.message);
     } finally {

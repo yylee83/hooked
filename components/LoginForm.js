@@ -11,6 +11,7 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
   const [mode, setMode] = useState(startMode); // signin | signup | link | forgot | waitlist
   const [email, setEmail] = useState(startEmail);
   const [password, setPassword] = useState("");
+  const [handle, setHandle] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset", or "waitlist"
@@ -81,8 +82,10 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         await signInWithPassword(addr, password);
         router.push(next);
       } else if (mode === "signup") {
-        const ready = await signUpWithPassword(addr, password, next);
-        if (ready) router.push(next);
+        // A new account starts by following a few people (it gets a handle automatically), then goes on.
+        const first = next === "/me" ? "/welcome/people" : next;
+        const ready = await signUpWithPassword(addr, password, first, handle);
+        if (ready) router.push(first);
         else setSent("confirm");
       } else if (mode === "waitlist") {
         await joinWaitlist(addr);
@@ -150,6 +153,26 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+
+        {mode === "signup" && (
+          <>
+            <label className="label" htmlFor="handle" style={{ margin: "16px 0 0" }}>
+              Handle
+            </label>
+            <input
+              id="handle"
+              className="input"
+              required
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              placeholder="e.g. maya.k"
+              value={handle}
+              onChange={(e) => setHandle(e.target.value)}
+            />
+            <p className="muted small" style={{ margin: 0 }}>How friends find and follow you. You can change it later.</p>
+          </>
+        )}
 
         {needsPassword && (
           <>
