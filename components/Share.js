@@ -240,7 +240,7 @@ export function BriefShareButton({ title, path, count, briefId }) {
   const [open, setOpen] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}${path}`;
-  const text = `A podcast brief for you: "${title}"${count ? `, ${count} ${count === 1 ? "episode" : "episodes"}` : ""}.`;
+  const text = `A podcast list for you: "${title}"${count ? `, ${count} ${count === 1 ? "episode" : "episodes"}` : ""}.`;
 
   // The phone's share menu opens straight away, so get the preview picture ready while the page is open: a phone gives
   // up on a slow one after a few seconds and shows only a small icon.
@@ -271,10 +271,10 @@ export function BriefShareButton({ title, path, count, briefId }) {
       </button>
       {open && (
         <LinkSheet
-          title="Share this brief"
+          title="Share this list"
           url={url}
           text={text}
-          subject={`A podcast brief for you: ${title}`}
+          subject={`A podcast list for you: ${title}`}
           onShare={(method) => recordShare({ briefId, method })}
           onClose={() => setOpen(false)}
         />

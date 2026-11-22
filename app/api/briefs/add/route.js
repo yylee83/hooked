@@ -1,5 +1,5 @@
 // One episode for a brief: from an Apple Podcasts or Spotify link (the brief builder's paste box, ?url=), or by our
-// episode id or its Podcast Index number ("+ Brief" on an episode page, ?episode=).
+// episode id or its Podcast Index number ("+ List" on an episode page, ?episode=).
 import { NextResponse } from "next/server";
 import { resolveLink } from "@/lib/links";
 import { briefItem } from "@/lib/briefs-server";

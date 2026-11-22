@@ -1,5 +1,5 @@
 // What Briefs and Search show the moment you tap them, while the server is still putting the page together
-// (app/briefs/loading.js, app/search/loading.js). Without it, a tap on the bottom bar left the old page up until the
+// (app/lists/loading.js, app/search/loading.js). Without it, a tap on the bottom bar left the old page up until the
 // new one was ready, which felt like lag (YY, 2026-11-21).
 export default function PageLoading({ title, blurb, placeholder }) {
   return (

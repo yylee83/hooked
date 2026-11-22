@@ -16,5 +16,5 @@ export default async function CuratedBriefPage({ params }) {
   const brief = getBrief(slug);
   if (!brief) notFound();
   const items = await resolveCuratedItems(brief);
-  return <BriefView brief={{ ...brief, sharePath: `/briefs/${brief.slug}` }} items={items} />;
+  return <BriefView brief={{ ...brief, sharePath: `/lists/${brief.slug}` }} items={items} />;
 }

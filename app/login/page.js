@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }) {
         {startMode === "signup" ? "Make your profile." : "Welcome back."}
       </h1>
       <p className="muted" style={{ fontSize: 19, marginBottom: 8 }}>
-        Save your log, pin the shows you're hooked on, and make briefs.
+        Save your log, pin the shows you're hooked on, and make lists.
       </p>
       <LoginForm next={next} linkError={sp.error === "link"} startMode={startMode} />
     </>

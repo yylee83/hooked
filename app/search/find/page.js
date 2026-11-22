@@ -135,7 +135,7 @@ export default async function SearchPage({ searchParams }) {
   const briefsSection = foundBriefs.briefs.length > 0 && (
     <section>
       <div className="row center" style={{ justifyContent: "space-between" }}>
-        <h2 className="label">Briefs</h2>
+        <h2 className="label">Lists</h2>
         {type === "all" && foundBriefs.total > foundBriefs.briefs.length && (
           <Link href={href(query, "briefs")} className="more-link">
             See all {foundBriefs.total} →
@@ -150,7 +150,7 @@ export default async function SearchPage({ searchParams }) {
                 <Art src={b.image} title={b.title} size={68} radius={14} />
               ) : (
                 <span className={`search-brief-tile tone-${b.color}`} aria-hidden="true">
-                  Brief
+                  List
                 </span>
               )}
               <div className="min0">
@@ -307,7 +307,7 @@ export default async function SearchPage({ searchParams }) {
       <div data-search-results>
         {friends && query && !linkError && <FriendsResults query={query} />}
         {type === "people" && (peopleSection || <p className="muted">No one on Hooked matches “{query}”.</p>)}
-        {type === "briefs" && (briefsSection || <p className="muted">No briefs match “{query}”.</p>)}
+        {type === "briefs" && (briefsSection || <p className="muted">No lists match “{query}”.</p>)}
         {/* All: someone's exact name goes first; partial name matches come after shows and episodes. */}
         {type === "all" && found.exact && peopleSection}
         {/* Always shows, then episodes, so the page looks the same for every search. */}

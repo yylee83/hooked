@@ -11,7 +11,7 @@ export default async function FeaturedInBriefs({ episode }) {
   ]);
   const list = [
     ...featured,
-    ...listeners.map((b) => ({ key: b.id, href: `/briefs/b/${b.id}`, title: b.title, color: b.color, by: b.author?.handle })),
+    ...listeners.map((b) => ({ key: b.id, href: `/lists/b/${b.id}`, title: b.title, color: b.color, by: b.author?.handle })),
   ];
   if (!list.length) return null;
   return (
@@ -21,7 +21,7 @@ export default async function FeaturedInBriefs({ episode }) {
         {list.map((b) => (
           <Link key={b.key} href={b.href} className={`ep-briefs__item ep-briefs__item--${b.color || "cobalt"}`}>
             <span className="ep-briefs__title">{b.title}</span>
-            {b.note ? <span className="ep-briefs__note">{b.note}</span> : b.by && <span className="ep-briefs__by">A brief by @{b.by}</span>}
+            {b.note ? <span className="ep-briefs__note">{b.note}</span> : b.by && <span className="ep-briefs__by">A list by @{b.by}</span>}
           </Link>
         ))}
       </div>

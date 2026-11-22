@@ -9,7 +9,7 @@ const KINDS = [
   [/^\/episode\/([^/?#]+)/, "episode"],
   [/^\/show\/(?:apple\/)?([^/?#]+)/, "show"],
   [/^\/u\/([^/?#]+)/, "person"],
-  [/^\/briefs\/b\/([^/?#]+)/, "brief"],
+  [/^\/lists\/b\/([^/?#]+)/, "brief"],
 ];
 const kindOf = (path) => {
   for (const [re, kind] of KINDS) {

@@ -1,6 +1,6 @@
 import BriefBuilder from "@/components/BriefBuilder";
 
-export const metadata = { title: "New brief" };
+export const metadata = { title: "New list" };
 
 export default async function NewBriefPage({ searchParams }) {
   const { topic } = await searchParams;
