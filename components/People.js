@@ -56,7 +56,8 @@ export default function PeopleTabs({ person = null, initialTab = "" }) {
   const tabs = [];
   if (subjectId) tabs.push(["following", "Following"], ["followers", "Followers"]);
   if (isMe) tabs.push(["find", "Find people"]);
-  const fallback = tabs[0]?.[0] || "find";
+  // Your own People page opens on Find people, where the suggestions are (YY, 2026-11-22).
+  const fallback = isMe ? "find" : tabs[0]?.[0] || "find";
   // Keep the tab that was asked for: until your account has loaded, only Find exists.
   const [tab, setTabState] = useState(initialTab);
   const current = tabs.some(([k]) => k === tab) ? tab : fallback;

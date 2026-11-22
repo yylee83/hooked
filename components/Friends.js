@@ -12,6 +12,7 @@ import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
 import { LOG_EPISODE, episodeOf, withEpisode } from "@/lib/log-episode";
 import { site } from "@/lib/site";
+import DiscoverPeople from "./DiscoverPeople";
 
 const HOUR = 3600 * 1000;
 
@@ -77,19 +78,7 @@ export function PeopleFinder() {
   const state = useStore();
   const [q, setQ] = useState("");
   const [results, setResults] = useState(null);
-  const [suggested, setSuggested] = useState([]);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const db = supabase();
-    if (!db) return;
-    db.from("profiles")
-      .select("id, handle, display_name")
-      .not("handle", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => setSuggested(data || []));
-  }, []);
 
   useEffect(() => {
     const db = supabase();
@@ -113,9 +102,7 @@ export function PeopleFinder() {
   if (state && !state.accounts) return <p className="muted">Profiles aren't switched on yet.</p>;
 
   const me = state?.user?.id;
-  const followingIds = new Set((state?.following || []).map((f) => f.id));
   const notMe = (list) => list.filter((p) => p.id !== me);
-  const suggestions = notMe(suggested).filter((p) => !followingIds.has(p.id)).slice(0, 10);
 
   async function invite() {
     const url = window.location.origin;
@@ -144,7 +131,6 @@ export function PeopleFinder() {
           aria-label="Search people"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          autoFocus
         />
       </div>
 
@@ -159,6 +145,8 @@ export function PeopleFinder() {
         </section>
       )}
 
+      <DiscoverPeople />
+
       <div className="card invite">
         <p className="display h-md" style={{ margin: 0 }}>Bring your friends.</p>
         <p style={{ margin: "6px 0 14px" }}>Send them a link to your profile. They can browse it without signing up. Making an account is invite-only for now.</p>
@@ -167,12 +155,6 @@ export function PeopleFinder() {
         </button>
       </div>
 
-      {suggestions.length > 0 && (
-        <section>
-          <h2 className="label">New on {site.name}</h2>
-          <ul>{suggestions.map((p) => <PersonRow key={p.id} p={p} />)}</ul>
-        </section>
-      )}
     </>
   );
 }
