@@ -190,7 +190,7 @@ export function ShareSheet({ episode, onClose }) {
               </div>
               {picked.length > 0 && (
                 <>
-                  <input className="input" style={{ marginTop: 12 }} placeholder="Add a note (optional)" maxLength={280} value={note} onChange={(e) => setNote(e.target.value)} />
+                  <input className="input" style={{ marginTop: 12 }} placeholder="Add a note (optional)" spellCheck autoCorrect="on" autoCapitalize="sentences" maxLength={280} value={note} onChange={(e) => setNote(e.target.value)} />
                   <button className="btn btn--cobalt btn--shadow-sm" style={{ marginTop: 12 }} onClick={send} disabled={sending}>
                     {sending ? "Sending…" : `Send to ${picked.length}`}
                   </button>

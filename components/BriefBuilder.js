@@ -434,6 +434,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           <input
             className="input"
             placeholder="Title"
+            spellCheck
+            autoCorrect="on"
+            autoCapitalize="sentences"
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
@@ -445,6 +448,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
             className="input textarea"
             rows={3}
             placeholder="One or two lines: why this, why now? (optional)"
+            spellCheck
+            autoCorrect="on"
+            autoCapitalize="sentences"
             value={dek}
             onChange={(e) => setDek(e.target.value)}
             maxLength={300}
