@@ -719,7 +719,12 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .welcome-q { padding-bottom: 40px; }
 .welcome-q__chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .welcome-q__chips .chip { cursor: pointer; }
-.welcome-q__bar { position: sticky; bottom: 96px; display: flex; justify-content: space-between; align-items: center; background: var(--cream); padding: 12px 0; margin-top: 22px; }
+.welcome-q__place { position: relative; }
+.welcome-q__place .input { width: 100%; }
+.welcome-q__options { list-style: none; margin: 6px 0 0; padding: 4px 0; border: var(--line); border-radius: 16px; background: var(--white); box-shadow: 4px 4px 0 var(--ink); }
+.welcome-q__options button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 16px; font: inherit; font-size: 17px; color: inherit; cursor: pointer; }
+.welcome-q__options li + li button { border-top: 1px solid rgba(21, 19, 29, .1); }
+.welcome-q__bar { display: flex; justify-content: space-between; align-items: center; background: var(--cream); padding: 12px 0; margin-top: 22px; }
 
 .picked-handle { margin: 0 0 18px; padding: 14px 16px; }
 .picked-handle__input { flex: 1; min-width: 0; }

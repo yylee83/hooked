@@ -131,7 +131,8 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Sign-up and the steps after it (YY, 2026-11-23):** the form asks for email, handle, an optional Name and a required "I'm 13
   or older" tick box (kept in the account's sign-up details as `over_13`). Then three skippable steps: `/welcome/shows`
   (pick favorite shows: saved as hooked shows; search through `/api/shows`, `components/FavoriteShows.js`) →
-  `/welcome/people` (Follow a few people) → `/welcome/about` (how you heard about Hooked, city or country;
+  `/welcome/people` (Follow a few people) → `/welcome/about` (how you heard about Hooked; city picked from suggestions as you type, `/api/places` over
+  `lib/places-data.json`, built by `scripts/make-places.cjs` from GeoNames, CC BY 4.0;
   `components/QuickQuestions.js`) → Home. Answers are private, in `signup_answers` (own row only; the team reads it in Supabase).
 - **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
   ("+ Up next"), `HookShowButton`; on episode pages also `AddToBriefButton` ("+ Brief", `components/AddToBrief.js`: add to one

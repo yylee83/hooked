@@ -1,6 +1,6 @@
 -- A few answers from new accounts (YY, 2026-11-23: "build a sample set up. keep the signup form short").
 -- The sign-up form asks for email, handle, an optional name and "I'm 13 or older". Right after, a short, skippable
--- step asks how they heard about Hooked and, optionally, their city. Favorite shows are saved as hooked shows
+-- step asks how they heard about Hooked and, optionally, their city (picked from a list). Favorite shows are saved as hooked shows
 -- (hooked_shows), so they feed Suggested follows, New episodes and Home like any other.
 --
 -- Private: profiles can be read by anyone, so these live in their own table. Each person can read and change only
@@ -13,8 +13,10 @@ create table public.signup_answers (
   -- How they heard about Hooked: one of the choices on the screen, and their own words for "Something else".
   heard_from text check (heard_from in ('friend', 'invite', 'instagram', 'tiktok', 'x', 'podcast', 'article', 'search', 'other')),
   heard_other text check (char_length(heard_other) <= 120),
-  -- City or country, as they typed it. Optional.
+  -- Where they are, picked from a list as they type (no misspellings; /api/places). Optional.
+  -- place: the town and its state or region, e.g. "Brooklyn, NY". country: its two-letter code, e.g. "US".
   place text check (char_length(place) <= 80),
+  country text check (country ~ '^[A-Z]{2}$'),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
