@@ -1,12 +1,13 @@
 // Builds lib/places-data.json, the city list behind "Where are you?" after sign-up (/api/places).
 // Data: GeoNames (geonames.org, CC BY 4.0), by way of two npm packages, so no outside service is asked at run time.
 // Run (packages unpacked outside the repo, e.g. with `npm pack all-the-cities cities.json`):
-//   node scripts/make-places.cjs <all-the-cities package folder> <cities.json package folder>
+//   node scripts/make-places.mjs <all-the-cities package folder> <cities.json package folder>
 // Keeps places with at least MIN_POP people: [name, region, country code], biggest first.
-const path = require("path");
-const fs = require("fs");
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 const [citiesDir, adminDir] = process.argv.slice(2);
-if (!citiesDir || !adminDir) throw new Error("usage: node scripts/make-places.cjs <all-the-cities dir> <cities.json dir>");
+if (!citiesDir || !adminDir) throw new Error("usage: node scripts/make-places.mjs <all-the-cities dir> <cities.json dir>");
 const MIN_POP = 5000;
 
 // all-the-cities stores its list as protocol buffers (cities.pbf). Read it as data here rather than running its code.
@@ -68,6 +69,6 @@ const rows = cities
     return !seen.has(k) && seen.add(k);
   });
 
-const out = path.join(__dirname, "..", "lib", "places-data.json");
+const out = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "lib", "places-data.json");
 fs.writeFileSync(out, JSON.stringify(rows));
 console.log(`${rows.length} places, ${(fs.statSync(out).size / 1e6).toFixed(1)} MB → lib/places-data.json`);

@@ -1,6 +1,6 @@
 // City suggestions for "Where are you?" after sign-up (components/QuickQuestions.js): type "brook" and pick
 // "Brooklyn, NY, United States". Picking from the list means no misspellings.
-// The list lives in the repo (lib/places-data.json, made by scripts/make-places.cjs from GeoNames, CC BY 4.0,
+// The list lives in the repo (lib/places-data.json, made by scripts/make-places.mjs from GeoNames, CC BY 4.0,
 // geonames.org): towns of 5,000+ people, biggest first. Nothing is asked of an outside service.
 import { NextResponse } from "next/server";
 import places from "@/lib/places-data.json";
