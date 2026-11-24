@@ -318,6 +318,12 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
             <span>I'm 13 or older</span>
           </label>
         )}
+        {mode === "signup" && (
+          <p className="muted small signup-terms">
+            By making a profile, you agree to the <Link href="/terms" target="_blank">Terms</Link> and{" "}
+            <Link href="/privacy" target="_blank">Privacy policy</Link>.
+          </p>
+        )}
 
         <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 22 }} disabled={busy || !state}>
           {busy ? "One sec…" : cta}

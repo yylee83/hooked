@@ -1047,3 +1047,17 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .blocked-note { margin: 14px 0 0; padding: 12px 14px; border: 2.5px dashed var(--ink); border-radius: 14px; font-size: 14px; }
 .brief__more { color: inherit; opacity: 0.85; }
 .brief__more:hover, .brief__more:focus-visible { color: inherit; opacity: 1; background: rgba(255, 255, 255, 0.18); }
+
+/* ---------- Privacy policy and Terms (app/privacy, app/terms) ---------- */
+.legal { max-width: 640px; padding: 24px 0 60px; font-size: 16px; line-height: 1.55; }
+.legal h1 { margin: 0; }
+.legal h2 { font-size: 20px; font-weight: 800; margin: 30px 0 8px; }
+.legal p { margin: 0 0 12px; }
+.legal ul { margin: 0 0 14px; padding-left: 20px; list-style: disc; }
+.legal li { margin-bottom: 6px; }
+.legal a { color: var(--cobalt); text-decoration: underline; }
+.legal__updated { font-family: var(--mono); font-size: 13px; color: var(--muted); margin: 8px 0 20px !important; }
+.legal__lead { font-weight: 700; margin: 16px 0 6px !important; }
+.legal-links { margin: 14px 0 0; }
+.legal-links a, .signup-terms a { color: inherit; text-decoration: underline; }
+.signup-terms { margin: 10px 0 0; }

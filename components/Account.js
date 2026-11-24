@@ -91,10 +91,12 @@ export function FreshLogs() {
 }
 
 // What people on Hooked said about one episode.
-export function EpisodeLogs({ episodeId, episodeRef }) {
+// `initial`: the same reviews, read on the server, so they're in the page itself (search engines and AI tools read
+// them there). The browser then reads them again, so your own review and fresh ones show up.
+export function EpisodeLogs({ episodeId, episodeRef, initial = null }) {
   const state = useStore();
   const me = state?.user?.id;
-  let [logs, setLogs] = useState(null);
+  let [logs, setLogs] = useState(initial);
   useEffect(() => {
     const db = supabase();
     if (!db) return setLogs([]);

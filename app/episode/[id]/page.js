@@ -18,7 +18,10 @@ import { REF, episodeRefFor, loadEpisode } from "@/lib/catalog";
 import { showHref, withQuery } from "@/lib/addresses";
 import Notes from "@/components/Notes";
 import FeaturedInBriefs from "@/components/FeaturedInBriefs";
-import { getSharedLog } from "@/lib/supabase/public";
+import { episodeReviews, getSharedLog } from "@/lib/supabase/public";
+import JsonLd from "@/components/JsonLd";
+import { episodeData } from "@/lib/structured-data";
+import { plainText } from "@/lib/podcastindex";
 import { minutes, shortDate } from "@/lib/format";
 import { site } from "@/lib/site";
 import { episodePreviewPath } from "@/lib/og-paths";
@@ -33,11 +36,18 @@ export async function generateMetadata({ params, searchParams }) {
   const shared = from ? await getSharedLog(from, { ref: data.ref, id: data.id }) : null;
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
   const title = who ? `${who} thinks you'd enjoy "${data.title}"` : data.title;
-  const description = shared?.log?.hook ? `“${shared.log.hook}” Listen free on ${site.name}.` : `${data.feedTitle || "A podcast"} · Listen free on ${site.name}.`;
+  const notes = plainText(data.description || "");
+  // For search results: the show, then the start of the show notes.
+  const about = `${data.feedTitle ? `${data.feedTitle}. ` : ""}${notes.length > 130 ? `${notes.slice(0, 129).trimEnd()}…` : notes}`.trim();
+  const description = shared?.log?.hook
+    ? `“${shared.log.hook}” Listen free on ${site.name}.`
+    : `${about || "A podcast episode"} Reviews and ratings on ${site.name}.`;
   const image = episodePreviewPath(data.ref || data.id, shared?.profile?.handle, shared?.log);
   return {
-    title: data.title,
+    title: data.feedTitle ? `${data.title} · ${data.feedTitle}` : data.title,
     description,
+    // One official address, whatever ?from= or ?talk= a shared link carries.
+    ...(data.ref ? { alternates: { canonical: `/episode/${data.ref}` } } : {}),
     openGraph: { title, description, images: [{ url: image, width: 1200, height: 630, type: "image/jpeg", alt: title }] },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
@@ -62,6 +72,8 @@ export default async function EpisodePage({ params, searchParams }) {
   const shared = from ? await getSharedLog(from, card) : null;
   // From Home's Featured discussions (?talk=1): their review is the start of a conversation, not a share.
   const talk = query.talk === "1";
+  // The reviews, read here so they're in the page itself (search engines and AI tools read them there).
+  const reviews = await episodeReviews(card.ref);
 
   return (
     <>
@@ -118,7 +130,8 @@ export default async function EpisodePage({ params, searchParams }) {
 
       {shared?.profile && <JoinNudge from={shared.profile.handle} />}
 
-      <EpisodeLogs episodeId={card.id} episodeRef={card.ref} />
+      <EpisodeLogs episodeId={card.id} episodeRef={card.ref} initial={reviews} />
+      <JsonLd data={episodeData({ card, description: e.description, path: `/episode/${card.ref || card.id}`, reviews: reviews || [] })} />
 
       {e.description && (
         <section>

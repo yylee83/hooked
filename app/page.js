@@ -10,11 +10,16 @@ import FeaturedDiscussions from "@/components/FeaturedDiscussions";
 import TrendingEpisodes from "@/components/TrendingEpisodes";
 import { NotificationBell } from "@/components/Notifications";
 import HomeRefresh from "@/components/HomeRefresh";
+import JsonLd from "@/components/JsonLd";
+import { siteData } from "@/lib/structured-data";
+
+export const metadata = { alternates: { canonical: "/" } };
 
 // Home: what's happening on Hooked. Apple's chart lives on Search.
 export default function FriendsPage() {
   return (
     <HomeRefresh>
+      <JsonLd data={siteData()} />
       <header className="topbar">
         <Wordmark size={34} />
         <div className="row gap center">
