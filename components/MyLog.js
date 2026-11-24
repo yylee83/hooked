@@ -66,6 +66,9 @@ function LogOutButton() {
       <button type="button" className="btn btn--sm" disabled={busy} onClick={() => (setBusy(true), signOut().finally(() => setBusy(false)))}>
         {busy ? "Logging out…" : "Log out"}
       </button>
+      <p className="muted small legal-links">
+        <Link href="/privacy">Privacy policy</Link> · <Link href="/terms">Terms</Link>
+      </p>
     </div>
   );
 }
