@@ -1,11 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { forgetInvite, rememberInvite, savedInvite } from "@/lib/invites";
 import { joinWaitlist, sendLoginLink, sendPasswordReset, signInWithPassword, signUpWithPassword, useStore } from "@/lib/store";
 
 // Sign in with a password (default), create an account, get a one-time link, or reset a password.
-export default function LoginForm({ next = "/me", linkError, startMode = "signin", startEmail = "" }) {
+// invite: the code of an invite link (/i/<code>); signing up with it works without being on the invite list. A link
+// opened earlier on this device counts too.
+export default function LoginForm({ next = "/me", linkError, startMode = "signin", startEmail = "", invite = "" }) {
   const router = useRouter();
   const state = useStore();
   const [mode, setMode] = useState(startMode); // signin | signup | link | forgot | waitlist
@@ -17,6 +20,11 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset", or "waitlist"
+  const [code, setCode] = useState(invite);
+  useEffect(() => {
+    if (invite) rememberInvite(invite);
+    else setCode(savedInvite());
+  }, [invite]);
   const [error, setError] = useState(linkError ? "That link expired or was already used. Sign in below, or get a new link." : "");
 
   if (state && !state.accounts) {
@@ -87,7 +95,8 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         // A new account starts with three short, skippable steps (favorite shows, follow people, two questions).
         if (!over13) throw new Error("You need to be 13 or older to use Hooked.");
         const first = next === "/me" ? "/welcome/shows" : next;
-        const ready = await signUpWithPassword(addr, password, first, handle, name);
+        const ready = await signUpWithPassword(addr, password, first, handle, name, code);
+        forgetInvite();
         if (ready) router.push(first);
         else setSent("confirm");
       } else if (mode === "waitlist") {
@@ -109,7 +118,7 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
 
   const needsPassword = mode === "signin" || mode === "signup";
   const cta = { signin: "Sign in", signup: "Create account", link: "Email me a link", forgot: "Send reset link", waitlist: "Join the waitlist" }[mode];
-  const notInvited = mode === "signup" && error.includes("invite-only");
+  const notInvited = mode === "signup" && /invite-only|waitlist/.test(error);
 
   return (
     <>
@@ -125,7 +134,7 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
       )}
       {mode === "forgot" && <p className="display h-md" style={{ margin: "18px 0 6px" }}>Forgot your password?</p>}
       {mode === "link" && <p className="display h-md" style={{ margin: "18px 0 6px" }}>Sign in with a link</p>}
-      {mode === "signup" && (
+      {mode === "signup" && !code && (
         <p className="muted" style={{ margin: "14px 0 0" }}>
           Hooked is invite-only for now. Use the email you were invited with.
         </p>
@@ -246,7 +255,7 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
             Email me a sign-in link instead
           </button>
         )}
-        {mode === "signup" && (
+        {mode === "signup" && !code && (
           <p className="muted small">
             Not invited yet?{" "}
             <button type="button" className="link-btn small" onClick={() => switchTo("waitlist")}>

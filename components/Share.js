@@ -287,7 +287,7 @@ export function BriefShareButton({ title, path, count, briefId }) {
 }
 
 // Copy link, Messages, Email, WhatsApp and X for a link.
-function LinkSheet({ title, url, text, subject, onShare = () => {}, onClose }) {
+export function LinkSheet({ title, url, text, subject, note = "Anyone with the link can open it and listen. No sign-up needed.", onShare = () => {}, onClose }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const full = `${text}\n${url}`;
@@ -326,7 +326,7 @@ function LinkSheet({ title, url, text, subject, onShare = () => {}, onClose }) {
             </svg>
           </button>
         </div>
-        <p className="muted small">Anyone with the link can open it and listen. No sign-up needed.</p>
+        <p className="muted small">{note}</p>
         <div className="share-grid">
           <button className="share-opt share-opt--main" onClick={copy}>
             {copied ? "Copied ✓" : "Copy link"}
