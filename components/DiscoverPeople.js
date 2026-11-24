@@ -50,7 +50,8 @@ function myShows(state) {
 // `suggested` and `newPage`: how many of each to show (the welcome step shows more suggestions).
 // `followAll`: a "Follow all" button on Suggested follows (the welcome step). `onCount`: told how many people are
 // listed, so the welcome step doesn't ask for more follows than there are people.
-export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage = 8, followAll = false, onCount }) {
+// `exclude`: handles left out of both lists (the welcome step follows the Hooked team for you).
+export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage = 8, followAll = false, onCount, exclude }) {
   const state = useStore();
   const me = state?.user?.id || null;
   const ready = !!state;
@@ -139,7 +140,7 @@ export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, me, showKey]);
 
-  const keep = (p) => !hide?.has(p.id);
+  const keep = (p) => !hide?.has(p.id) && !exclude?.includes(p.handle);
   const picks = (found || []).filter((s) => keep(s.p)).slice(0, suggestedCount);
   const pickIds = new Set(picks.map((s) => s.p.id));
   // Someone already suggested above isn't repeated under New.

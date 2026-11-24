@@ -1,23 +1,51 @@
 "use client";
 // Step 2 of 3 after sign-up (after favorite shows): follow a few people, then two quick questions.
 // Hooked is only useful for discovery once you follow people (YY, 2026-11-24), so the step sets a goal of 3: the big
-// button waits for it ("Follow 3 to continue"), and Skip is a small link. Never more than there are people to follow.
+// button waits for it ("Follow 3 more"), and Skip is a small link. Never more than there are people to follow.
+// Everyone also follows Erin and YY, who make Hooked (YY, 2026-11-24), once per account on this device: unfollowing them
+// later sticks. They don't count toward the 3.
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DiscoverPeople from "./DiscoverPeople";
-import { useStore } from "@/lib/store";
+import { follow, useStore } from "@/lib/store";
+import { supabase } from "@/lib/supabase/client";
 
 const GOAL = 3;
+const TEAM = ["erin", "kikilululee"];
+
+function useFollowTeam(state) {
+  const me = state?.user?.id;
+  const loaded = !!state?.following;
+  useEffect(() => {
+    const db = supabase();
+    if (!db || !me || !loaded) return;
+    const key = `hooked:team-followed:${me}`;
+    try {
+      if (localStorage.getItem(key)) return;
+    } catch {}
+    db.from("profiles")
+      .select("id, handle, display_name")
+      .in("handle", TEAM)
+      .then(async ({ data }) => {
+        for (const p of data || []) if (p.id !== me) await follow(p).catch(() => {});
+        try {
+          localStorage.setItem(key, "1");
+        } catch {}
+      });
+  }, [me, loaded]);
+}
 
 export default function FollowAFew() {
   const state = useStore();
-  const following = state?.following?.length ?? null;
-  // How many you followed on this page.
+  useFollowTeam(state);
+  const following = state?.following ?? null;
+  // Who you followed on this page (not counting the Hooked team).
   const [start, setStart] = useState(null);
   useEffect(() => {
-    if (start === null && following !== null) setStart(following);
+    if (start === null && following !== null) setStart(new Set(following.map((f) => f.id)));
   }, [start, following]);
-  const added = start === null ? 0 : Math.max(0, following - start);
+  const added = start === null ? 0 : following.filter((f) => !start.has(f.id) && !TEAM.includes(f.handle)).length;
+  const team = (following || []).filter((f) => TEAM.includes(f.handle));
 
   // How many people the page lists (null until loaded).
   const [listed, setListed] = useState(null);
@@ -32,7 +60,12 @@ export default function FollowAFew() {
       <p className="muted" style={{ margin: "8px 0 0", fontSize: 18 }}>
         Hooked is better with friends: their reviews and picks fill your Home.
       </p>
-      <DiscoverPeople suggested={8} newPage={5} followAll onCount={onCount} />
+      {team.length > 0 && (
+        <p className="small muted follow-few__team">
+          You&apos;re following {team.map((f) => `@${f.handle}`).join(" and ")}, who make Hooked.
+        </p>
+      )}
+      <DiscoverPeople suggested={8} newPage={5} followAll onCount={onCount} exclude={TEAM} />
       <div className="follow-few__bar">
         {done ? (
           <span />
