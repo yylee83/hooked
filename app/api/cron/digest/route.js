@@ -45,6 +45,7 @@ export async function GET(request) {
         .select("type, episode_id, episode_ref, title, body, created_at, actor:profiles!notifications_actor_id_fkey(handle), owner:profiles!notifications_log_user_id_fkey(handle)")
         .eq("user_id", profile.id)
         .is("read_at", null)
+        .is("emailed_at", null) // already emailed on its own (lib/notify-email.js)
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(20),

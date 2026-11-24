@@ -18,6 +18,26 @@ import { myBriefs } from "@/lib/briefs-client";
 import { minutes, plural, starStats } from "@/lib/format";
 import { showHref } from "@/lib/addresses";
 
+// Notification emails (lib/notify-email.js): follows, replies, sends, thumbs up and + on your reviews.
+function NotifyEmailToggle({ state }) {
+  const [on, setOn] = useState(state.profile?.email_notify !== false);
+  const [busy, setBusy] = useState(false);
+  async function flip() {
+    setBusy(true);
+    const next = !on;
+    setOn(next);
+    const { error } = await sb().from("profiles").update({ email_notify: next }).eq("id", state.user.id);
+    if (error) setOn(!next);
+    setBusy(false);
+  }
+  return (
+    <label className="digest">
+      <input type="checkbox" checked={on} onChange={flip} disabled={busy} />
+      <span>Email me when someone follows me, replies or sends me an episode</span>
+    </label>
+  );
+}
+
 // Weekly email: a Sunday roundup of what friends logged and sent you.
 function DigestToggle({ state }) {
   const [on, setOn] = useState(state.profile?.email_digest !== false);
@@ -105,6 +125,7 @@ function ProfilePanel({ state }) {
           {pwSaved ? "Password saved ✓" : "Set password"}
         </button>
       </div>
+      <NotifyEmailToggle state={state} />
       <DigestToggle state={state} />
       <HistoryNote style={{ marginTop: 10 }} />
       <LogOutButton />
