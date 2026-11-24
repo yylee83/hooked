@@ -199,6 +199,13 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   (`/api/cron/notify-email`, 14:00 UTC; Hobby crons run once a day) sends what was held back. Switch: `profiles.email_notify`
   (My log gear; email footer link `/api/unsubscribe?k=notify`). `notifications.emailed_at`, `notify_emails` (last sent;
   server only). Test: `node scripts/check-notify-emails.mjs`.
+- **Clean language (YY, 2026-11-24)**: reviews, replies, send notes, list titles/descriptions/topics, handles and display names can't be saved
+  with a word from the `banned_words` table: the database refuses it (`words_check` triggers, code `HKW01`), and the app
+  shows "Please edit out “…”. Hooked keeps it clean." (`lib/clean-words.js`). Whole words only, plus stretched letters
+  and simple swaps ($ → s, 1 → i); a word in the episode's or show's own title may be quoted ("Bitch Sesh"); only new or
+  changed text is checked. **To add or remove a word:** Supabase → Table Editor → `banned_words` (lower case; end with `*`
+  to also block longer words starting with it). Handles and names also block `inside_names` words anywhere inside
+  ("shittalker"; `banned_name_in`, asked by the sign-up form too). Test: `node scripts/check-banned-words.mjs`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and
