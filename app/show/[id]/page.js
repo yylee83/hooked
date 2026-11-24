@@ -11,6 +11,8 @@ import { episodeHref, withQuery } from "@/lib/addresses";
 import { minutes, plural, shortDate } from "@/lib/format";
 import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
+import JsonLd from "@/components/JsonLd";
+import { showData } from "@/lib/structured-data";
 
 const PAGE = 30; // episodes per "Load more"
 const MOST = 1000; // Podcast Index returns at most 1,000 episodes per show
@@ -18,7 +20,18 @@ const MOST = 1000; // Podcast Index returns at most 1,000 episodes per show
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const { data } = await loadShow(id);
-  return { title: data?.title || "Show" };
+  if (!data) return { title: "Show" };
+  const notes = plainText(data.description || "");
+  const about = notes.length > 150 ? `${notes.slice(0, 149).trimEnd()}…` : notes;
+  const description = `${about ? `${about} ` : ""}Episode ratings and reviews on Hooked.`.trim();
+  const image = artOf(data);
+  return {
+    title: `${data.title}: episodes, ratings and reviews`,
+    description,
+    ...(data.ref ? { alternates: { canonical: `/show/${data.ref}` } } : {}),
+    openGraph: { title: data.title, description, ...(image ? { images: [{ url: image, alt: data.title }] } : {}) },
+    twitter: { card: "summary", title: data.title, description, ...(image ? { images: [image] } : {}) },
+  };
 }
 
 export default async function ShowPage({ params, searchParams }) {
@@ -71,6 +84,7 @@ export default async function ShowPage({ params, searchParams }) {
         {[s.episodeCount ? plural(s.episodeCount, "episode") : null, ...categories].filter(Boolean).join(" · ")}
       </p>
       {s.description && <p className="show__desc">{plainText(s.description)}</p>}
+      <JsonLd data={showData({ show: s, path: `/show/${s.ref || s.id}`, image: artOf(s), stats: community })} />
 
       <ShowRatings show={{ showRef: s.ref, feedId: s.id }} community={community} />
       <HookShowButton show={{ feedId: s.id ?? undefined, showRef: s.ref, title: s.title, image: artOf(s) }} />
