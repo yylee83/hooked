@@ -12,6 +12,7 @@ import { Avatar } from "./Friends";
 import { supabase } from "@/lib/supabase/client";
 import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
 import { useRefreshTick } from "@/lib/home-refresh";
+import { isBlocked, useStore } from "@/lib/store";
 
 const MAX = 15; // conversations loaded
 const SCROLL_FROM = 4; // more than this many: the list scrolls inside its own box (YY, 2026-11-22)
@@ -113,7 +114,8 @@ async function load(db) {
 }
 
 export default function FeaturedDiscussions() {
-  const [cards, setCards] = useState(null);
+  const state = useStore();
+  let [cards, setCards] = useState(null);
   const [atEnd, setAtEnd] = useState(false); // scrolled to the bottom of the box: drop the fade
   const tick = useRefreshTick();
   const box = useRef(null);
@@ -131,6 +133,9 @@ export default function FeaturedDiscussions() {
     };
   }, [tick]);
 
+  // People you blocked: their reviews drop out, and so do their replies on the cards.
+  if (cards && state?.blocked?.length)
+    cards = cards.filter((c) => !isBlocked(state, c.person.id)).map((c) => (c.reply && isBlocked(state, c.reply.author_id) ? { ...c, reply: null } : c));
   if (cards && !cards.length) return null;
   const scrolls = (cards?.length || 0) > SCROLL_FROM;
   return (

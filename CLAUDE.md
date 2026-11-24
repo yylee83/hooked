@@ -46,7 +46,7 @@ off Home).
 | Spotify public pages / oEmbed | Matching pasted Spotify links | `lib/links.js` |
 | Google Trends RSS (Wikipedia fallback) | Trending topics bar on Search: the past 48 hours, saved in `trending_topics` | `lib/trends.js` |
 | Supabase | Auth (email + password, magic link), Postgres with row-level security | `lib/supabase/*`, `lib/store.js`, `lib/social.js` |
-| Resend | Notification emails (follows, replies, sends, thumbs up and +); weekly digest (dormant until `DIGEST_FROM` is added) | `lib/notify-email.js`, `lib/digest.js`, `app/api/cron/*` |
+| Resend | Notification emails (follows, replies, sends, thumbs up and +), report emails to the team; weekly digest (dormant until `DIGEST_FROM` is added) | `lib/notify-email.js`, `lib/digest.js`, `app/api/cron/*` |
 
 ### Environment variables
 
@@ -209,6 +209,12 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   changed text is checked. **To add or remove a word:** Supabase → Table Editor → `banned_words` (lower case; end with `*`
   to also block longer words starting with it). Handles and names also block `inside_names` words anywhere inside
   ("shittalker"; `banned_name_in`, asked by the sign-up form too). Test: `node scripts/check-banned-words.mjs`.
+- **Reports and blocks (YY, 2026-11-24)**: a small "…" (`components/MoreMenu.js`) on others' reviews, replies, lists and
+  profiles, signed in only: Report (reason picker; private `reports` table, the database copies the words in; emailed to
+  hello@ by `lib/report-email.js`) or Block (`blocks`; unfollows both ways, the database refuses follows, replies,
+  reactions and sends between them, `HKB01`, and skips notifications; the app hides their reviews and replies via
+  `isBlocked` in `lib/store.js`). Team view: `insights_reports`. How to act on a report: `docs/MODERATION.md`. Test:
+  `node scripts/check-reports-blocks.mjs`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and

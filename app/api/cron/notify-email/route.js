@@ -1,8 +1,9 @@
-// Daily catch-up for notification emails: anything held back by the one-an-hour limit, or whose ping never
+// Daily catch-up for notification emails (and report emails to the team): anything held back by the one-an-hour limit, or whose ping never
 // arrived. Vercel runs it each morning (vercel.json; the Hobby plan allows once a day).
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/supabase/admin";
 import { emailDue, emailReady } from "@/lib/notify-email";
+import { emailReports } from "@/lib/report-email";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,5 +23,7 @@ export async function GET(request) {
     .limit(2000);
   const people = [...new Set((data || []).map((n) => n.user_id))];
   const sent = await emailDue(db, people);
-  return NextResponse.json({ people: people.length, sent });
+  // Reports whose email didn't go out when they were made.
+  const reports = await emailReports(db);
+  return NextResponse.json({ people: people.length, sent, reports });
 }

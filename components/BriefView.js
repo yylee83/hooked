@@ -3,6 +3,7 @@ import Art from "./Art";
 import { ClipChip, PlayButton, PlayCut } from "./Player";
 import { LogButton, QueueAll, QueueButton } from "./Social";
 import BriefOwner from "./BriefOwner";
+import MoreMenu from "./MoreMenu";
 import { BriefShareButton } from "./Share";
 import { briefQueue, briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes } from "@/lib/format";
@@ -48,6 +49,9 @@ export default function BriefView({ brief, items, backHref = "/lists" }) {
         <div className="brief__top-end">
           {brief.sharePath && <BriefShareButton title={brief.title} path={brief.sharePath} count={usable.length} briefId={brief.id || brief.slug} />}
           <span className={`sticker ${onCobalt ? "" : "sticker--cobalt"}`}>List</span>
+          {brief.authorId && brief.id && (
+            <MoreMenu person={{ id: brief.authorId, handle: brief.author }} what={{ kind: "list", briefId: brief.id }} className="brief__more" />
+          )}
         </div>
       </div>
 

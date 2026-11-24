@@ -91,7 +91,7 @@ export default async function EpisodePage({ params, searchParams }) {
               {shared.log.hook && <p className="shared-by__hook">“{shared.log.hook}”</p>}
             </div>
           )}
-          {shared.log && <LogThread logUserId={shared.profile.id} episodeRef={card.ref} episodeId={card.id} defaultOpen id="thread" />}
+          {shared.log && <LogThread logUserId={shared.profile.id} episodeRef={card.ref} episodeId={card.id} defaultOpen id="thread" handle={shared.profile.handle} />}
         </section>
       )}
 

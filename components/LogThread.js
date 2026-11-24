@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addToList, inUpNext, useStore } from "@/lib/store";
+import { addToList, inUpNext, isBlocked, useStore } from "@/lib/store";
+import MoreMenu from "./MoreMenu";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
 import { haptic } from "@/lib/haptics";
 
@@ -30,7 +31,8 @@ function Icon({ kind, on }) {
 }
 
 // episodeRef is our episode id (the thread's key); episodeId is the Podcast Index number, when there is one.
-export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpen = false, id }) {
+// handle is the review's author, for the "…" menu (Report / Block).
+export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpen = false, id, handle }) {
   const state = useStore();
   const ep = { ref: episodeRef, id: episodeId ?? undefined };
   const data = useThread(logUserId, episodeRef);
@@ -46,7 +48,8 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
 
   const me = state?.user || null;
   const reactions = data?.reactions || [];
-  const comments = data?.comments || [];
+  // Replies from people you blocked are hidden.
+  const comments = (data?.comments || []).filter((c) => !isBlocked(state, c.author_id));
   const counts = Object.fromEntries(REACTIONS.map((r) => [r.kind, reactions.filter((x) => x.kind === r.kind).length]));
   const mine = new Set(reactions.filter((x) => x.user_id === me?.id).map((x) => x.kind));
   const isOwner = me?.id === logUserId;
@@ -126,6 +129,7 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
           </svg>
           {comments.length ? `${comments.length} ${comments.length === 1 ? "reply" : "replies"}` : "Reply"}
         </button>
+        <MoreMenu person={{ id: logUserId, handle }} what={{ kind: "review", userId: logUserId, episodeRef }} className="more-menu--end" />
       </div>
 
       {error === "signin" ? (
@@ -156,6 +160,11 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
                         Delete
                       </button>
                     )}
+                    <MoreMenu
+                      person={{ id: c.author_id, handle: c.author?.handle }}
+                      what={{ kind: "reply", commentId: c.id }}
+                      className={`more-menu--sm ${isOwner ? "" : "more-menu--end"}`}
+                    />
                   </p>
                   <p className="comment__body">{c.body}</p>
                 </li>
