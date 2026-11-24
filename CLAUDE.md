@@ -92,6 +92,12 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   covers passwords, email links and Google. **To invite someone:** Supabase → Table Editor →
   `allowed_emails` → Insert row → their email in lower case. Never write email addresses into a
   migration: the repo is public.
+- **Invite links (YY, 2026-11-24):** everyone has one link, `/i/<code>` (`app/i/[code]/page.js`), on Find people's
+  "Bring your friends" card (`components/InviteCard.js`: phone share menu, else Copy link / Messages / Email). No limit;
+  "Make a new link" retires the old one. The code rides along in the sign-up details (`user_metadata.invite`, also kept
+  on the device as `hooked:invite`), and `hook_invite_gate` lets it in, adds the email to `allowed_emails` and records
+  `invite_uses`; when the new profile is made, they follow whoever sent the link (`follow_inviter`), which notifies that
+  person. Migration `20261124180000_invite_links.sql`, test `node scripts/check-invites.mjs`.
 - **Shows and episodes** (`shows`, `episodes`, our own 8-character ids): every save that mentions an
   episode fills in `episode_ref` / `show_ref` by itself (triggers in `*_refs_on_save.sql`), creating a basic
   entry if needed. `lib/catalog.js` upgrades entries from Podcast Index, and brings in shows Podcast Index lacks from
