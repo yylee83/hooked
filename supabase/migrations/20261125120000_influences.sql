@@ -105,3 +105,20 @@ join public.profiles p on p.id = s.influencer_id
 group by p.id, p.handle
 order by listened desc, added desc;
 revoke all on public.insights_influence from anon, authenticated;
+
+-- What happened before today. Every + on someone else's review still standing, dated with the +. Every send the person
+-- went on to log (at or after the send), dated with the send. Sends that were only queued can't be found: queuing
+-- wasn't recorded, and Up next rows are gone once played.
+insert into public.influences (influencer_id, user_id, episode_ref, via, created_at)
+select r.log_user_id, r.user_id, r.episode_ref, 'review', r.created_at
+from public.reactions r
+where r.kind = 'adding' and r.user_id is not null and r.user_id <> r.log_user_id
+on conflict do nothing;
+
+insert into public.influences (influencer_id, user_id, episode_ref, via, created_at)
+select r.from_id, r.to_id, r.episode_ref, 'send', min(r.created_at)
+from public.recommendations r
+where r.from_id is not null and r.from_id <> r.to_id
+  and exists (select 1 from public.logs l where l.user_id = r.to_id and l.episode_ref = r.episode_ref and l.logged_at >= r.created_at)
+group by r.from_id, r.to_id, r.episode_ref
+on conflict do nothing;

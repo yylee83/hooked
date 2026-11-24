@@ -19,7 +19,27 @@ await db.exec(`
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
   grant usage on schema public to anon, authenticated, service_role;
 `);
-for (const f of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) await db.exec(readFileSync(join(dir, f), "utf8"));
+// Two passes: everything before "Your reach", then some history (to test the backfill), then the rest.
+const NEW = "20261125120000_influences.sql";
+const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+for (const f of files.filter((f) => f < NEW)) await db.exec(readFileSync(join(dir, f), "utf8"));
+
+const D = "00000000-0000-0000-0000-00000000000d"; // reviewed and sent before today
+const E = "00000000-0000-0000-0000-00000000000e"; // tapped + on D's review; logged what F sent
+const F = "00000000-0000-0000-0000-00000000000f"; // sent E an episode E later logged; got a send from D, never logged
+const EP0 = "ep000000";
+await db.exec(`
+  insert into auth.users values ('${D}', 'd@x.com'), ('${E}', 'e@x.com'), ('${F}', 'f@x.com');
+  insert into public.profiles (id, handle) values ('${D}', 'dee'), ('${E}', 'eve'), ('${F}', 'fay');
+  insert into public.shows (id, title, source) values ('show0000', 'Old show', 'legacy');
+  insert into public.episodes (id, show_id, title, source) values ('${EP0}', 'show0000', 'Old episode', 'legacy');
+  insert into public.logs (user_id, episode_ref, rating) values ('${D}', '${EP0}', 4);
+  insert into public.reactions (log_user_id, user_id, kind, episode_ref) values ('${D}', '${E}', 'adding', '${EP0}');
+  insert into public.reactions (log_user_id, user_id, kind, episode_ref) values ('${D}', '${D}', 'adding', '${EP0}');
+  insert into public.recommendations (from_id, to_id, episode_ref) values ('${F}', '${E}', '${EP0}'), ('${D}', '${F}', '${EP0}');
+  insert into public.logs (user_id, episode_ref, rating) values ('${E}', '${EP0}', 5);
+`);
+for (const f of files.filter((f) => f >= NEW)) await db.exec(readFileSync(join(dir, f), "utf8"));
 
 const A = "00000000-0000-0000-0000-00000000000a"; // the reviewer / sender
 const B = "00000000-0000-0000-0000-00000000000b"; // the friend who gets influenced
@@ -44,6 +64,13 @@ const same = (r, people, added) => r && r.people === people && r.added === added
 const blocked = async (role, sql) => {
   try { await db.exec(`set role ${role}`); await db.query(sql); return false; } catch { return true; } finally { await db.exec(`reset role`); }
 };
+
+// Backfill: what happened before "Your reach" existed
+const has = async (inf, user, via) => (await db.query(`select 1 from public.influences where influencer_id = $1 and user_id = $2 and via = $3`, [inf, user, via])).rows.length === 1;
+ok(await has(D, E, "review"), "backfill: an earlier + on D's review counts for D");
+ok(await has(F, E, "send"), "backfill: a send E went on to log counts for F");
+ok(!(await has(D, F, "send")), "backfill: a send never logged doesn't count (queuing wasn't recorded then)");
+ok((await db.query(`select 1 from public.influences where influencer_id = user_id`)).rows.length === 0, "backfill: no credit for + on your own review");
 
 // + on a review
 await as(B, `insert into public.reactions (log_user_id, user_id, kind, episode_ref) values ('${A}', '${B}', 'adding', '${EP}')`);
