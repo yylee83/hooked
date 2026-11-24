@@ -10,6 +10,7 @@ import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
 import { MAX_ITEMS, UNTITLED, savedItem } from "@/lib/briefs-client";
+import { cleanWordsMessage } from "@/lib/clean-words";
 
 const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
@@ -61,6 +62,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   // A published brief you're editing changes only when you tap "Save changes".
   const [draftId, setDraftId] = useState(editing?.draft ? editing.id : null);
   const [draftSaved, setDraftSaved] = useState(""); // "saving" / "saved" / "failed"
+  const [wordNote, setWordNote] = useState(""); // "Please edit out …" when the title or description has a banned word
   const autosaving = useRef(null);
 
   // Bring back a draft (e.g. after signing in to publish), or start from a trending topic.
@@ -233,6 +235,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       const id = job.id || draftId;
       const q = id ? supabase().from("briefs").update(row).eq("id", id) : supabase().from("briefs").insert(row);
       const { data, error: err } = await q.select("id").single();
+      setWordNote(cleanWordsMessage(err) || "");
       if (err) {
         setDraftSaved("failed");
         return false;
@@ -277,8 +280,10 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     const id = draft || editing?.id;
     const q = id ? supabase().from("briefs").update(draft ? { ...row, draft: false } : row).eq("id", id) : supabase().from("briefs").insert(row);
     const { data, error: err } = await q.select("id").single();
+    setWordNote(cleanWordsMessage(err) || "");
     if (err) {
       setSaving(false);
+      if (cleanWordsMessage(err)) return;
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
@@ -468,6 +473,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
               />
             ))}
           </div>
+          {wordNote && <p className="nudge small" role="alert">{wordNote}</p>}
           <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 10 }} onClick={publish} disabled={saving || !state?.accounts}>
             {saving ? (isPublished ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : isPublished ? "Save changes" : "Publish list"}
           </button>
