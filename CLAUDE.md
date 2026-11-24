@@ -138,7 +138,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   the browser, `components/DraftEditor.js`), `/me` My log (the big blue Up next card above the tabs, where "Listening now" used to be: first episode with a play button, the next few covers, "See all" opens the Up next tab, `components/UpNextCard.js`; tabs: Episodes, Shows,
   Up next (topped by "Keep listening": episodes started and not finished, from your saved spots, `components/KeepListening.js`; never episodes you've logged), Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
   show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
-  `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
+  `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`, `/privacy` and `/terms` (a starting
+  draft, 2026-11-24, for a lawyer to review; linked from sign-up, the My log gear and the history note: **when the app
+  starts collecting or sharing something new, update `/privacy` and its date in the same change**).
 - **Sign-up and the steps after it (YY, 2026-11-23):** the form asks for email, handle, an optional Name and a required "I'm 13
   or older" tick box (kept in the account's sign-up details as `over_13`). Then three skippable steps: `/welcome/shows`
   (pick favorite shows: saved as hooked shows; search through `/api/shows`, `components/FavoriteShows.js`) →
