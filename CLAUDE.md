@@ -98,6 +98,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   on the device as `hooked:invite`), and `hook_invite_gate` lets it in, adds the email to `allowed_emails` and records
   `invite_uses`; when the new profile is made, they follow whoever sent the link (`follow_inviter`), which notifies that
   person. Migration `20261124180000_invite_links.sql`, test `node scripts/check-invites.mjs`.
+- **Sign-in emails** (confirm, sign-in link, reset): our templates in `supabase/templates/` (pasted into each project's
+  dashboard) link to `/auth/confirm` (one "Sign in" button that POSTs to `/auth/callback`, so it works on any device and mail
+  scanners can't use it up) and carry a code the "Check your email" screen accepts. See `docs/AUTH_EMAILS.md`.
 - **Shows and episodes** (`shows`, `episodes`, our own 8-character ids): every save that mentions an
   episode fills in `episode_ref` / `show_ref` by itself (triggers in `*_refs_on_save.sql`), creating a basic
   entry if needed. `lib/catalog.js` upgrades entries from Podcast Index, and brings in shows Podcast Index lacks from

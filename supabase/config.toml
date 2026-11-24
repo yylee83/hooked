@@ -238,6 +238,20 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Hooked's sign-in emails: a link that works on any device, plus a code. The live and test projects take these from the
+# dashboard, not from here (see docs/AUTH_EMAILS.md).
+[auth.email.template.confirmation]
+subject = "Confirm your email for Hooked on Pods"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your Hooked on Pods sign-in link"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Set a new password for Hooked on Pods"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

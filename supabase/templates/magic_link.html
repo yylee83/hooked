@@ -1,0 +1,12 @@
+<!-- Hooked on Pods: Your sign-in link Paste into Supabase → Authentication → Emails (see docs/AUTH_EMAILS.md). -->
+<div style="font-family: Helvetica, Arial, sans-serif; color: #15131D; max-width: 480px; margin: 0 auto; padding: 24px;">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 16px;">Your sign-in link</p>
+  <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px;">Tap the button to sign in to Hooked on Pods. It works on any device.</p>
+  <p style="margin: 0 0 24px;">
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&redirect_to={{ .RedirectTo }}"
+       style="display: inline-block; background: #2340FF; color: #ffffff; font-weight: bold; font-size: 16px; text-decoration: none; padding: 12px 22px; border-radius: 999px;">Sign in to Hooked</a>
+  </p>
+  <p style="font-size: 16px; line-height: 1.5; margin: 0 0 6px;">Or type this code on Hooked:</p>
+  <p style="font-family: Menlo, Consolas, monospace; font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 0 0 24px;">{{ .Token }}</p>
+  <p style="font-size: 13px; line-height: 1.5; color: #6b6878; margin: 0;">Didn't ask to sign in? You can ignore this email.</p>
+</div>
