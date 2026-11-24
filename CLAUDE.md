@@ -212,6 +212,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   changed text is checked. **To add or remove a word:** Supabase → Table Editor → `banned_words` (lower case; end with `*`
   to also block longer words starting with it). Handles and names also block `inside_names` words anywhere inside
   ("shittalker"; `banned_name_in`, asked by the sign-up form too). Test: `node scripts/check-banned-words.mjs`.
+- **Back buttons** (Erin, 2026-11-24): every "← Back" (show, episode, list, list editor, hooked shows) and the log
+  sheet's Cancel go back to the screen you were on (`components/BackButton.js`: `BackButton`, `useGoBack`). With no
+  earlier Hooked screen in the tab (a shared link, a new tab), they go to a fixed page instead (a show's goes to Search, an
+  episode's to its show). The trail of screens is kept by `BackTracker` in the root layout (`hooked:trail` in
+  sessionStorage), because Next.js rewrites the browser's own history entries. New back links should use `BackButton`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and

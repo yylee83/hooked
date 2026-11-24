@@ -9,6 +9,8 @@ import { addLog, findLog, needsAccount, sendRecommendation, useStore } from "@/l
 import { signInHref } from "@/lib/sign-in-first";
 import { HookShowPill } from "./Social";
 import { haptic } from "@/lib/haptics";
+import { useGoBack } from "./BackButton";
+import { episodeHref } from "@/lib/addresses";
 import { CLEAN_CODE } from "@/lib/clean-words";
 
 export function RatingInput({ value, onChange, size = 52 }) {
@@ -68,6 +70,7 @@ export function RatingInput({ value, onChange, size = 52 }) {
 // Decision 6). `presetRating` carries stars picked in the "Log it?" prompt over ("Add what you thought").
 export default function LogSheet({ episode, presetRating = 0 }) {
   const router = useRouter();
+  const cancel = useGoBack(episodeHref(episode.ref, episode.id)); // opened from a link: to the episode, not out of Hooked
   const state = useStore();
   const existing = findLog(state, episode);
   const [touched, setTouched] = useState(false);
@@ -122,7 +125,7 @@ export default function LogSheet({ episode, presetRating = 0 }) {
   return (
     <div className="sheet">
       <header className="sheet__top">
-        <button className="link-btn" onClick={() => router.back()}>
+        <button className="link-btn" onClick={cancel}>
           Cancel
         </button>
         <h1 className="display sheet__title">Log it</h1>
