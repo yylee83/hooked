@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }) {
       <p className="muted" style={{ fontSize: 19, marginBottom: 8 }}>
         Save your log, pin the shows you're hooked on, and make lists.
       </p>
-      <LoginForm next={next} linkError={sp.error === "link"} startMode={startMode} startEmail={startEmail} />
+      <LoginForm next={next} linkError={sp.error === "link" || sp.error === "device" ? sp.error : ""} startMode={startMode} startEmail={startEmail} />
     </>
   );
 }

@@ -3,11 +3,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { forgetInvite, rememberInvite, savedInvite } from "@/lib/invites";
-import { joinWaitlist, sendLoginLink, sendPasswordReset, signInWithPassword, signUpWithPassword, useStore } from "@/lib/store";
+import { joinWaitlist, resendConfirmation, sendLoginLink, sendPasswordReset, signInWithPassword, signUpWithPassword, useStore, verifyEmailCode } from "@/lib/store";
 
 // Sign in with a password (default), create an account, get a one-time link, or reset a password.
 // invite: the code of an invite link (/i/<code>); signing up with it works without being on the invite list. A link
 // opened earlier on this device counts too.
+const LINK_ERRORS = {
+  link: "That link didn't work. It may have expired or been used already. Get a new one below, or sign in with your password.",
+  // Opened in a different browser or app from the one that asked for it (often the phone's mail app).
+  device:
+    "That link was opened in a different browser from the one you asked from. If you were confirming a new account, you're confirmed: sign in with your password. Otherwise, get a new link below.",
+};
+
 export default function LoginForm({ next = "/me", linkError, startMode = "signin", startEmail = "", invite = "" }) {
   const router = useRouter();
   const state = useStore();
@@ -21,11 +28,14 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset", or "waitlist"
   const [code, setCode] = useState(invite);
+  const [otp, setOtp] = useState(""); // the 6-digit code from the email
+  const [resent, setResent] = useState(false);
+  const [unconfirmed, setUnconfirmed] = useState(false);
   useEffect(() => {
     if (invite) rememberInvite(invite);
     else setCode(savedInvite());
   }, [invite]);
-  const [error, setError] = useState(linkError ? "That link expired or was already used. Sign in below, or get a new link." : "");
+  const [error, setError] = useState(LINK_ERRORS[linkError] || (linkError ? LINK_ERRORS.link : ""));
 
   if (state && !state.accounts) {
     return (
@@ -50,10 +60,43 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
     );
   }
 
+  // After a sign-up, the link in the email leads to the first welcome step.
+  const firstStep = next === "/me" ? "/welcome/shows" : next;
+
+  async function sendAgain() {
+    setBusy(true);
+    setError("");
+    const addr = email.trim();
+    try {
+      if (sent === "confirm" || unconfirmed) await resendConfirmation(addr, firstStep);
+      else if (sent === "reset") await sendPasswordReset(addr);
+      else await sendLoginLink(addr, next);
+      setResent(true);
+      if (unconfirmed) setSent("confirm");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitCode(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await verifyEmailCode(email.trim(), otp, sent);
+      router.push(sent === "reset" ? "/reset-password" : sent === "confirm" ? firstStep : next);
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
   if (sent) {
     const copy = {
       link: ["Check your email.", "We sent a sign-in link to"],
-      confirm: ["Confirm your email.", "Almost there. We sent a confirmation link to"],
+      confirm: ["Confirm your email.", "Almost there. We sent a confirmation email to"],
       reset: ["Check your email.", "We sent a link to set a new password to"],
       waitlist: ["You're on the list.", "We'll email"],
     }[sent];
@@ -62,16 +105,50 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         <p className="display h-md" style={{ marginTop: 0 }}>{copy[0]}</p>
         <p style={{ fontSize: 19 }}>
           {copy[1]} <b>{email}</b>
-          {sent === "waitlist" ? " when there's room. Keep exploring Hooked in the meantime." : ". Open it on this device."}
+          {sent === "waitlist" ? " when there's room. Keep exploring Hooked in the meantime." : ". Not there? Check your spam folder."}
         </p>
         {sent === "waitlist" ? (
           <Link href="/" className="btn btn--cobalt btn--shadow-sm" style={{ marginTop: 14 }}>
             Explore Hooked
           </Link>
         ) : (
-          <button className="link-btn small" style={{ marginTop: 14 }} onClick={() => (setSent(null), setMode("signin"))}>
-            Back to sign in
-          </button>
+          <>
+            <form onSubmit={submitCode} className="login-code">
+              <label className="label" htmlFor="otp" style={{ margin: "6px 0 0" }}>
+                Or type the code from the email
+              </label>
+              <div className="login-code__row">
+                <input
+                  id="otp"
+                  className="input login-code__input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9 ]*"
+                  maxLength={12}
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+                <button className="btn btn--cobalt" disabled={busy || otp.replace(/\D/g, "").length < 6}>
+                  {busy ? "One sec…" : "Go"}
+                </button>
+              </div>
+            </form>
+            {error && <p className="nudge" role="alert">{error}</p>}
+            <p className="muted small" style={{ marginTop: 14 }}>
+              {resent ? "Sent again. Use the newest email: older links and codes stop working. " : "Didn't get it? "}
+              <button type="button" className="link-btn small" onClick={sendAgain} disabled={busy}>
+                Send it again
+              </button>
+            </p>
+            <button
+              className="link-btn small"
+              style={{ marginTop: 6 }}
+              onClick={() => (setSent(null), setResent(false), setOtp(""), setError(""), setMode("signin"))}
+            >
+              Back to sign in
+            </button>
+          </>
         )}
       </div>
     );
@@ -80,24 +157,28 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
   const switchTo = (m) => {
     setMode(m);
     setError("");
+    setUnconfirmed(false);
   };
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
+    setUnconfirmed(false);
     const addr = email.trim();
     try {
       if (mode === "signin") {
-        await signInWithPassword(addr, password);
+        await signInWithPassword(addr, password).catch((err) => {
+          if (/confirm your email/i.test(err.message)) setUnconfirmed(true);
+          throw err;
+        });
         router.push(next);
       } else if (mode === "signup") {
         // A new account starts with three short, skippable steps (favorite shows, follow people, two questions).
         if (!over13) throw new Error("You need to be 13 or older to use Hooked.");
-        const first = next === "/me" ? "/welcome/shows" : next;
-        const ready = await signUpWithPassword(addr, password, first, handle, name, code);
+        const ready = await signUpWithPassword(addr, password, firstStep, handle, name, code);
         forgetInvite();
-        if (ready) router.push(first);
+        if (ready) router.push(firstStep);
         else setSent("confirm");
       } else if (mode === "waitlist") {
         await joinWaitlist(addr);
@@ -242,6 +323,11 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
           {busy ? "One sec…" : cta}
         </button>
         {error && <p className="nudge" role="alert">{error}</p>}
+        {unconfirmed && (
+          <button type="button" className="btn" onClick={sendAgain} disabled={busy}>
+            Send the confirmation email again
+          </button>
+        )}
         {notInvited && (
           <button type="button" className="btn" onClick={() => switchTo("waitlist")}>
             Join the waitlist instead
