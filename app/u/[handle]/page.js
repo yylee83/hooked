@@ -19,6 +19,7 @@ export async function generateMetadata({ params }) {
   const name = page.profile.display_name || `@${page.profile.handle}`;
   return {
     title: `${name} (@${page.profile.handle})`,
+    alternates: { canonical: `/u/${page.profile.handle}` },
     description: `See what ${name} is hooked on: ${plural(page.logs.length, "episode")} logged on ${site.name}.`,
     openGraph: { title: `${name} on ${site.name}`, description: `See what ${name} is hooked on.` },
   };
