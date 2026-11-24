@@ -1,4 +1,5 @@
--- Keep Hooked clean: reviews, replies, send notes and list titles can't be saved with a word from banned_words.
+-- Keep Hooked clean: reviews, replies, send notes, list titles, handles and names can't be saved with a word from
+-- banned_words.
 --
 -- The list is the banned_words table. To add or remove a word: Supabase → Table Editor → banned_words → Insert row
 -- (lower case, letters only). End it with * to also block longer words that start with it ("fuck*" blocks
@@ -9,11 +10,15 @@
 --   * Caps and stretched letters count ("SHIIIT", "fuuuck"), and so do common swaps: @ 4 → a, $ 5 → s, 0 → o, 3 → e,
 --     and 1 ! | → i before a letter ("sh1t", "b!tch"). Starred-out words ("f***") are allowed.
 --   * A word that's in the episode's or show's own title is allowed, so you can quote it ("Bitch Sesh").
+-- Handles have no spaces, so a word marked inside_names is also blocked anywhere inside one ("shittalker",
+-- "x_fuckboy_x"). Only strong words are marked, so "classic", "spicy" and "hitchcock" are fine. Display names get the
+-- whole-word check plus the same inside check on each word.
 -- Only changed text is checked: older reviews stay as they are, and editing a review's stars keeps working.
 -- The app turns the error (code HKW01, the word in details) into "Please edit out …" (lib/clean-words.js).
 
 create table public.banned_words (
   word text primary key check (word ~ '^[a-z]+\*?$'),
+  inside_names boolean not null default false,   -- also blocked inside a handle or name ("shittalker")
   added_at timestamptz not null default now()
 );
 alter table public.banned_words enable row level security;
@@ -32,6 +37,10 @@ insert into public.banned_words (word) values
   -- slurs
   ('nigger*'), ('nigga*'), ('niggaz'), ('faggot*'), ('fag'), ('retard'), ('retarded'), ('tranny'), ('trannies'),
   ('kike'), ('spic'), ('gook'), ('wetback*'), ('beaner*'), ('raghead*'), ('towelhead*'), ('paki');
+update public.banned_words set inside_names = true where word in (
+  'fuck*', 'motherfuck*', 'shit*', 'cunt*', 'bitch*', 'bastard*', 'asshole*', 'dickhead*', 'cocksuck*', 'dildo*', 'jizz*',
+  'blowjob*', 'handjob*', 'slut*', 'whore*', 'nigger*', 'nigga*', 'faggot*', 'retard', 'wetback*', 'raghead*', 'towelhead*'
+);
 
 -- Text as it's compared: lower case, symbol swaps undone.
 create function public.words_normal(t text) returns text
@@ -79,6 +88,30 @@ grant execute on function public.banned_word_in(text, text) to anon, authenticat
 revoke all on function public.words_normal(text) from public, anon, authenticated;
 revoke all on function public.word_pattern(text) from public, anon, authenticated;
 
+-- The first banned word in a handle or display name, or null: the whole-word check, then the inside_names words
+-- anywhere inside each word (dots, underscores and numbers count as gaps: "shit_talker" and "shittalker" both stop).
+create function public.banned_name_in(name text) returns text
+language plpgsql stable security definer set search_path = public
+as $$
+declare
+  t text := public.words_normal(name);
+  w text;
+  found text[];
+begin
+  if t !~ '[a-z]' then return null; end if;
+  w := public.banned_word_in(name);
+  if w is not null then return w; end if;
+  for w in select rtrim(word, '*') from public.banned_words where inside_names order by word loop
+    found := regexp_match(t, '([a-z]*' || w || '[a-z]*)');
+    if found is not null then return found[1]; end if;
+  end loop;
+  return null;
+end;
+$$;
+revoke all on function public.banned_name_in(text) from public, anon, authenticated;
+-- The sign-up form asks before creating the account.
+grant execute on function public.banned_name_in(text) to anon, authenticated;
+
 -- An episode's own words: its title and its show's.
 create function public.episode_words(ref text) returns text
 language sql stable security definer set search_path = public
@@ -105,6 +138,13 @@ begin
       bad := coalesce(public.banned_word_in(new.note, public.episode_words(new.episode_ref)),
                       public.banned_word_in(new.hook, public.episode_words(new.episode_ref)));
     end if;
+  elsif tg_table_name = 'profiles' then
+    if ins or new.handle is distinct from old.handle then
+      bad := public.banned_name_in(new.handle);
+    end if;
+    if bad is null and (ins or new.display_name is distinct from old.display_name) then
+      bad := public.banned_name_in(new.display_name);
+    end if;
   elsif tg_table_name = 'briefs' then
     -- A list may quote the titles of the episodes in it.
     if ins or new.title is distinct from old.title or new.dek is distinct from old.dek or new.topic is distinct from old.topic then
@@ -124,3 +164,4 @@ create trigger words_check before insert or update on public.logs for each row e
 create trigger words_check before insert or update on public.comments for each row execute function public.check_words();
 create trigger words_check before insert or update on public.recommendations for each row execute function public.check_words();
 create trigger words_check before insert or update on public.briefs for each row execute function public.check_words();
+create trigger words_check before insert or update on public.profiles for each row execute function public.check_words();

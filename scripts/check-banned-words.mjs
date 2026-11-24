@@ -1,4 +1,4 @@
-// Test for the banned-words check (supabase/migrations/20261124180000_banned_words.sql): every migration on an empty
+// Test for the banned-words check (supabase/migrations/20261124190000_banned_words.sql): every migration on an empty
 // in-memory database, then sample text. Checks whole-word matching, variants, titles that may be quoted, and that
 // reviews, replies, send notes and list titles are refused while older text and other changes still save.
 // Usage (from the repo folder): node scripts/check-banned-words.mjs
@@ -80,6 +80,19 @@ check(e?.code === "HKW01", "a list title with a banned word is refused");
 e = await err(1, `insert into public.briefs (title, dek, topic) values ('Good stuff', 'all bangers, no bullshit', 'stuff')`);
 check(e?.code === "HKW01", "a list description with one is refused");
 check(!(await err(1, `insert into public.briefs (title, topic, items) values ('Bitch Sesh favorites', 'comedy', '[{"title":"Ep 1","feedTitle":"Bitch Sesh"}]')`)), "a list can quote the shows in it");
+
+// ---- handles and names ----
+const name = async (t) => (await db.query(`select public.banned_name_in(${q(t)}) as w`)).rows[0].w;
+for (const [t, w] of [["shittalker", "shittalker"], ["shit_talker", "shit"], ["x_fuckboy_x", "fuckboy"], ["b1tchqueen", "bitchqueen"],
+  ["Big Shit Energy", "shit"], ["ass", "ass"], ["lilcunt99", "lilcunt"]]) check((await name(t)) === w, `blocks the name ${JSON.stringify(t)} (${w})`);
+for (const t of ["classic_jess", "spicy.pod", "hitchcock_fan", "assassin", "Maya K.", "kikilululee", "erin", "ana.b", "therapist", "pakistani_pods"])
+  check((await name(t)) === null, `allows the name ${JSON.stringify(t)}`);
+e = await err(1, `update public.profiles set handle = 'shittalker' where id = '${U(1)}'`);
+check(e?.code === "HKW01", "changing your handle to a banned one is refused");
+e = await err(1, `update public.profiles set display_name = 'Fuck Off' where id = '${U(1)}'`);
+check(e?.code === "HKW01", "a banned display name is refused");
+check(!(await err(1, `update public.profiles set handle = 'ann.k', display_name = 'Ann K' where id = '${U(1)}'`)), "a clean handle and name save");
+check((await as(1, `select public.banned_name_in('shittalker') as w`)).rows[0].w === "shittalker", "the sign-up form can ask about a handle");
 
 check(!!(await err(1, `select * from public.banned_words`)), "the app can't read the list directly");
 check((await as(1, `select public.banned_word_in('shit') as w`)).rows[0].w === "shit", "the app can ask about a piece of text");
