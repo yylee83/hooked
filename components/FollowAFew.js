@@ -62,7 +62,7 @@ export default function FollowAFew() {
       </p>
       {team.length > 0 && (
         <p className="small muted follow-few__team">
-          You&apos;re following {team.map((f) => `@${f.handle}`).join(" and ")}, who make Hooked.
+          You&apos;re following {team.map((f) => `@${f.handle}`).join(" and ")}, who make Hooked on Pods.
         </p>
       )}
       <DiscoverPeople suggested={8} newPage={5} followAll onCount={onCount} exclude={TEAM} />
