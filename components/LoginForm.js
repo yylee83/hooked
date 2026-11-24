@@ -12,6 +12,8 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
   const [email, setEmail] = useState(startEmail);
   const [password, setPassword] = useState("");
   const [handle, setHandle] = useState("");
+  const [name, setName] = useState("");
+  const [over13, setOver13] = useState(false);
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(null); // what we emailed: "link" | "confirm" | "reset", or "waitlist"
@@ -82,9 +84,10 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
         await signInWithPassword(addr, password);
         router.push(next);
       } else if (mode === "signup") {
-        // A new account starts by following a few people (it gets a handle automatically), then goes on.
-        const first = next === "/me" ? "/welcome/people" : next;
-        const ready = await signUpWithPassword(addr, password, first, handle);
+        // A new account starts with three short, skippable steps (favorite shows, follow people, two questions).
+        if (!over13) throw new Error("You need to be 13 or older to use Hooked.");
+        const first = next === "/me" ? "/welcome/shows" : next;
+        const ready = await signUpWithPassword(addr, password, first, handle, name);
         if (ready) router.push(first);
         else setSent("confirm");
       } else if (mode === "waitlist") {
@@ -171,6 +174,20 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
               onChange={(e) => setHandle(e.target.value)}
             />
             <p className="muted small" style={{ margin: 0 }}>How friends find and follow you. You can change it later.</p>
+
+            <label className="label" htmlFor="name" style={{ margin: "16px 0 0" }}>
+              Name <span className="muted small signup-optional">optional</span>
+            </label>
+            <input
+              id="name"
+              className="input"
+              autoComplete="name"
+              autoCapitalize="words"
+              maxLength={60}
+              placeholder="What friends call you"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </>
         )}
 
@@ -203,6 +220,13 @@ export default function LoginForm({ next = "/me", linkError, startMode = "signin
               </button>
             </div>
           </>
+        )}
+
+        {mode === "signup" && (
+          <label className="signup-age">
+            <input type="checkbox" required checked={over13} onChange={(e) => setOver13(e.target.checked)} />
+            <span>I'm 13 or older</span>
+          </label>
         )}
 
         <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 22 }} disabled={busy || !state}>
