@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Avatar, FollowButton } from "./Friends";
-import { useStore } from "@/lib/store";
+import { follow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 
 const WHO = "id, handle, display_name, created_at";
@@ -48,7 +48,10 @@ function myShows(state) {
 }
 
 // `suggested` and `newPage`: how many of each to show (the welcome step shows more suggestions).
-export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage = 8 }) {
+// `followAll`: a "Follow all" button on Suggested follows (the welcome step). `onCount`: told how many people are
+// listed, so the welcome step doesn't ask for more follows than there are people.
+// `exclude`: handles left out of both lists (the welcome step follows the Hooked team for you).
+export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage = 8, followAll = false, onCount, exclude }) {
   const state = useStore();
   const me = state?.user?.id || null;
   const ready = !!state;
@@ -137,12 +140,20 @@ export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, me, showKey]);
 
-  if (!hide) return null;
-  const keep = (p) => !hide.has(p.id);
+  const keep = (p) => !hide?.has(p.id) && !exclude?.includes(p.handle);
   const picks = (found || []).filter((s) => keep(s.p)).slice(0, suggestedCount);
   const pickIds = new Set(picks.map((s) => s.p.id));
   // Someone already suggested above isn't repeated under New.
   const newest = (fresh || []).filter((p) => keep(p) && !pickIds.has(p.id)).slice(0, NEW_MAX);
+  const loaded = !!(hide && fresh && found);
+  const listed = picks.length + newest.length;
+  useEffect(() => {
+    if (loaded && onCount) onCount(listed);
+  }, [loaded, listed, onCount]);
+
+  if (!hide) return null;
+  const followingIds = new Set((state?.following || []).map((f) => f.id));
+  const notYet = picks.filter((s) => !followingIds.has(s.p.id));
 
   // Everyone here is already followed (Hooked is small and invite-only for now): say so instead of showing nothing.
   if (fresh && found && !picks.length && !newest.length) {
@@ -157,7 +168,18 @@ export default function DiscoverPeople({ suggested: suggestedCount = 5, newPage 
     <>
       {picks.length > 0 && (
         <section className="discover">
-          <h2 className="label">Suggested follows</h2>
+          <div className="discover__head">
+            <h2 className="label">Suggested follows</h2>
+            {followAll && picks.length > 1 && (
+              <button
+                className="btn btn--sm btn--cobalt discover__all"
+                disabled={!notYet.length}
+                onClick={() => notYet.forEach((s) => follow(s.p).catch(() => {}))}
+              >
+                {notYet.length ? "Follow all" : "Following all"}
+              </button>
+            )}
+          </div>
           <ul>
             {picks.map(({ p, why }) => (
               <DiscoverRow key={p.id} p={p} why={why} />
