@@ -11,21 +11,19 @@ from it.
 **First thing next session:** `gh pr list --repo yylee83/hooked`, `git checkout main && git pull`, then
 `supabase migration list` (it shows which migration files live has applied; it reads no user data).
 
-**1. The live database is five migrations behind (as of 2026-11-24).** These PRs are merged and live as code, but
-their database changes aren't on `hooked` yet, so their features quietly don't work there:
+**1. The live database is up to date (checked 2026-11-24, evening).** `supabase migration list` shows all 24
+migrations on `hooked`, through `20261124190000_banned_words.sql` (#147). The five that were waiting (auto handles #139,
+sign-up answers #143, notification emails #145, invite links #146, banned words #147) were pushed after this plan was
+first written, so those features should work live. Unknown: whether live was backed up before `auto_handles` (it filled
+in handles for existing accounts), and whether the **test** database has the five. Notification emails still need
+`RESEND_API_KEY` in Vercel Production (item 2).
 
-| Migration | PR | Until it's pushed |
-|---|---|---|
-| `20261122180000_auto_handles.sql` | #139 | Accounts without a handle stay unfindable in Find people |
-| `20261123120000_signup_answers.sql` | #143 | Sign-up's "two quick questions" step errors on Done |
-| `20261124120000_notify_emails.sql` | #145 | No notification emails (also needs `RESEND_API_KEY` in Vercel Production) |
-| `20261124180000_invite_links.sql` | #146 | The Invite card errors, invite links say they don't work |
-| `20261124190000_banned_words.sql` | #147 | Curse words and slurs aren't blocked |
-
-The fix is one push (Erin runs it): `git checkout main && git pull`, then `supabase db push`. It lists the files it will
-apply and asks `[Y/n]`; check that the list matches the table above. `auto_handles` changes saved data (it fills in
-handles for existing accounts), so per the database rules, back up live first. Pushed already: everything up to and
-including `20261122140000_waitlist.sql` (#130). Whether the **test** database has the five is unchecked.
+**Supabase CLI: Erin is on 3.4.0** (upgraded 2026-11-24). Since #140, `supabase/config.toml` is written for 3.x, and
+2.98 refuses to read it (`invalid keys: local_smtp`), so every command failed, even `migration list`. On 3.x:
+`supabase migration list` and `supabase db push --remote`. Before confirming a push, check its "Target:" line says
+`hooked` (live) and the list of files matches what you expect. Homebrew now asks you to trust outside taps before it
+updates them: `brew trust --formula supabase/tap/supabase` (done), then `brew upgrade supabase`. The
+`enable_signup is deprecated` warnings are harmless until CLI 4.
 
 **2. Settings outside the code, to check or do:**
 - **Sign-in email templates (#148):** paste `supabase/templates/` into both Supabase projects (steps in
@@ -40,17 +38,16 @@ including `20261122140000_waitlist.sql` (#130). Whether the **test** database ha
 **3. Open PRs:**
 - **#128 (Erin): logging, Up next and Hook show need an account.** Signed out, those buttons open sign-in and come
   back (`lib/sign-in-first.js`; `needsAccount` in `lib/store.js` refuses the save as a backstop); the log page redirects;
-  the player doesn't ask "Log it?" signed out. Erin decided "all three" on 2026-11-21. Tested locally against the test
-  database (signed out: nothing saved, each button opens sign-in with the right return page; signed in: all three
-  saved). **Needs updating before merge:** it now conflicts with main in `components/LogSheet.js`, and newer work added
-  more places that save logs, Up next or hooked shows (13 calls now, 11 when it was written; likely the sign-up
-  favorite-shows step from #143). Merge main in, wrap the new buttons with `guard()`, retest.
+  the player doesn't ask "Log it?" signed out. Erin decided "all three" on 2026-11-21. **Up to date with main and ready
+  to merge (2026-11-24):** the only conflict was one import line in `components/LogSheet.js`; the favorite-shows step
+  (#143, `components/FavoriteShows.js`) now opens sign-in too. Retested locally on the test database, signed out and in.
+  No migration.
 - **#149 (YY): search engines and AI tools** (robots.txt keeping AI-training crawlers out, sitemap, reviews in the page,
   structured data). No migration.
 - **#150 (YY): privacy policy and terms** at /privacy and /terms. A draft, not legal advice: a lawyer should read it
   before a wider launch. One line depends on #149.
 - **#151 (YY): report and block people.** Has a migration (`20261124200000_reports_blocks.sql`): it needs a push after
-  merge, after the five above. Moderation steps in `docs/MODERATION.md`.
+  merge (`supabase db push --remote`). Moderation steps in `docs/MODERATION.md`.
 
 **What changed 2026-11-17 to 2026-11-24 (all merged; database parts per item 1):**
 - **Invites and sign-up:** waitlist on sign-up while invite-only (#130; read it in Supabase → Table Editor →
@@ -72,7 +69,7 @@ including `20261122140000_waitlist.sql` (#130). Whether the **test** database ha
   on Pods (#137). Unread count on the My log tab (#141). Spellcheck while writing (#142). Share previews update when a
   review changes (#129, #136). Show notes for brand-new episodes (#135). Shares tracked (#125). Searching inside the app
   fixed (#127).
-- Supabase CLI 3.x config rename (#140). Erin's CLI is 2.98; `supabase db push` works on it.
+- Supabase CLI 3.x config rename (#140). Erin's CLI is now 3.4.0 (see item 1).
 
 **Still to do before a wider invite (from the earlier list):** account deletion in settings (#150 says to email for now),
 the installable app (Home Screen icon, opens full screen; Erin said "not yet" on 2026-11-22), Google sign-in.
