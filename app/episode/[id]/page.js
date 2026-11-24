@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Art from "@/components/Art";
+import BackButton from "@/components/BackButton";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
@@ -64,15 +65,8 @@ export default async function EpisodePage({ params, searchParams }) {
 
   return (
     <>
-      {card.showRef || card.feedId ? (
-        <Link href={showHref(card.showRef, card.feedId)} className="back">
-          ← {card.feedTitle || "Show"}
-        </Link>
-      ) : (
-        <Link href="/search" className="back">
-          ← Search
-        </Link>
-      )}
+      {/* Back to where you were; opened from a shared link, to the show (its name is also under the title). */}
+      <BackButton fallback={card.showRef || card.feedId ? showHref(card.showRef, card.feedId) : "/search"} />
 
       {shared?.profile && (
         <section className="shared-by">

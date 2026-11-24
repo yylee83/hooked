@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BackButton from "./BackButton";
 import Art from "./Art";
 import { ClipChip, PlayButton, PlayCut } from "./Player";
 import { LogButton, QueueAll, QueueButton } from "./Social";
@@ -43,9 +44,7 @@ export default function BriefView({ brief, items, backHref = "/lists" }) {
   return (
     <div className={`brief tone-${brief.color || "cobalt"}`}>
       <div className="brief__top">
-        <Link href={backHref} className="back">
-          ← Back
-        </Link>
+        <BackButton fallback={backHref} />
         <div className="brief__top-end">
           {brief.sharePath && <BriefShareButton title={brief.title} path={brief.sharePath} count={usable.length} briefId={brief.id || brief.slug} />}
           <span className={`sticker ${onCobalt ? "" : "sticker--cobalt"}`}>List</span>

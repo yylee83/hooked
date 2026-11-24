@@ -7,10 +7,12 @@ import { useRouter } from "next/navigation";
 import Art from "./Art";
 import { GENRES } from "@/lib/genres";
 import { findHookedShow, saveInterests, toggleHookedShow, useStore } from "@/lib/store";
+import { useSignInFirst } from "@/lib/sign-in-first";
 
 export default function TastePicker({ shows }) {
   const state = useStore();
   const router = useRouter();
+  const { guard } = useSignInFirst();
   const [step, setStep] = useState(1);
   const [picked, setPicked] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -60,7 +62,7 @@ export default function TastePicker({ shows }) {
                 <button
                   key={s.feedId}
                   className={`taste__show ${on ? "is-on" : ""}`}
-                  onClick={() => toggleHookedShow({ feedId: s.feedId, showRef: s.showRef, title: s.title, image: s.image })}
+                  onClick={guard(() => toggleHookedShow({ feedId: s.feedId, showRef: s.showRef, title: s.title, image: s.image }))}
                   aria-pressed={on}
                 >
                   <Art src={s.image} title={s.title} size="100%" radius={16} className="art--fluid" />

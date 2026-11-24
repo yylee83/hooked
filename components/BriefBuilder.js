@@ -1,4 +1,5 @@
 "use client";
+import BackButton from "./BackButton";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -301,9 +302,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
   return (
     <>
-      <Link href={isPublished ? `/lists/b/${editing.id}` : "/lists"} className="back">
-        ← {isPublished ? "Back to list" : "Lists"}
-      </Link>
+      <BackButton fallback={isPublished ? `/lists/b/${editing.id}` : "/lists"} />
       <h1 className="display h-lg" style={{ margin: "18px 0 8px" }}>
         {isPublished ? "Edit list" : editing?.draft ? "Your draft" : "New list"}
       </h1>

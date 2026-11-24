@@ -2,6 +2,8 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "@fontsource/bagel-fat-one/400.css";
 import "./globals.css";
+import { Suspense } from "react";
+import { BackTracker } from "@/components/BackButton";
 import BottomNav from "@/components/BottomNav";
 import HandleGate from "@/components/HandleGate";
 import { NotificationToast } from "@/components/Notifications";
@@ -48,6 +50,9 @@ export default function RootLayout({ children }) {
           <BottomNav />
           <HandleGate />
           <NotificationToast />
+          <Suspense fallback={null}>
+            <BackTracker />
+          </Suspense>
         </PlayerProvider>
       </body>
     </html>

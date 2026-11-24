@@ -2,7 +2,81 @@
 
 Erin and YY built two versions of Hooked in parallel. This repo (YY's) is the shared base. This file records what we decided and the order we're doing the work in. Update it when a decision changes.
 
-## Where we left off (2026-11-17)
+## Where we left off (2026-11-24)
+
+**Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). Some of YY's PRs say
+"`~/hooked`": on Erin's computer that means this folder. `~/claude/hooked` is Erin's archived first version: don't build
+from it.
+
+**First thing next session:** `gh pr list --repo yylee83/hooked`, `git checkout main && git pull`, then
+`supabase migration list` (it shows which migration files live has applied; it reads no user data).
+
+**1. The live database is up to date (checked 2026-11-24, evening).** `supabase migration list` shows all 24
+migrations on `hooked`, through `20261124190000_banned_words.sql` (#147). The five that were waiting (auto handles #139,
+sign-up answers #143, notification emails #145, invite links #146, banned words #147) were pushed after this plan was
+first written, so those features should work live. Unknown: whether live was backed up before `auto_handles` (it filled
+in handles for existing accounts), and whether the **test** database has the five. Notification emails still need
+`RESEND_API_KEY` in Vercel Production (item 2).
+
+**Supabase CLI: Erin is on 3.4.0** (upgraded 2026-11-24). Since #140, `supabase/config.toml` is written for 3.x, and
+2.98 refuses to read it (`invalid keys: local_smtp`), so every command failed, even `migration list`. On 3.x:
+`supabase migration list` and `supabase db push --remote`. Before confirming a push, check its "Target:" line says
+`hooked` (live) and the list of files matches what you expect. Homebrew now asks you to trust outside taps before it
+updates them: `brew trust --formula supabase/tap/supabase` (done), then `brew upgrade supabase`. The
+`enable_signup is deprecated` warnings are harmless until CLI 4.
+
+**2. Settings outside the code, to check or do:**
+- **Sign-in email templates (#148):** paste `supabase/templates/` into both Supabase projects (steps in
+  `docs/AUTH_EMAILS.md`). Until then the old emails, which only work in the browser that asked for them, keep going out.
+- **Resend:** the notification emails (#145) send from `hello@hookedonpods.com` through Resend. It's unconfirmed whether
+  `RESEND_API_KEY` is in Vercel, and whether Supabase's own sign-in emails go through Resend (Supabase → `hooked` →
+  Authentication → Emails → SMTP Settings). Without custom SMTP, Supabase's built-in sender allows only a few emails an
+  hour, which matters when inviting a group.
+- **Backups:** check what Supabase → `hooked` → Database → Backups includes on the current plan, now that real people's
+  data is there.
+
+**3. Open PRs:**
+- **#128 (Erin): logging, Up next and Hook show need an account.** Signed out, those buttons open sign-in and come
+  back (`lib/sign-in-first.js`; `needsAccount` in `lib/store.js` refuses the save as a backstop); the log page redirects;
+  the player doesn't ask "Log it?" signed out. Erin decided "all three" on 2026-11-21. **Up to date with main and ready
+  to merge (2026-11-24):** the only conflict was one import line in `components/LogSheet.js`; the favorite-shows step
+  (#143, `components/FavoriteShows.js`) now opens sign-in too. Retested locally on the test database, signed out and in.
+  No migration.
+- **#149 (YY): search engines and AI tools** (robots.txt keeping AI-training crawlers out, sitemap, reviews in the page,
+  structured data). No migration.
+- **#150 (YY): privacy policy and terms** at /privacy and /terms. A draft, not legal advice: a lawyer should read it
+  before a wider launch. One line depends on #149.
+- **#151 (YY): report and block people.** Has a migration (`20261124200000_reports_blocks.sql`): it needs a push after
+  merge (`supabase db push --remote`). Moderation steps in `docs/MODERATION.md`.
+
+**What changed 2026-11-17 to 2026-11-24 (all merged; database parts per item 1):**
+- **Invites and sign-up:** waitlist on sign-up while invite-only (#130; read it in Supabase → Table Editor →
+  `waitlist`). **Invite links** (#146): anyone can invite friends with a link, no limit, and new people follow whoever
+  invited them; `allowed_emails` and the waitlist still work. Sign-up asks for an optional name and a required 13+ tick,
+  then favorite shows and two quick questions (#143), then a follow step with a goal of 3 (#139, #144). Accounts
+  without a handle get one picked for them, with a one-time Keep it / Change it note (#139). Sign-in emails that work on
+  any device, with a code (#148).
+- **Inviting someone now:** send them an invite link from the app, or add their email (lower case) to `allowed_emails`
+  and send `https://hookedonpods.com/login?mode=signup`. From the waitlist, also fill in `invited_at` on their row.
+- **Safety:** banned words in reviews, replies, send notes, lists and handles (#147; the list is the `banned_words`
+  table, editable in Supabase). Report and block is #151, still open.
+- **Emails to people:** when someone follows them, replies, sends an episode or likes their review, at most one an hour
+  (#145). Live only; previews email only `EMAIL_TEST_TO`.
+- **Briefs are now "Lists"** on screen and at `/lists` (old `/briefs` links redirect) (#131). Episode pages show which
+  lists feature the episode (#126).
+- **Home:** "Top conversations" (renamed, scrolls in its own box), the new-episodes row only for signed-in people with
+  their own shows, tap Home again or pull down to refresh (#132–#134, #138). People: Suggested follows and New on Hooked
+  on Pods (#137). Unread count on the My log tab (#141). Spellcheck while writing (#142). Share previews update when a
+  review changes (#129, #136). Show notes for brand-new episodes (#135). Shares tracked (#125). Searching inside the app
+  fixed (#127).
+- Supabase CLI 3.x config rename (#140). Erin's CLI is now 3.4.0 (see item 1).
+
+**Still to do before a wider invite (from the earlier list):** account deletion in settings (#150 says to email for now),
+the installable app (Home Screen icon, opens full screen; Erin said "not yet" on 2026-11-22), Google sign-in.
+
+## Earlier: where we left off (2026-11-17)
+
+Kept for history. Most of its "Up next" is done: Stage D, Decision 6 and the domain.
 
 **Start Claude Code in `~/claude/hooked-shared`** (`cd ~/claude/hooked-shared && claude`). `~/claude/hooked` is Erin's
 archived first version: don't build from it.

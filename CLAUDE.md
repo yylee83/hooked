@@ -151,8 +151,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   sits in page headers when signed out.
 - **API routes** (`app/api/`): `resolve` (paste a link), `episode`, `for-you`, `top-episodes`,
   `genres`, `new-episodes`, `listening-now`, `briefs/draft`, `briefs/add`, `og/episode` (share images), `cron/digest`, `unsubscribe`.
-- **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase when signed in, and to
-  localStorage when signed out (moved into the account on sign-in).
+- **Client state**: `lib/store.js` (useSyncExternalStore). Saves to Supabase. **Logging, Up next and hooking a show
+  need an account** (Erin, 2026-11-21): signed out, those buttons open sign-in and come back (`useSignInFirst` /
+  `signInHref` in `lib/sign-in-first.js`; the log page redirects), the player doesn't ask "Log it?", and the store
+  refuses the save (`needsAccount`). Signed out, people browse and listen. Anything saved in a browser before that is
+  still moved into the account on sign-in.
 - **Player**: `components/Player.js` (queue/clips, skip −15/+30 (the lock screen skips 10 each way, to match the "10" its buttons show), speed, drag the playhead,
   auto-advance through Up next; an episode on Up next comes off it as soon as it starts playing, from anywhere, and
   finishing any episode (not a brief) starts the next one on Up next; the next one is looked up two minutes before the
@@ -215,6 +218,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   reactions and sends between them, `HKB01`, and skips notifications; the app hides their reviews and replies via
   `isBlocked` in `lib/store.js`). Team view: `insights_reports`. How to act on a report: `docs/MODERATION.md`. Test:
   `node scripts/check-reports-blocks.mjs`.
+- **Back buttons** (Erin, 2026-11-24): every "← Back" (show, episode, list, list editor, hooked shows) and the log
+  sheet's Cancel go back to the screen you were on (`components/BackButton.js`: `BackButton`, `useGoBack`). With no
+  earlier Hooked screen in the tab (a shared link, a new tab), they go to a fixed page instead (a show's goes to Search, an
+  episode's to its show). The trail of screens is kept by `BackTracker` in the root layout (`hooked:trail` in
+  sessionStorage), because Next.js rewrites the browser's own history entries. New back links should use `BackButton`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and
