@@ -20,7 +20,7 @@ export default function SearchFilters({ type = "all", signedInHint = false }) {
   const options = signedIn || type === "friends" ? [...OPTIONS, FRIENDS] : [...OPTIONS];
   // People and Briefs live in All; their "See all" views get a pill only while you're on them.
   if (type === "people") options.push(["people", "People"]);
-  if (type === "briefs") options.push(["briefs", "Briefs"]);
+  if (type === "briefs") options.push(["briefs", "Lists"]);
   const rerun = (e) => {
     const form = document.getElementById("search-form");
     // Only search again if there's something to search for; otherwise the pick waits for the search.

@@ -171,6 +171,9 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
                 maxLength={500}
                 onChange={(e) => setText(e.target.value)}
                 aria-label="Write a reply"
+                spellCheck
+                autoCorrect="on"
+                autoCapitalize="sentences"
               />
               <button className="btn btn--sm btn--cobalt" disabled={busy || !text.trim()}>
                 {busy ? "…" : "Post"}

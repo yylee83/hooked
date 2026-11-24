@@ -10,6 +10,7 @@ import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
 import { MAX_ITEMS, UNTITLED, savedItem } from "@/lib/briefs-client";
+import { cleanWordsMessage } from "@/lib/clean-words";
 
 const DRAFT = "hooked:brief-draft";
 const COLORS = ["cobalt", "bubblegum", "butter"];
@@ -61,6 +62,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
   // A published brief you're editing changes only when you tap "Save changes".
   const [draftId, setDraftId] = useState(editing?.draft ? editing.id : null);
   const [draftSaved, setDraftSaved] = useState(""); // "saving" / "saved" / "failed"
+  const [wordNote, setWordNote] = useState(""); // "Please edit out …" when the title or description has a banned word
   const autosaving = useRef(null);
 
   // Bring back a draft (e.g. after signing in to publish), or start from a trending topic.
@@ -159,7 +161,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       setError("Couldn't delete. Try again.");
       return;
     }
-    router.push(isDraft ? "/me" : "/briefs");
+    router.push(isDraft ? "/me" : "/lists");
     router.refresh();
   }
   const isDraft = !!draftId || !!editing?.draft;
@@ -193,7 +195,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       if (!res.ok || !data.item) throw new Error(data.error || "We couldn't find that episode.");
       const item = data.item;
       const k = itemKey(item);
-      if (!picked.includes(k) && picked.length >= MAX_ITEMS) throw new Error(`A brief can hold ${MAX_ITEMS} episodes. Remove one first.`);
+      if (!picked.includes(k) && picked.length >= MAX_ITEMS) throw new Error(`A list can hold ${MAX_ITEMS} episodes. Remove one first.`);
       setPool((o) => ({ ...o, [k]: item }));
       setPicked((p) => (p.includes(k) ? p : [...p, k]));
       setLink("");
@@ -233,6 +235,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       const id = job.id || draftId;
       const q = id ? supabase().from("briefs").update(row).eq("id", id) : supabase().from("briefs").insert(row);
       const { data, error: err } = await q.select("id").single();
+      setWordNote(cleanWordsMessage(err) || "");
       if (err) {
         setDraftSaved("failed");
         return false;
@@ -241,7 +244,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
         job.id = data.id;
         setDraftId(data.id);
         // Reloading (or coming back later) opens this draft.
-        window.history.replaceState(null, "", `/briefs/b/${data.id}/edit`);
+        window.history.replaceState(null, "", `/lists/b/${data.id}/edit`);
         try {
           sessionStorage.removeItem(DRAFT);
         } catch {}
@@ -264,7 +267,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       try {
         sessionStorage.setItem(DRAFT, JSON.stringify({ topic, mode, result, picked, pool, title, titleTouched, dek, color }));
       } catch {}
-      router.push("/login?next=/briefs/new");
+      router.push("/login?next=/lists/new");
       return;
     }
     setSaving(true);
@@ -277,8 +280,10 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     const id = draft || editing?.id;
     const q = id ? supabase().from("briefs").update(draft ? { ...row, draft: false } : row).eq("id", id) : supabase().from("briefs").insert(row);
     const { data, error: err } = await q.select("id").single();
+    setWordNote(cleanWordsMessage(err) || "");
     if (err) {
       setSaving(false);
+      if (cleanWordsMessage(err)) return;
       setError(state.profile?.handle ? `Couldn't publish (${err.message}). Try again in a moment.` : "Pick a handle on My log first, then publish.");
       return;
     }
@@ -286,7 +291,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     try {
       sessionStorage.removeItem(DRAFT);
     } catch {}
-    router.push(`/briefs/b/${data.id}`);
+    router.push(`/lists/b/${data.id}`);
     router.refresh();
   }
 
@@ -296,14 +301,14 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
   return (
     <>
-      <Link href={isPublished ? `/briefs/b/${editing.id}` : "/briefs"} className="back">
-        ← {isPublished ? "Back to brief" : "Briefs"}
+      <Link href={isPublished ? `/lists/b/${editing.id}` : "/lists"} className="back">
+        ← {isPublished ? "Back to list" : "Lists"}
       </Link>
       <h1 className="display h-lg" style={{ margin: "18px 0 8px" }}>
-        {isPublished ? "Edit brief" : editing?.draft ? "Your draft" : "New brief"}
+        {isPublished ? "Edit list" : editing?.draft ? "Your draft" : "New list"}
       </h1>
       <p className="muted" style={{ fontSize: 19 }}>
-        Pick a topic. We'll find episodes about it, and you choose the ones that make your brief.
+        Pick a topic. We'll find episodes about it, and you choose the ones that make your list.
       </p>
 
       <form onSubmit={find} className="stack" style={{ marginTop: 22 }}>
@@ -406,7 +411,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           {chosen.length > 0 && (
             <div className="briefbar" role="status">
               <span className="briefbar__text">
-                <span className="mono briefbar__label">Your brief</span>
+                <span className="mono briefbar__label">Your list</span>
                 <span className="briefbar__sum">
                   {chosen.length} {chosen.length === 1 ? "episode" : "episodes"} · {briefMode === "clips" ? clock(total) : minutes(total)}
                 </span>
@@ -421,7 +426,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
 
       {chosen.length > 0 && (
         <section id="your-brief" className="card stack" style={{ marginTop: 26, scrollMarginTop: 20 }}>
-          <h2 className="label" style={{ margin: 0 }}>Your brief</h2>
+          <h2 className="label" style={{ margin: 0 }}>Your list</h2>
           {isDraft && (
             <p className="mono small muted" style={{ margin: 0 }} role="status">
               {draftSaved === "failed" ? "Couldn't save the draft just now." : "Draft · saved as you go · only you can see it"}
@@ -434,6 +439,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
           <input
             className="input"
             placeholder="Title"
+            spellCheck
+            autoCorrect="on"
+            autoCapitalize="sentences"
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
@@ -445,6 +453,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
             className="input textarea"
             rows={3}
             placeholder="One or two lines: why this, why now? (optional)"
+            spellCheck
+            autoCorrect="on"
+            autoCapitalize="sentences"
             value={dek}
             onChange={(e) => setDek(e.target.value)}
             maxLength={300}
@@ -462,8 +473,9 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
               />
             ))}
           </div>
+          {wordNote && <p className="nudge small" role="alert">{wordNote}</p>}
           <button className="btn btn--big btn--display btn--cobalt" style={{ marginTop: 10 }} onClick={publish} disabled={saving || !state?.accounts}>
-            {saving ? (isPublished ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : isPublished ? "Save changes" : "Publish brief"}
+            {saving ? (isPublished ? "Saving…" : "Publishing…") : !state?.user ? "Sign in to publish" : isPublished ? "Save changes" : "Publish list"}
           </button>
           <div className="row gap center wrap" style={{ justifyContent: "center" }}>
             {canDraft && (
@@ -473,13 +485,13 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
             )}
             {(editing || draftId) && (
               <button type="button" className={`btn btn--sm ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving}>
-                {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this brief"}
+                {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this list"}
               </button>
             )}
           </div>
           {draftSaved === "kept" && (
             <p className="small" style={{ margin: 0, textAlign: "center" }} role="status">
-              ✓ Draft saved. It&apos;s under My briefs on{" "}
+              ✓ Draft saved. It&apos;s under My lists on{" "}
               <Link href="/me" className="u-link">
                 My log
               </Link>
@@ -494,7 +506,7 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
       {chosen.length === 0 && (editing || draftId) && (
         <div className="row gap center" style={{ justifyContent: "center", marginTop: 26 }}>
           <button type="button" className={`btn btn--sm ${confirmDelete ? "btn--ink" : ""}`} onClick={remove} disabled={saving}>
-            {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this brief"}
+            {confirmDelete ? "Tap again to delete for good" : isDraft ? "Delete this draft" : "Delete this list"}
           </button>
         </div>
       )}

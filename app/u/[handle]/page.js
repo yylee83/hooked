@@ -81,10 +81,10 @@ export default async function ProfilePage({ params }) {
 
       {briefs.length > 0 && (
         <section>
-          <h2 className="label">Briefs</h2>
+          <h2 className="label">Lists</h2>
           <div className="row gap wrap">
             {briefs.map((b) => (
-              <Link key={b.id} href={`/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
+              <Link key={b.id} href={`/lists/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
                 <span className="display">{b.title}</span>
                 <span className="mono small">
                   {b.items.length} shows{b.total_seconds ? ` · ${minutes(b.total_seconds)}` : ""}

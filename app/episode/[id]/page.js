@@ -20,6 +20,7 @@ import FeaturedInBriefs from "@/components/FeaturedInBriefs";
 import { getSharedLog } from "@/lib/supabase/public";
 import { minutes, shortDate } from "@/lib/format";
 import { site } from "@/lib/site";
+import { episodePreviewPath } from "@/lib/og-paths";
 
 const cleanFrom = (v) => (typeof v === "string" && /^[a-z0-9._]{2,24}$/i.test(v) ? v.toLowerCase() : null);
 
@@ -32,11 +33,11 @@ export async function generateMetadata({ params, searchParams }) {
   const who = shared?.profile ? shared.profile.display_name || `@${shared.profile.handle}` : null;
   const title = who ? `${who} thinks you'd enjoy "${data.title}"` : data.title;
   const description = shared?.log?.hook ? `“${shared.log.hook}” Listen free on ${site.name}.` : `${data.feedTitle || "A podcast"} · Listen free on ${site.name}.`;
-  const image = `/api/og/episode?${new URLSearchParams({ id: String(data.ref || data.id), ...(shared?.profile ? { from: shared.profile.handle } : {}) })}`;
+  const image = episodePreviewPath(data.ref || data.id, shared?.profile?.handle, shared?.log);
   return {
     title: data.title,
     description,
-    openGraph: { title, description, images: [{ url: image, width: 1200, height: 630 }] },
+    openGraph: { title, description, images: [{ url: image, width: 1200, height: 630, type: "image/jpeg", alt: title }] },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }

@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import PasteLink from "./PasteLink";
+import { HOME_TAP } from "@/lib/home-refresh";
+import { useStore } from "@/lib/store";
+import { useUnread, badgeText } from "@/lib/unread";
 
 const tabs = [
   { href: "/", label: "Home" },
-  { href: "/briefs", label: "Briefs" },
+  { href: "/lists", label: "Lists" },
   { plus: true },
   { href: "/search", label: "Search" },
   { href: "/me", label: "My log" },
@@ -35,8 +38,8 @@ function PlusSheet({ onClose }) {
           <span>Find an episode, rate it, say what you thought.</span>
         </Link>
         <PasteLink onDone={onClose} />
-        <Link href="/briefs/new" className="plus-option tone-bubblegum" onClick={onClose}>
-          <span className="display">Make a brief</span>
+        <Link href="/lists/new" className="plus-option tone-bubblegum" onClick={onClose}>
+          <span className="display">Make a list</span>
           <span>Pick a topic. We'll find the best episodes about it.</span>
         </Link>
         <button className="link-btn" style={{ marginTop: 6 }} onClick={onClose}>
@@ -100,6 +103,9 @@ export default function BottomNav() {
   const path = usePathname() || "/";
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
+  // New notifications show as a pink count on My log, so you see them from any page (the bell lives on Home and My log).
+  const uid = useStore()?.user?.id;
+  const { count: unread } = useUnread(uid, path);
   useBottomPinned();
   if (path.startsWith("/log/")) return null; // the Log it sheet is full-screen
   const active = (href) => (href === "/" ? path === "/" : path.startsWith(href));
@@ -115,8 +121,21 @@ export default function BottomNav() {
                 </svg>
               </button>
             ) : (
-              <Link key={t.label} href={t.href} className={`nav__link ${active(t.href) ? "is-active" : ""}`}>
-                <NavLabel>{t.label}</NavLabel>
+              <Link
+                key={t.label}
+                href={t.href}
+                className={`nav__link ${active(t.href) ? "is-active" : ""}`}
+                // Home, tapped while on Home: back to the top and refresh, instead of a page change that does nothing.
+                onClick={t.href === "/" && path === "/" ? (e) => (e.preventDefault(), window.dispatchEvent(new Event(HOME_TAP))) : undefined}
+              >
+                <NavLabel>
+                  {t.label}
+                  {t.href === "/me" && unread > 0 && (
+                    <span className="nav__badge" aria-label={`${unread} new notifications`}>
+                      {badgeText(unread)}
+                    </span>
+                  )}
+                </NavLabel>
               </Link>
             )
           )}

@@ -249,6 +249,9 @@ html.keyboard-open .nav { display: none; }
 .nav__inner { max-width: 540px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 88px 1fr 1fr; align-items: center; height: 76px; padding: 0 8px; }
 .nav__link { display: flex; align-items: center; justify-content: center; align-self: stretch; text-align: center; font-weight: 700; font-size: 18px; color: var(--muted); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .nav__link.is-active { color: var(--cobalt); }
+/* Unread notifications, on the My log tab (BottomNav.js). */
+.nav__badge { min-width: 17px; height: 17px; margin-left: 3px; padding: 0 4px; border-radius: 999px; background: var(--bubblegum); color: var(--ink); font-family: var(--mono); font-size: 10.5px; font-weight: 700; line-height: 17px; text-align: center; position: absolute; top: -9px; left: 100%; }
+.nav__label { position: relative; }
 /* Turns blue the moment it's tapped, while a slower page (Search) is still loading (BottomNav.js, NavLabel). */
 .nav__label.is-pending { color: var(--cobalt); opacity: 0.7; }
 .nav__plus { justify-self: center; display: grid; place-items: center; width: 78px; height: 78px; margin-top: -26px; border-radius: 50%; background: var(--cobalt); border: var(--line); box-shadow: var(--shadow-sm); }
@@ -436,6 +439,9 @@ body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
 .pw .input { padding-right: 76px; }
 .pw__toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 14px; color: var(--cobalt); padding: 6px 8px; }
 .auth-alt { margin-top: 18px; text-align: center; }
+.login-code { margin-top: 18px; }
+.login-code__row { display: flex; gap: 10px; margin-top: 6px; }
+.login-code__input { flex: 1; min-width: 0; font-family: var(--mono); font-size: 22px; letter-spacing: 0.2em; }
 
 /* ---------- v8: full player ---------- */
 body:has(.mini) .app { padding-bottom: 300px; }
@@ -492,11 +498,15 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .find-friends:hover { background: var(--butter); }
 .friends-cta { margin-top: 26px; background: var(--butter); }
 .invite { margin-top: 24px; background: var(--bubblegum); }
+.invite-card__meta { margin: 12px 0 0; }
+.invite-card__meta .link-btn { color: var(--ink); }
 .person { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 2px solid rgba(21, 19, 29, 0.15); }
 .person__who { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .person__name { display: block; font-weight: 700; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .person__handle { display: block; color: var(--muted); font-size: 15px; }
 .person .avatar { flex: none; }
+.discover__more { margin-top: 10px; }
+.discover__empty { margin: 22px 0 0; }
 .follow { display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .profile__name { font-size: clamp(32px, 9vw, 46px); color: var(--cobalt); overflow-wrap: anywhere; }
 .me__handle a { text-decoration: underline; text-decoration-color: rgba(21,19,29,.25); text-underline-offset: 3px; }
@@ -570,7 +580,7 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 /* ---------- v10: notifications ---------- */
 .bell { position: relative; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; border: var(--line); background: var(--white); color: var(--ink); }
 .bell:hover { background: var(--butter); }
-.bell__n { position: absolute; top: -6px; right: -6px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; background: var(--bubblegum); border: 2.5px solid var(--ink); font-family: var(--mono); font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+.bell__n { position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--bubblegum); color: var(--ink); border: 2px solid var(--ink); font-family: var(--mono); font-weight: 700; font-size: 11px; line-height: 1; display: grid; place-items: center; }
 .me__bell { display: flex; justify-content: flex-end; flex: none; }
 .notes { display: flex; flex-direction: column; }
 .note { display: flex; gap: 12px; align-items: flex-start; padding: 14px 10px; border-top: 2px solid rgba(21,19,29,.12); border-radius: 14px; }
@@ -700,6 +710,38 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .taste__check { position: absolute; top: -6px; right: -6px; width: 30px; height: 30px; border-radius: 999px; background: var(--cobalt); color: var(--white); border: 3px solid var(--ink); display: grid; place-items: center; font-weight: 800; }
 .taste__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 700; font-size: 14px; line-height: 1.2; margin-top: 8px; }
 .taste__bar { position: sticky; bottom: 96px; display: flex; justify-content: space-between; align-items: center; background: var(--cream); padding: 12px 0; margin-top: 18px; }
+.follow-few { padding-bottom: 40px; }
+/* Sign-up (components/LoginForm.js) and the steps after it: favorite shows, two quick questions */
+.signup-optional { font-weight: 500; margin-left: 6px; }
+.signup-age { display: flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 17px; font-weight: 600; cursor: pointer; }
+.signup-age input { width: 22px; height: 22px; accent-color: var(--cobalt); margin: 0; }
+.fav-shows { padding-bottom: 40px; }
+.fav-shows__search { width: 100%; }
+.fav-shows__picked { display: flex; gap: 10px; overflow-x: auto; padding: 14px 2px 4px; }
+.fav-shows__pick { position: relative; flex: none; background: none; border: 0; padding: 0; cursor: pointer; }
+.fav-shows__pick span { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 999px; background: var(--ink); color: var(--white); font-size: 14px; line-height: 20px; text-align: center; }
+.fav-shows__label { margin: 18px 0 10px; }
+.welcome-q { padding-bottom: 40px; }
+.welcome-q__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.welcome-q__chips .chip { cursor: pointer; }
+.welcome-q__place { position: relative; }
+.welcome-q__place .input { width: 100%; }
+.welcome-q__options { list-style: none; margin: 6px 0 0; padding: 4px 0; border: var(--line); border-radius: 16px; background: var(--white); box-shadow: 4px 4px 0 var(--ink); }
+.welcome-q__options button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 16px; font: inherit; font-size: 17px; color: inherit; cursor: pointer; }
+.welcome-q__options li + li button { border-top: 1px solid rgba(21, 19, 29, .1); }
+.welcome-q__bar { display: flex; justify-content: space-between; align-items: center; background: var(--cream); padding: 12px 0; margin-top: 22px; }
+
+.picked-handle { margin: 0 0 18px; padding: 14px 16px; }
+.picked-handle__input { flex: 1; min-width: 0; }
+.follow-few__bar { position: sticky; bottom: 96px; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--cream); padding: 12px 0; margin-top: 18px; }
+.follow-few__team { margin: 10px 0 0; }
+.follow-few__skip { color: var(--muted); font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
+.follow-few__goal { display: flex; gap: 6px; }
+.follow-few__goal i { width: 12px; height: 12px; border-radius: 999px; border: 2px solid var(--ink); background: var(--white); }
+.follow-few__goal i.is-on { background: var(--bubblegum); }
+.follow-few__wait { opacity: 0.55; cursor: default; box-shadow: none; }
+.discover__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 30px 0 12px; }
+.discover__head .label { margin: 0; }
 /* ---------- For you ---------- */
 .taste-cta { margin-top: 26px; background: var(--butter); }
 .foryou { display: flex; gap: 14px; overflow-x: auto; padding: 6px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -2px; }
@@ -711,7 +753,6 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .foryou__actions { margin-top: auto; flex-wrap: wrap; }
 .foryou__actions .btn { padding-left: 10px; padding-right: 10px; }
 /* Home: "New episodes" (components/NewEpisodes.js): a swipe row of small cards. */
-.new-eps__hint { margin: -6px 0 10px; }
 .new-eps__row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin: 0 -2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .new-eps__row::-webkit-scrollbar { display: none; }
 .new-eps__card { flex: none; width: 140px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
@@ -760,6 +801,13 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .featured-talk__label { margin: 4px 0 14px; }
 /* A list (Erin, 2026-11-21): one row per conversation, divided by thin lines. */
 .featured-talk__row { display: flex; flex-direction: column; }
+/* More than 4 conversations: the list scrolls inside a box (about 500px, so a cut-off card shows there is more), with a fade at the bottom
+   that hints at more and goes away at the end. */
+.featured-talk__row--scroll {
+  max-height: 500px; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent); mask-image: linear-gradient(to bottom, #000 82%, transparent);
+}
+.featured-talk__row--scroll.is-end { -webkit-mask-image: none; mask-image: none; }
 .featured-talk__card { display: flex; flex-direction: column; gap: 7px; padding: 14px 0; border-bottom: 2px solid rgba(21, 19, 29, 0.1); }
 .featured-talk__card:first-child { padding-top: 4px; }
 .featured-talk__card:last-child { border-bottom: none; }
@@ -945,3 +993,33 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 @media (prefers-reduced-motion: reduce) { .page-loading__rows span { animation: none; } }
 
 .friends-feed__more { display: block; margin: 10px auto 4px; }
+
+/* ---------- Home: refresh by pulling down or tapping Home again (components/HomeRefresh.js) ---------- */
+html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
+.home-pull {
+  position: fixed; z-index: 15; left: 50%; top: calc(env(safe-area-inset-top) + 4px);
+  width: 38px; height: 38px; margin-left: -19px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--cobalt);
+  background: var(--cream); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+  transform: translateY(calc(var(--pull, 0px) - 44px));
+  transition: transform 0.25s ease, opacity 0.25s ease, background 0.15s ease;
+  pointer-events: none;
+}
+.home-pull.is-dragging, .home-pull__body.is-dragging { transition: none; }
+.home-pull.is-ready { background: var(--butter); }
+.home-pull.is-busy svg { animation: home-pull-spin 0.8s linear infinite; }
+@keyframes home-pull-spin { to { transform: rotate(360deg); } }
+.home-pull__body { transition: transform 0.25s ease; }
+.home-pull__status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .home-pull.is-busy svg { animation: none; }
+  .home-pull, .home-pull__body { transition: none; }
+}
+
+/* "@ana followed you": a small note when you open Hooked with something new (Notifications.js, NotificationToast). */
+.note-toast { position: fixed; z-index: 40; top: calc(10px + env(safe-area-inset-top)); left: 50%; translate: -50% 0; width: min(420px, calc(100% - 32px)); display: flex; align-items: center; background: var(--ink); color: var(--white); border-radius: 14px; box-shadow: 3px 3px 0 var(--bubblegum); animation: toast-in .2s ease-out; }
+.note-toast__body { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 10px 4px 10px 12px; color: inherit; font-size: 14px; }
+.note-toast__n { flex: none; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--bubblegum); color: var(--ink); font-family: var(--mono); font-size: 12px; font-weight: 700; line-height: 22px; text-align: center; }
+.note-toast__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-toast__more { color: rgba(255, 255, 255, 0.7); }
+.note-toast__x { flex: none; width: 40px; align-self: stretch; background: none; border: 0; color: rgba(255, 255, 255, 0.7); font-size: 20px; cursor: pointer; }

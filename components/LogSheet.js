@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
@@ -9,6 +9,7 @@ import { addLog, findLog, needsAccount, sendRecommendation, useStore } from "@/l
 import { signInHref } from "@/lib/sign-in-first";
 import { HookShowPill } from "./Social";
 import { haptic } from "@/lib/haptics";
+import { CLEAN_CODE } from "@/lib/clean-words";
 
 export function RatingInput({ value, onChange, size = 52 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // two pickers on a page each need their own gradient ids
@@ -84,6 +85,8 @@ export default function LogSheet({ episode, presetRating = 0 }) {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [wordNote, setWordNote] = useState(""); // "Please edit out …", shown under the box
+  const hookBox = useRef(null);
 
   // Logging needs an account: signed out, sign in first and come straight back here.
   const signedOut = needsAccount(state);
@@ -96,6 +99,7 @@ export default function LogSheet({ episode, presetRating = 0 }) {
     haptic("success");
     setSaving(true);
     setError("");
+    setWordNote("");
     try {
       const review = { rating, hook: hook.trim() };
       await addLog({ ...episode, ...review, sentTo: sendTo });
@@ -106,6 +110,11 @@ export default function LogSheet({ episode, presetRating = 0 }) {
       router.push("/me");
     } catch (e) {
       setSaving(false);
+      if (e?.code === CLEAN_CODE) {
+        setWordNote(e.message);
+        hookBox.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+        return;
+      }
       setError(`Couldn't save that log (${e?.message || "unknown error"}). Try again in a moment.`);
     }
   }
@@ -139,9 +148,18 @@ export default function LogSheet({ episode, presetRating = 0 }) {
         rows={4}
         maxLength={280}
         placeholder="One line. What got you?"
+        spellCheck
+        autoCorrect="on"
+        autoCapitalize="sentences"
         value={hook}
-        onChange={(e) => setHook(e.target.value)}
+        onChange={(e) => (setHook(e.target.value), setWordNote(""))}
+        ref={hookBox}
       />
+      {wordNote && (
+        <p className="nudge small" role="alert">
+          {wordNote}
+        </p>
+      )}
 
       <h3 className="label">Send it to a friend</h3>
       {state?.user && state.following?.length > 0 ? (

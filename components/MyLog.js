@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import FinishedNotLogged from "./FinishedNotLogged";
 import KeepListening from "./KeepListening";
 import HistoryNote from "./HistoryNote";
@@ -16,6 +17,26 @@ import UpNextCard from "./UpNextCard";
 import { myBriefs } from "@/lib/briefs-client";
 import { minutes, plural, starStats } from "@/lib/format";
 import { showHref } from "@/lib/addresses";
+
+// Notification emails (lib/notify-email.js): follows, replies, sends, thumbs up and + on your reviews.
+function NotifyEmailToggle({ state }) {
+  const [on, setOn] = useState(state.profile?.email_notify !== false);
+  const [busy, setBusy] = useState(false);
+  async function flip() {
+    setBusy(true);
+    const next = !on;
+    setOn(next);
+    const { error } = await sb().from("profiles").update({ email_notify: next }).eq("id", state.user.id);
+    if (error) setOn(!next);
+    setBusy(false);
+  }
+  return (
+    <label className="digest">
+      <input type="checkbox" checked={on} onChange={flip} disabled={busy} />
+      <span>Email me when someone follows me, replies or sends me an episode</span>
+    </label>
+  );
+}
 
 // Weekly email: a Sunday roundup of what friends logged and sent you.
 function DigestToggle({ state }) {
@@ -58,6 +79,7 @@ function ProfilePanel({ state }) {
   const [busy, setBusy] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
   const [pwSaved, setPwSaved] = useState(false);
+  const router = useRouter();
 
   if (!state.accounts) return null;
 
@@ -66,7 +88,7 @@ function ProfilePanel({ state }) {
       <div className="card profile-cta">
         <p className="display h-md" style={{ margin: 0 }}>Make it yours.</p>
         <p style={{ margin: "8px 0 16px" }}>
-          Your log is only saved on this device. Make a profile to keep it, share it, and make briefs.
+          Your log is only saved on this device. Make a profile to keep it, share it, and make lists.
         </p>
         <Link href="/login?mode=signup&next=/me" className="btn btn--cobalt btn--shadow-sm">
           Make a profile
@@ -103,6 +125,7 @@ function ProfilePanel({ state }) {
           {pwSaved ? "Password saved ✓" : "Set password"}
         </button>
       </div>
+      <NotifyEmailToggle state={state} />
       <DigestToggle state={state} />
       <HistoryNote style={{ marginTop: 10 }} />
       <LogOutButton />
@@ -124,6 +147,8 @@ function ProfilePanel({ state }) {
     try {
       await saveProfile({ handle, displayName: name });
       setEditing(false);
+      // A brand-new account: next, follow a few people.
+      if (needsHandle) router.push("/welcome/people");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -168,10 +193,10 @@ function MyBriefs({ userId }) {
   if (!briefs?.length) return null;
   return (
     <section>
-      <h2 className="label">My briefs</h2>
+      <h2 className="label">My lists</h2>
       <div className="row gap wrap">
         {briefs.map((b) => (
-          <Link key={b.id} href={b.draft ? `/briefs/b/${b.id}/edit` : `/briefs/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
+          <Link key={b.id} href={b.draft ? `/lists/b/${b.id}/edit` : `/lists/b/${b.id}`} className={`brief-chip tone-${b.color}`}>
             <span className="display">{b.title}</span>
             <span className="mono small">
               {b.draft ? "Draft · " : ""}

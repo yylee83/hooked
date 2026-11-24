@@ -11,7 +11,7 @@ TypeScript for new code) and the order of work.
 **Hooked** (hookedonpods.com; `hooked-nu.vercel.app` and `www.` forward to it) is "Letterboxd for podcasts." People find podcast episodes, log them
 (hooked or not hooked, optional 0.5–5 stars, and "What's the hook?", a one-line review), keep a diary
 of what they listened to, follow friends, send and discuss episodes, and make **Briefs**: topic
-collections that can be cut down to just the parts of each episode where the topic comes up.
+collections that can be cut down to just the parts of each episode where the topic comes up. **On screen they are called "Lists"** (YY, 2026-11-22); pages live at `/lists/…` (old `/briefs/…` links forward there, `next.config.mjs`), while the code, API routes and database still say briefs.
 
 Hooked is **Erin and YY (Youyoung Lee)**'s project, built together; the repo just lives under YY's GitHub
 account. YY is not a developer, so explain changes in plain language, without code jargon. The current focus is the **review/logging experience**. Keep things simple, and
@@ -46,7 +46,7 @@ off Home).
 | Spotify public pages / oEmbed | Matching pasted Spotify links | `lib/links.js` |
 | Google Trends RSS (Wikipedia fallback) | Trending topics bar on Search: the past 48 hours, saved in `trending_topics` | `lib/trends.js` |
 | Supabase | Auth (email + password, magic link), Postgres with row-level security | `lib/supabase/*`, `lib/store.js`, `lib/social.js` |
-| Resend | Weekly digest email (dormant until keys are added) | `lib/digest.js`, `app/api/cron/digest` |
+| Resend | Notification emails (follows, replies, sends, thumbs up and +); weekly digest (dormant until `DIGEST_FROM` is added) | `lib/notify-email.js`, `lib/digest.js`, `app/api/cron/*` |
 
 ### Environment variables
 
@@ -59,7 +59,9 @@ off Home).
   command's output: show a key's prefix at most (the shell is zsh, which doesn't word-split `$var`). Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
   Trending shows only what Google lists right now. Also used by the weekly digest.
 - `CRON_SECRET`: protects the scheduled jobs (daily catalog refresh, weekly digest). Vercel sends it automatically.
-- `RESEND_API_KEY`, `DIGEST_FROM`: only for the weekly digest (not set yet)
+- `RESEND_API_KEY`: notification emails (and the weekly digest, which also needs `DIGEST_FROM`, not set). `EMAIL_FROM`
+  (optional sender, default `Hooked on Pods <hello@hookedonpods.com>`). Only the live site emails real people; previews
+  and local runs send only to `EMAIL_TEST_TO`, if set (the test database holds real addresses).
 - Test-only overrides, which point external calls at a local mock: `PODCASTINDEX_BASE_URL`, `CHARTS_FEED_URL`,
   `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `APPLE_PODCASTS_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`, and
   `SAFE_FETCH_ALLOW_PRIVATE=1` (lets `safeFetch` reach local mocks; never set it on Vercel)
@@ -75,7 +77,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - For migrations that change saved data, also rehearse on a copy of live: export it (`scripts/export-live.sql`, saved
   outside the repo), then `node scripts/rehearse-migrations.mjs <export.json> <last applied migration> <checks.sql>`.
   It loads the copy in memory, applies the newer migrations and runs the checks (see `scripts/checks/`).
-- To apply new migrations to the live database: `supabase db push` (the project must be linked once
+- To apply new migrations to the live database: `supabase db push` (Supabase CLI 3.x: `supabase db push --remote`; the project must be linked once
   with `supabase link --project-ref ltdjzjbqhojhtahewgtd`). Merge the PR first, then push, so the live
   code and database change together. Back up before anything that changes or deletes data.
 - **Two databases.** The live site uses `hooked` (`ltdjzjbqhojhtahewgtd`). Preview links use `hooked-test`
@@ -90,6 +92,15 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   covers passwords, email links and Google. **To invite someone:** Supabase → Table Editor →
   `allowed_emails` → Insert row → their email in lower case. Never write email addresses into a
   migration: the repo is public.
+- **Invite links (YY, 2026-11-24):** everyone has one link, `/i/<code>` (`app/i/[code]/page.js`), on Find people's
+  "Bring your friends" card (`components/InviteCard.js`: phone share menu, else Copy link / Messages / Email). No limit;
+  "Make a new link" retires the old one. The code rides along in the sign-up details (`user_metadata.invite`, also kept
+  on the device as `hooked:invite`), and `hook_invite_gate` lets it in, adds the email to `allowed_emails` and records
+  `invite_uses`; when the new profile is made, they follow whoever sent the link (`follow_inviter`), which notifies that
+  person. Migration `20261124180000_invite_links.sql`, test `node scripts/check-invites.mjs`.
+- **Sign-in emails** (confirm, sign-in link, reset): our templates in `supabase/templates/` (pasted into each project's
+  dashboard) link to `/auth/confirm` (one "Sign in" button that POSTs to `/auth/callback`, so it works on any device and mail
+  scanners can't use it up) and carry a code the "Check your email" screen accepts. See `docs/AUTH_EMAILS.md`.
 - **Shows and episodes** (`shows`, `episodes`, our own 8-character ids): every save that mentions an
   episode fills in `episode_ref` / `show_ref` by itself (triggers in `*_refs_on_save.sql`), creating a basic
   entry if needed. `lib/catalog.js` upgrades entries from Podcast Index, and brings in shows Podcast Index lacks from
@@ -115,19 +126,25 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 
 ## Where things are
 
-- **Pages** (`app/`): `/` Home ("Trending episodes" at the top: a swipe row of the episodes with the most activity in the past 14 days, from the `trending_episodes` database function (logs, replies, sends, thumbs and +, Up next adds; totals only), `components/TrendingEpisodes.js`; then a slim Up next line, New episodes, listening now, the friends feed ("From people you follow" shows 15, then Show more adds 15, up to 60), then Trending conversations (Erin, 2026-11-21; it was at the top from 2026-11-20), built on Erin's `trending_conversations`: a list of reviews and the replies around them, from `trending_conversations` and then recent reviews with the most replies and thumbs; each opens the review's replies on the episode page, `?from=<handle>&talk=1#thread` (`components/FeaturedDiscussions.js`); the Up next line leads back to My log → Up next (`components/UpNextHome.js`); "New episodes" swipe row of small cards from your hooked shows (`components/NewEpisodes.js`,
-  `/api/new-episodes`; signed out or nothing hooked: "New from popular shows on Hooked"; icon-only `PlayButton` /
+- **Pages** (`app/`): `/` Home ("Trending episodes" at the top: a swipe row of the episodes with the most activity in the past 14 days, from the `trending_episodes` database function (logs, replies, sends, thumbs and +, Up next adds; totals only), `components/TrendingEpisodes.js`; then a slim Up next line, New episodes, listening now, the friends feed ("From people you follow" shows 15, then Show more adds 15, up to 60), then Top conversations (renamed from Trending conversations, YY 2026-11-22; up to 15, and past 4 the list scrolls inside a 500px box with a bottom fade; Erin, 2026-11-21; it was at the top from 2026-11-20), built on Erin's `trending_conversations`: a list of reviews and the replies around them, from `trending_conversations` and then recent reviews with the most replies and thumbs; each opens the review's replies on the episode page, `?from=<handle>&talk=1#thread` (`components/FeaturedDiscussions.js`); the Up next line leads back to My log → Up next (`components/UpNextHome.js`); "New episodes from shows you listen to" swipe row of small cards from shows you hooked, rated 4+ stars or played 5+ minutes of (`my_listening`) (`components/NewEpisodes.js`,
+  `/api/new-episodes`; signed out or none of those: no row at all (YY, 2026-11-22: it repeated Trending episodes); icon-only `PlayButton` /
   `QueueButton` with `icon`; the last row is remembered on the device (`hooked:new-eps`, with whose it was; cleared on sign-out) and shown at
   once while the fresh one loads; the top of each hooked show's own feed is read too (`feedNewest` in `lib/catalog.js`, kept 10 minutes), so an episode shows up before Podcast Index lists it: it's saved as one of ours, Podcast Index is asked to re-read the feed (`pubNotify`), and its number later joins the same entry by the feed's episode id), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
   listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
   Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"); no Just logged (removed 2026-11-21) and no Apple chart),
   `/search` (trending topics, Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
-  `/briefs` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/briefs/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/briefs/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
+  `/lists` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/lists/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/lists/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (the big blue Up next card above the tabs, where "Listening now" used to be: first episode with a play button, the next few covers, "See all" opens the Up next tab, `components/UpNextCard.js`; tabs: Episodes, Shows,
   Up next (topped by "Keep listening": episodes started and not finished, from your saved spots, `components/KeepListening.js`; never episodes you've logged), Wrapped), `/me/hooked` (every hooked show), `/episode/[id]`, `/show/[id]`, `/log/[id]` (the log sheet: "+ Hook this show" under the
   show name (`HookShowPill`, saves straight away), Your rating, What did you think?; no per-episode hooked question; `[id]` is our short id, and Podcast Index numbers redirect to it), `/u/[handle]`,
   `/people`, `/notifications`, `/welcome` (taste picker), `/login`, `/reset-password`.
+- **Sign-up and the steps after it (YY, 2026-11-23):** the form asks for email, handle, an optional Name and a required "I'm 13
+  or older" tick box (kept in the account's sign-up details as `over_13`). Then three skippable steps: `/welcome/shows`
+  (pick favorite shows: saved as hooked shows; search through `/api/shows`, `components/FavoriteShows.js`) →
+  `/welcome/people` (Follow a few people) → `/welcome/about` (how you heard about Hooked; city picked from suggestions as you type, `/api/places` over
+  `lib/places-data.json`, built by `scripts/make-places.mjs` from GeoNames, CC BY 4.0;
+  `components/QuickQuestions.js`) → Home. Answers are private, in `signup_answers` (own row only; the team reads it in Supabase).
 - **Buttons on episodes** (`components/Social.js`): `LogButton` ("Log it", or your stars / "✓ Logged"), `QueueButton`
   ("+ Up next"), `HookShowButton`; on episode pages also `AddToBriefButton` ("+ Brief", `components/AddToBrief.js`: add to one
   of your briefs or start a draft; helpers in `lib/briefs-client.js`). Done states are yellow (`btn--butter`). `SignInButton` (`components/Account.js`)
@@ -177,10 +194,28 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `lib/history.js`, called from `components/Share.js`); in-app sends are `recommendations`. Same rules as history: signed in
   only, never read back, kept a year. Views: `insights_shares_daily`, `insights_shares_top` (inside and outside together).
   Both trending functions count an outside share of an episode as sharing, like a send. Test: `node scripts/check-shares.mjs`.
+- **Unread notifications (YY, 2026-11-22)**: a pink count on the bell (YY first asked for red, then kept pink) (Home, My log) and on the My log tab in the bottom bar,
+  from one shared count (`lib/unread.js`, asked on opening, signing in, changing pages, coming back to the tab and every
+  minute). On opening Hooked with something new, a small note at the top ("@ana followed you and 2 more",
+  `NotificationToast` in `components/Notifications.js`) shows once per notification (`hooked:note-toast`). Opening
+  /notifications marks them read and clears the counts. Follows, sends, replies and reactions all create notifications.
+- **Notification emails (YY, 2026-11-24)**: `lib/notify-email.js`. Follows, replies, sends, thumbs up and + (not
+  thumbs down) are emailed, at most one email an hour per person, bundled; never something already read, nothing older
+  than 3 days. The app pings `/api/notify-email` right after the action (`lib/notify-ping.js`), and a daily catch-up
+  (`/api/cron/notify-email`, 14:00 UTC; Hobby crons run once a day) sends what was held back. Switch: `profiles.email_notify`
+  (My log gear; email footer link `/api/unsubscribe?k=notify`). `notifications.emailed_at`, `notify_emails` (last sent;
+  server only). Test: `node scripts/check-notify-emails.mjs`.
+- **Clean language (YY, 2026-11-24)**: reviews, replies, send notes, list titles/descriptions/topics, handles and display names can't be saved
+  with a word from the `banned_words` table: the database refuses it (`words_check` triggers, code `HKW01`), and the app
+  shows "Please edit out “…”. Hooked keeps it clean." (`lib/clean-words.js`). Whole words only, plus stretched letters
+  and simple swaps ($ → s, 1 → i); a word in the episode's or show's own title may be quoted ("Bitch Sesh"); only new or
+  changed text is checked. **To add or remove a word:** Supabase → Table Editor → `banned_words` (lower case; end with `*`
+  to also block longer words starting with it). Handles and names also block `inside_names` words anywhere inside
+  ("shittalker"; `banned_name_in`, asked by the sign-up form too). Test: `node scripts/check-banned-words.mjs`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
-- **Plain /search and /briefs are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/briefs/page.js`, 10
+- **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and
-  `/briefs/find?q=…`: **link and submit forms there directly**. Inside the app, a link to `/search?q=…` reuses the
+  `/lists/find?q=…`: **link and submit forms there directly**. Inside the app, a link to `/search?q=…` reuses the
   ready-made page and shows no results (broke live 2026-11-21 to 22); `next.config.mjs` only keeps old `/search?q=…`
   links working when opened from outside. Their shared lists are in
   `components/SearchSections.js`.

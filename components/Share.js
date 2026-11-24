@@ -9,6 +9,7 @@ import { findLog, sendRecommendation, useStore } from "@/lib/store";
 import { episodeHref } from "@/lib/addresses";
 import { site } from "@/lib/site";
 import { recordShare } from "@/lib/history";
+import { briefPreviewPath, episodePreviewPath, reviewVersion, warmPreview } from "@/lib/og-paths";
 
 export function starText(rating) {
   if (!rating) return "";
@@ -76,7 +77,10 @@ export function ShareSheet({ episode, onClose }) {
   const handle = state?.profile?.handle;
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   // Our short address when we know it; otherwise the Podcast Index number, which redirects to it.
-  const url = `${origin}${episodeHref(episode.ref, episode.id)}${handle ? `?from=${encodeURIComponent(handle)}` : ""}`;
+  // With a review, `v` changes whenever the review does, so Messages treats it as a new link and shows the new preview
+  // instead of one it saved earlier (the page itself ignores it).
+  const v = handle ? reviewVersion(review) : "";
+  const url = `${origin}${episodeHref(episode.ref, episode.id)}${handle ? `?from=${encodeURIComponent(handle)}${v ? `&v=${v}` : ""}` : ""}`;
   const text = shareText(episode, review);
   const full = `${text}\n${url}`;
   const enc = encodeURIComponent;
@@ -120,6 +124,12 @@ export function ShareSheet({ episode, onClose }) {
       setSending(false);
     }
   }
+
+  // Get the link's preview picture drawn now, so it's ready when Messages (or anything else) asks for it. A phone
+  // gives up after a few seconds and shows only a small icon.
+  useEffect(() => {
+    if (episode.ref) warmPreview(episodePreviewPath(episode.ref, handle, review));
+  }, [episode.ref, handle, review?.rating, review?.hook]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canNative = typeof navigator !== "undefined" && !!navigator.share;
 
@@ -180,7 +190,7 @@ export function ShareSheet({ episode, onClose }) {
               </div>
               {picked.length > 0 && (
                 <>
-                  <input className="input" style={{ marginTop: 12 }} placeholder="Add a note (optional)" maxLength={280} value={note} onChange={(e) => setNote(e.target.value)} />
+                  <input className="input" style={{ marginTop: 12 }} placeholder="Add a note (optional)" spellCheck autoCorrect="on" autoCapitalize="sentences" maxLength={280} value={note} onChange={(e) => setNote(e.target.value)} />
                   <button className="btn btn--cobalt btn--shadow-sm" style={{ marginTop: 12 }} onClick={send} disabled={sending}>
                     {sending ? "Sending…" : `Send to ${picked.length}`}
                   </button>
@@ -233,7 +243,15 @@ export function BriefShareButton({ title, path, count, briefId }) {
   const [open, setOpen] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const url = `${origin}${path}`;
-  const text = `A podcast brief for you: "${title}"${count ? `, ${count} ${count === 1 ? "episode" : "episodes"}` : ""}.`;
+  const text = `A podcast list for you: "${title}"${count ? `, ${count} ${count === 1 ? "episode" : "episodes"}` : ""}.`;
+
+  // The phone's share menu opens straight away, so get the preview picture ready while the page is open: a phone gives
+  // up on a slow one after a few seconds and shows only a small icon.
+  useEffect(() => {
+    const key = path.split("?")[0].split("/").filter(Boolean).pop();
+    const t = setTimeout(() => warmPreview(briefPreviewPath(key)), 2000);
+    return () => clearTimeout(t);
+  }, [path]);
 
   async function share() {
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -256,10 +274,10 @@ export function BriefShareButton({ title, path, count, briefId }) {
       </button>
       {open && (
         <LinkSheet
-          title="Share this brief"
+          title="Share this list"
           url={url}
           text={text}
-          subject={`A podcast brief for you: ${title}`}
+          subject={`A podcast list for you: ${title}`}
           onShare={(method) => recordShare({ briefId, method })}
           onClose={() => setOpen(false)}
         />
@@ -269,7 +287,7 @@ export function BriefShareButton({ title, path, count, briefId }) {
 }
 
 // Copy link, Messages, Email, WhatsApp and X for a link.
-function LinkSheet({ title, url, text, subject, onShare = () => {}, onClose }) {
+export function LinkSheet({ title, url, text, subject, note = "Anyone with the link can open it and listen. No sign-up needed.", onShare = () => {}, onClose }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const full = `${text}\n${url}`;
@@ -308,7 +326,7 @@ function LinkSheet({ title, url, text, subject, onShare = () => {}, onClose }) {
             </svg>
           </button>
         </div>
-        <p className="muted small">Anyone with the link can open it and listen. No sign-up needed.</p>
+        <p className="muted small">{note}</p>
         <div className="share-grid">
           <button className="share-opt share-opt--main" onClick={copy}>
             {copied ? "Copied ✓" : "Copy link"}

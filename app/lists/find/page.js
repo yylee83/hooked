@@ -10,13 +10,13 @@ import { curatedSummary } from "@/lib/briefs-server";
 import { minutes, plural } from "@/lib/format";
 import { Suspense } from "react";
 
-export const metadata = { title: "Briefs" };
+export const metadata = { title: "Lists" };
 
 // Tile colours on this page (Erin, 2026-11-18): featured briefs are always pink, listener briefs always blue, whatever
 // colour each brief has on its own page.
 const FEATURED = "bubblegum";
 const LISTENER = "cobalt";
-// (The find page answers searches; plain /briefs is app/briefs/page.js.)
+// (The find page answers searches; plain /lists is app/lists/page.js.)
 
 // Every card's one line of details, the same for built-in and listener briefs:
 // shows · length · "Just the parts" (briefs that play clips) · who made it (@handle, or Hooked).
@@ -42,7 +42,7 @@ function FeaturedRow({ curated = {} }) {
     <div className="selects" role="list">
       {briefs.map((b) => (
         <div key={b.slug} role="listitem" className="selects__item">
-          <BriefCard variant="select" href={`/briefs/${b.slug}`} title={b.title} color={FEATURED} covers={curated[b.slug]?.covers} meta={curated[b.slug]?.meta} />
+          <BriefCard variant="select" href={`/lists/${b.slug}`} title={b.title} color={FEATURED} covers={curated[b.slug]?.covers} meta={curated[b.slug]?.meta} />
         </div>
       ))}
     </div>
@@ -65,21 +65,21 @@ export default async function BriefsPage({ searchParams }) {
   return (
     <>
       <div className="row center page-head">
-        <h1 className="display h-lg cobalt">Briefs</h1>
+        <h1 className="display h-lg cobalt">Lists</h1>
         <div className="row center page-head__actions">
           <SignInButton />
-          <Link href="/briefs/new" className="btn btn--sm btn--cobalt btn--shadow-sm">
-            + New brief
+          <Link href="/lists/new" className="btn btn--sm btn--cobalt btn--shadow-sm">
+            + New list
           </Link>
         </div>
       </div>
       <p className="muted" style={{ margin: "8px 0 16px", fontSize: 19 }}>
-        A topic, the best episodes and sections from several shows, and each show&rsquo;s angle.
+        Episode playlists, picked by people who listen.
       </p>
 
       {/* Searches briefs only (built-in and listeners'), by title, topic, description and the episodes inside. */}
-      <Form className="search briefs-search" action="/briefs/find" role="search">
-        <input className="input" type="search" name="q" defaultValue={query} placeholder="Search briefs" aria-label="Search briefs" />
+      <Form className="search briefs-search" action="/lists/find" role="search">
+        <input className="input" type="search" name="q" defaultValue={query} placeholder="Search lists" aria-label="Search lists" />
         <button className="btn btn--cobalt btn--shadow-sm" type="submit">
           Search
         </button>
@@ -89,15 +89,15 @@ export default async function BriefsPage({ searchParams }) {
         <section>
           <div className="row center" style={{ justifyContent: "space-between" }}>
             <h2 className="section-title">
-              {found.total ? `${plural(found.total, "brief")} for “${query}”` : `No briefs match “${query}”`}
+              {found.total ? `${plural(found.total, "list")} for “${query}”` : `No lists match “${query}”`}
             </h2>
-            <Link href="/briefs" className="more-link">
+            <Link href="/lists" className="more-link">
               Clear
             </Link>
           </div>
           {found.total === 0 && (
             <p className="muted">
-              Try another word, or <Link href={`/briefs/new?topic=${encodeURIComponent(query)}`} className="more-link">make a brief about it</Link>.
+              Try another word, or <Link href={`/lists/new?topic=${encodeURIComponent(query)}`} className="more-link">make a list about it</Link>.
             </p>
           )}
           <div className="brief-grid">
@@ -115,7 +115,7 @@ export default async function BriefsPage({ searchParams }) {
         </section>
       ) : (
         <>
-          <h2 className="section-title">Featured briefs</h2>
+          <h2 className="section-title">Featured lists</h2>
           {/* The cards show right away with their titles; covers and lengths fill in when they're worked out
               (YY, 2026-11-21: Briefs was slow to open while it waited for them). */}
           <Suspense fallback={<FeaturedRow />}>
@@ -129,7 +129,7 @@ export default async function BriefsPage({ searchParams }) {
                 {community.map((b) => (
                   <BriefCard
                     key={b.id}
-                    href={`/briefs/b/${b.id}`}
+                    href={`/lists/b/${b.id}`}
                     title={b.title}
                     color={LISTENER}
                     covers={(b.items || []).map((it) => it.image)}

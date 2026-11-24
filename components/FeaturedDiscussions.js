@@ -1,17 +1,20 @@
 "use client";
-// Home, under "From people you follow": "Trending conversations", reviews and the talk around them, as a list (Erin,
-// 2026-11-21; it was a swipe row at the top). Tapping one opens that review with its replies on the episode page, ready to join in.
+// Home, under "From people you follow": "Top conversations" (was "Trending conversations"), reviews and the talk around them, as a list (Erin,
+// 2026-11-21; it was a swipe row at the top). Up to 15; past 4, the list scrolls inside a box about 500px tall
+// conversations tall, fading at the bottom until you reach the end (YY, 2026-11-22). Tapping one opens that review with its replies on the episode page, ready to join in.
 // First the episodes in Trending conversations (the trending_conversations database function: reviews, replies and
 // sends this week), each with its best review. While Hooked is small that list is often short, so the rest are the
 // recent reviews with the most going on (replies, thumbs, "+"), newest counting most.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { Avatar } from "./Friends";
 import { supabase } from "@/lib/supabase/client";
 import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
+import { useRefreshTick } from "@/lib/home-refresh";
 
-const MAX = 5;
+const MAX = 15; // conversations loaded
+const SCROLL_FROM = 4; // more than this many: the list scrolls inside its own box (YY, 2026-11-22)
 const DAY = 86400000;
 
 // How much is going on under one review: like reviewScore (lib/social.js), plus recency (half as much every week).
@@ -33,7 +36,7 @@ async function load(db) {
       .neq("hook", "")
       .gte("logged_at", since)
       .order("logged_at", { ascending: false })
-      .limit(40),
+      .limit(60),
   ]);
   const hot = trending.error ? [] : (trending.data || []).filter((r) => r.top_hook && r.top_handle);
   const logs = (recent.data || []).map(withEpisode).filter((l) => l.hook?.trim());
@@ -111,7 +114,12 @@ async function load(db) {
 
 export default function FeaturedDiscussions() {
   const [cards, setCards] = useState(null);
+  const [atEnd, setAtEnd] = useState(false); // scrolled to the bottom of the box: drop the fade
+  const tick = useRefreshTick();
+  const box = useRef(null);
   useEffect(() => {
+    // A refresh starts the box back at the top, like the page.
+    if (tick && box.current) box.current.scrollTop = 0;
     const db = supabase();
     if (!db) return setCards([]);
     let live = true;
@@ -121,13 +129,18 @@ export default function FeaturedDiscussions() {
     return () => {
       live = false;
     };
-  }, []);
+  }, [tick]);
 
   if (cards && !cards.length) return null;
+  const scrolls = (cards?.length || 0) > SCROLL_FROM;
   return (
-    <section className="featured-talk" aria-label="Trending conversations">
-      <h2 className="section-title featured-talk__label">Trending conversations</h2>
-      <div className="featured-talk__row">
+    <section className="featured-talk" aria-label="Top conversations">
+      <h2 className="section-title featured-talk__label">Top conversations</h2>
+      <div
+        ref={box}
+        className={`featured-talk__row ${scrolls ? "featured-talk__row--scroll" : ""} ${scrolls && atEnd ? "is-end" : ""}`}
+        onScroll={scrolls ? (e) => setAtEnd(e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 8) : undefined}
+      >
         {!cards && <div className="featured-talk__card featured-talk__card--ghost" aria-hidden="true" />}
         {cards?.map((c) => (
           <Link

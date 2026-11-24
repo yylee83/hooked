@@ -5,13 +5,15 @@ import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
 import ListeningOnHooked from "./ListeningOnHooked";
+import InviteCard from "./InviteCard";
 import { logVerb, plural } from "@/lib/format";
 import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
 import { LOG_EPISODE, episodeOf, withEpisode } from "@/lib/log-episode";
-import { site } from "@/lib/site";
+import DiscoverPeople from "./DiscoverPeople";
+import { useRefreshTick } from "@/lib/home-refresh";
 
 const HOUR = 3600 * 1000;
 
@@ -77,19 +79,6 @@ export function PeopleFinder() {
   const state = useStore();
   const [q, setQ] = useState("");
   const [results, setResults] = useState(null);
-  const [suggested, setSuggested] = useState([]);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const db = supabase();
-    if (!db) return;
-    db.from("profiles")
-      .select("id, handle, display_name")
-      .not("handle", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(20)
-      .then(({ data }) => setSuggested(data || []));
-  }, []);
 
   useEffect(() => {
     const db = supabase();
@@ -113,26 +102,7 @@ export function PeopleFinder() {
   if (state && !state.accounts) return <p className="muted">Profiles aren't switched on yet.</p>;
 
   const me = state?.user?.id;
-  const followingIds = new Set((state?.following || []).map((f) => f.id));
   const notMe = (list) => list.filter((p) => p.id !== me);
-  const suggestions = notMe(suggested).filter((p) => !followingIds.has(p.id)).slice(0, 10);
-
-  async function invite() {
-    const url = window.location.origin;
-    const text = `I'm logging podcasts on ${site.name}. Come see what I'm hooked on${state?.profile?.handle ? ` (I'm @${state.profile.handle})` : ""}.`;
-    const target = state?.profile?.handle ? `${url}/u/${state.profile.handle}` : url;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: site.name, text, url: target });
-        return;
-      } catch {}
-    }
-    try {
-      await navigator.clipboard.writeText(`${text} ${target}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
-  }
 
   return (
     <>
@@ -144,7 +114,6 @@ export function PeopleFinder() {
           aria-label="Search people"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          autoFocus
         />
       </div>
 
@@ -159,20 +128,10 @@ export function PeopleFinder() {
         </section>
       )}
 
-      <div className="card invite">
-        <p className="display h-md" style={{ margin: 0 }}>Bring your friends.</p>
-        <p style={{ margin: "6px 0 14px" }}>Send them a link to your profile. They can browse it without signing up. Making an account is invite-only for now.</p>
-        <button className="btn btn--cobalt btn--shadow-sm" onClick={invite}>
-          {copied ? "Link copied" : "Invite friends"}
-        </button>
-      </div>
+      <DiscoverPeople />
 
-      {suggestions.length > 0 && (
-        <section>
-          <h2 className="label">New on {site.name}</h2>
-          <ul>{suggestions.map((p) => <PersonRow key={p.id} p={p} />)}</ul>
-        </section>
-      )}
+      <InviteCard />
+
     </>
   );
 }
@@ -188,6 +147,7 @@ export function FriendsFeed() {
   const [allSent, setAllSent] = useState(false);
   const [shownLogs, setShownLogs] = useState(FRIEND_LOGS_PAGE);
   const ids = (state?.following || []).map((f) => f.id).sort().join(",");
+  const tick = useRefreshTick();
 
   useEffect(() => {
     const db = supabase();
@@ -231,7 +191,7 @@ export function FriendsFeed() {
     return () => {
       live = false;
     };
-  }, [state?.user?.id, ids]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state?.user?.id, ids, tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!state || !state.accounts) return null;
 
