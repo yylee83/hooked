@@ -46,7 +46,7 @@ off Home).
 | Spotify public pages / oEmbed | Matching pasted Spotify links | `lib/links.js` |
 | Google Trends RSS (Wikipedia fallback) | Trending topics bar on Search: the past 48 hours, saved in `trending_topics` | `lib/trends.js` |
 | Supabase | Auth (email + password, magic link), Postgres with row-level security | `lib/supabase/*`, `lib/store.js`, `lib/social.js` |
-| Resend | Weekly digest email (dormant until keys are added) | `lib/digest.js`, `app/api/cron/digest` |
+| Resend | Notification emails (follows, replies, sends, thumbs up and +); weekly digest (dormant until `DIGEST_FROM` is added) | `lib/notify-email.js`, `lib/digest.js`, `app/api/cron/*` |
 
 ### Environment variables
 
@@ -59,7 +59,9 @@ off Home).
   command's output: show a key's prefix at most (the shell is zsh, which doesn't word-split `$var`). Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
   Trending shows only what Google lists right now. Also used by the weekly digest.
 - `CRON_SECRET`: protects the scheduled jobs (daily catalog refresh, weekly digest). Vercel sends it automatically.
-- `RESEND_API_KEY`, `DIGEST_FROM`: only for the weekly digest (not set yet)
+- `RESEND_API_KEY`: notification emails (and the weekly digest, which also needs `DIGEST_FROM`, not set). `EMAIL_FROM`
+  (optional sender, default `Hooked on Pods <hello@hookedonpods.com>`). Only the live site emails real people; previews
+  and local runs send only to `EMAIL_TEST_TO`, if set (the test database holds real addresses).
 - Test-only overrides, which point external calls at a local mock: `PODCASTINDEX_BASE_URL`, `CHARTS_FEED_URL`,
   `ITUNES_SEARCH_URL`, `ITUNES_LOOKUP_URL`, `APPLE_PODCASTS_URL`, `SPOTIFY_BASE_URL`, `TRENDS_FEED_URL`, `WIKI_FEED_URL`, and
   `SAFE_FETCH_ALLOW_PRIVATE=1` (lets `safeFetch` reach local mocks; never set it on Vercel)
@@ -185,6 +187,12 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   minute). On opening Hooked with something new, a small note at the top ("@ana followed you and 2 more",
   `NotificationToast` in `components/Notifications.js`) shows once per notification (`hooked:note-toast`). Opening
   /notifications marks them read and clears the counts. Follows, sends, replies and reactions all create notifications.
+- **Notification emails (YY, 2026-11-24)**: `lib/notify-email.js`. Follows, replies, sends, thumbs up and + (not
+  thumbs down) are emailed, at most one email an hour per person, bundled; never something already read, nothing older
+  than 3 days. The app pings `/api/notify-email` right after the action (`lib/notify-ping.js`), and a daily catch-up
+  (`/api/cron/notify-email`, 14:00 UTC; Hobby crons run once a day) sends what was held back. Switch: `profiles.email_notify`
+  (My log gear; email footer link `/api/unsubscribe?k=notify`). `notifications.emailed_at`, `notify_emails` (last sent;
+  server only). Test: `node scripts/check-notify-emails.mjs`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
 - **Plain /search and /lists are made ahead of time** (`app/search/page.js`, kept 30 minutes; `app/lists/page.js`, 10
   minutes), so the bottom-bar tabs open fully loaded. Searches and filters live at `/search/find?q=…` and
