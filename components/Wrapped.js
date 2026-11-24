@@ -276,7 +276,8 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
   else if (goTo) talkLines.push(`Your go-to rating is ${goTo}★`);
   if (fromListening && loggedShows.length) talkLines.push(`${hookedRate}% of the shows you've logged got you hooked`);
   if (talk?.thumbs) talkLines.push(`${talk.thumbs} thumbs up on your reviews`);
-  if (talk?.adds) talkLines.push(`${talk.adds} ${talk.adds === 1 ? "person" : "people"} put an episode on Up next because of your review`);
+  // People, not taps: one friend adding three of your reviews counts once (Erin, 2026-11-24).
+  if (talk?.adds) talkLines.push(`${talk.adds} ${talk.adds === 1 ? "person wants" : "people want"} to listen because of your reviews`);
   const facts = fromListening ? factsOf(listening) : [];
 
   return (
