@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { findHookedShow, toggleHookedShow, useStore } from "@/lib/store";
+import { useSignInFirst } from "@/lib/sign-in-first";
 
 export default function FavoriteShows({ popular }) {
   const state = useStore();
+  const { guard } = useSignInFirst(); // signed out (someone opened this page directly): a tap opens sign-in
   const [q, setQ] = useState("");
   const [found, setFound] = useState(null); // null: not searching
   const [busy, setBusy] = useState(false);
@@ -46,7 +48,7 @@ export default function FavoriteShows({ popular }) {
       {picked.length > 0 && (
         <div className="fav-shows__picked" aria-label="Your picks">
           {picked.map((s) => (
-            <button key={s.showRef || s.feedId} className="fav-shows__pick" onClick={() => toggleHookedShow(s)} aria-label={`Remove ${s.title}`}>
+            <button key={s.showRef || s.feedId} className="fav-shows__pick" onClick={guard(() => toggleHookedShow(s))} aria-label={`Remove ${s.title}`}>
               <Art src={s.image} title={s.title} size={44} radius={10} />
               <span aria-hidden="true">×</span>
             </button>
@@ -59,7 +61,7 @@ export default function FavoriteShows({ popular }) {
         {shows.map((s) => {
           const on = !!findHookedShow(state, s);
           return (
-            <button key={s.showRef || s.feedId} className={`taste__show ${on ? "is-on" : ""}`} onClick={() => toggleHookedShow(s)} aria-pressed={on}>
+            <button key={s.showRef || s.feedId} className={`taste__show ${on ? "is-on" : ""}`} onClick={guard(() => toggleHookedShow(s))} aria-pressed={on}>
               <Art src={s.image} title={s.title} size="100%" radius={16} className="art--fluid" />
               {on && <span className="taste__check" aria-hidden="true">✓</span>}
               <span className="taste__title">{s.title}</span>
