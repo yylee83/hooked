@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
+import BackButton from "@/components/BackButton";
 import { HookShowButton, LogButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
 import { REF, loadShow, ownShowEpisodes, showRefFor, withRefs } from "@/lib/catalog";
@@ -52,9 +53,7 @@ export default async function ShowPage({ params, searchParams }) {
 
   return (
     <>
-      <Link href="/search" className="back">
-        ← Back
-      </Link>
+      <BackButton fallback="/search" />
       {note && (
         <div className="notice" style={{ marginTop: 12 }}>
           <p>{String(note).slice(0, 160)}</p>

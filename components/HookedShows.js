@@ -1,6 +1,7 @@
 "use client";
 // Every show you're hooked on (My log → Hooked on → "+3 more").
 import Link from "next/link";
+import BackButton from "./BackButton";
 import Art from "./Art";
 import { hookedShows, useStore } from "@/lib/store";
 import { showHref } from "@/lib/addresses";
@@ -15,9 +16,7 @@ export default function HookedShows() {
 
   return (
     <>
-      <Link href="/me" className="back">
-        ← My log
-      </Link>
+      <BackButton fallback="/me" />
       <h1 className="display h-lg cobalt" style={{ marginTop: 10 }}>Hooked on</h1>
       <p className="muted" style={{ marginTop: 6 }}>
         {shows.length ? plural(shows.length, "show") : "Shows you love show up here."}

@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
-import { logHref } from "@/lib/addresses";
+import { episodeHref, logHref } from "@/lib/addresses";
 import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
 import { HookShowPill } from "./Social";
 import { haptic } from "@/lib/haptics";
+import { useGoBack } from "./BackButton";
 import { CLEAN_CODE } from "@/lib/clean-words";
 
 export function RatingInput({ value, onChange, size = 52 }) {
@@ -67,6 +68,7 @@ export function RatingInput({ value, onChange, size = 52 }) {
 // Decision 6). `presetRating` carries stars picked in the "Log it?" prompt over ("Add what you thought").
 export default function LogSheet({ episode, presetRating = 0 }) {
   const router = useRouter();
+  const cancel = useGoBack(episodeHref(episode.ref, episode.id)); // opened from a link: to the episode, not out of Hooked
   const state = useStore();
   const existing = findLog(state, episode);
   const [touched, setTouched] = useState(false);
@@ -114,7 +116,7 @@ export default function LogSheet({ episode, presetRating = 0 }) {
   return (
     <div className="sheet">
       <header className="sheet__top">
-        <button className="link-btn" onClick={() => router.back()}>
+        <button className="link-btn" onClick={cancel}>
           Cancel
         </button>
         <h1 className="display sheet__title">Log it</h1>
