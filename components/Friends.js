@@ -5,13 +5,13 @@ import Link from "next/link";
 import Art from "./Art";
 import Stars from "./Stars";
 import ListeningOnHooked from "./ListeningOnHooked";
+import InviteCard from "./InviteCard";
 import { logVerb, plural } from "@/lib/format";
 import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
 import { LOG_EPISODE, episodeOf, withEpisode } from "@/lib/log-episode";
-import { site } from "@/lib/site";
 import DiscoverPeople from "./DiscoverPeople";
 import { useRefreshTick } from "@/lib/home-refresh";
 
@@ -79,7 +79,6 @@ export function PeopleFinder() {
   const state = useStore();
   const [q, setQ] = useState("");
   const [results, setResults] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const db = supabase();
@@ -104,23 +103,6 @@ export function PeopleFinder() {
 
   const me = state?.user?.id;
   const notMe = (list) => list.filter((p) => p.id !== me);
-
-  async function invite() {
-    const url = window.location.origin;
-    const text = `I'm logging podcasts on ${site.name}. Come see what I'm hooked on${state?.profile?.handle ? ` (I'm @${state.profile.handle})` : ""}.`;
-    const target = state?.profile?.handle ? `${url}/u/${state.profile.handle}` : url;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: site.name, text, url: target });
-        return;
-      } catch {}
-    }
-    try {
-      await navigator.clipboard.writeText(`${text} ${target}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
-  }
 
   return (
     <>
@@ -148,13 +130,7 @@ export function PeopleFinder() {
 
       <DiscoverPeople />
 
-      <div className="card invite">
-        <p className="display h-md" style={{ margin: 0 }}>Bring your friends.</p>
-        <p style={{ margin: "6px 0 14px" }}>Send them a link to your profile. They can browse it without signing up. Making an account is invite-only for now.</p>
-        <button className="btn btn--cobalt btn--shadow-sm" onClick={invite}>
-          {copied ? "Link copied" : "Invite friends"}
-        </button>
-      </div>
+      <InviteCard />
 
     </>
   );
