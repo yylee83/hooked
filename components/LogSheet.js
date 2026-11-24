@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Art from "./Art";
 import { STAR_PATH } from "./Stars";
-import { episodeHref, logHref } from "@/lib/addresses";
+import { logHref } from "@/lib/addresses";
 import { addLog, findLog, sendRecommendation, useStore } from "@/lib/store";
 import { HookShowPill } from "./Social";
 import { haptic } from "@/lib/haptics";
 import { useGoBack } from "./BackButton";
+import { episodeHref } from "@/lib/addresses";
 import { CLEAN_CODE } from "@/lib/clean-words";
 
 export function RatingInput({ value, onChange, size = 52 }) {
