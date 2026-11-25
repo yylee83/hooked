@@ -177,7 +177,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   download counts stay right) and keeps it in Cache Storage (`hooked-downloads-v1`, list in `hooked:downloads`;
   `lib/downloads.js`). The service worker `public/sw.js` plays saved copies (with the byte ranges iPhone needs) at
   `/downloads/audio/<id>`, and with no signal shows `public/offline.html`, which plays your downloads; it leaves every
-  other request alone. The player uses a saved copy by itself (`localAudioUrl`). Hosts that don't allow other sites to
+  other request alone. The player uses a saved copy by itself (`localAudioUrl`). When a download finishes, the next download plays (in the Downloads tab's order, carrying on down and wrapping round, skipping ones played to the end since the page opened and ones you've logged; `nextDownload`), then Up next once they're all done; a downloaded Up next item plays from its saved details with no signal. The offline page does the same with downloads, then says "That's all your downloads." (YY, 2026-11-25). Hosts that don't allow other sites to
   read their files (no CORS) show "Can't save this one". The list is its own My log tab, "Downloads" (YY, 2026-11-25). iPhone Safari
   may clear a site's saved files after about a week without opening it (until Hooked is a Home Screen app).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as

@@ -16,7 +16,7 @@ import { pullFinished } from "@/lib/finished-sync";
 import { listenPlay, listenSave, listenTick } from "@/lib/history";
 import { ensureRefs } from "@/lib/catalog-client";
 import { haptic } from "@/lib/haptics";
-import { localAudioUrl } from "@/lib/downloads";
+import { downloadKey, localAudioUrl, nextDownload, savedDownload } from "@/lib/downloads";
 
 const FINISH = 60; // the last minute of an episode counts as finished
 
@@ -178,6 +178,14 @@ export function PlayerProvider({ children }) {
   const playItem = useCallback(
     async (item) => {
       if (!item?.episodeRef && !item?.episodeId) return false;
+      // Downloaded: its saved details are enough, so it plays with no signal too.
+      const saved = savedDownload({ ref: item.episodeRef, id: item.episodeId });
+      if (saved?.audio) {
+        const ep = { id: saved.id ?? undefined, ref: saved.ref || undefined, title: saved.title, feedTitle: saved.feedTitle, image: saved.image, audio: saved.audio, duration: saved.duration };
+        source.current = "up_next";
+        playQueue([{ ep, start: 0, end: null }], null, resumeAt(ep));
+        return true;
+      }
       try {
         const q = item.episodeRef ? `ref=${encodeURIComponent(item.episodeRef)}` : `id=${item.episodeId}`;
         const res = await fetch(`/api/episode?${q}`);
@@ -217,8 +225,21 @@ export function PlayerProvider({ children }) {
   // When an episode finishes, start the next one on Up next, wherever the finished one was played from (YY,
   // 2026-11-19). Before, this only happened if the player remembered the episode came from Up next, and it forgot
   // that whenever the page reloaded or the player was brought back, so playback just stopped.
+  const doneDownloads = useRef(new Set()); // downloads played to the end since the page opened
   const advanceUpNext = useCallback(
     async (finishedEp) => {
+      // After a download, the next download first (YY, 2026-11-25), then Up next once they've all been played.
+      const dk = downloadKey(finishedEp);
+      if (dk && savedDownload(finishedEp)) {
+        doneDownloads.current.add(dk);
+        const st = getState();
+        const nextDl = nextDownload(finishedEp, doneDownloads.current, (ep) => !!(st && findLog(st, ep)));
+        if (nextDl) {
+          source.current = "my_log"; // Downloads live in My log
+          playQueue([{ ep: nextDl, start: 0, end: null }], null, resumeAt(nextDl));
+          return;
+        }
+      }
       const list = upNext(getState());
       const again = list.find((i) => sameEpisode({ ref: i.episodeRef, id: i.episodeId }, finishedEp));
       if (again) removeFromList(again); // added again while listening: it's done now

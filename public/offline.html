@@ -123,6 +123,18 @@
   seek.oninput = function () { if (audio.duration > 0) audio.currentTime = (seek.value / 1000) * audio.duration; };
   audio.addEventListener("play", paint);
   audio.addEventListener("pause", function () { paint(); save(); });
+  // When one ends, the next download plays: on down the list, then round from the top, skipping ones already
+  // played to the end here (YY, 2026-11-25; the app does the same, lib/downloads.js nextDownload).
+  var done = {};
+  audio.addEventListener("ended", function () {
+    if (!current) return;
+    done[key(current)] = true;
+    var at = eps.findIndex(function (e) { return key(e) === key(current); });
+    var order = eps.slice(at + 1).concat(eps.slice(0, at));
+    var next = order.find(function (e) { return !done[key(e)]; });
+    if (next) play(next);
+    else { paint(); document.getElementById("now").textContent = "That's all your downloads."; }
+  });
   audio.addEventListener("timeupdate", function () {
     if (audio.duration > 0) seek.value = Math.round((audio.currentTime / audio.duration) * 1000);
     time.textContent = fmt(audio.currentTime);
