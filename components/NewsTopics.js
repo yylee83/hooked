@@ -62,11 +62,11 @@ function CardActions({ t }) {
     <>
       <div className="news-x__acts">
         <button type="button" className="btn btn--sm btn--cobalt" onClick={playAll}>
-          <PlayIcon size={13} /> Play all
+          <PlayIcon size={13} /> {t.deeper.length ? "Play all" : "Play"}
         </button>
         <FollowTopicButton topic={t.topic} label="Follow topic" showNote={false} />
       </div>
-      {queued && <p className="news-x__note muted small">The deeper ones are next in Up next.</p>}
+      {queued && t.deeper.length > 0 && <p className="news-x__note muted small">The deeper ones are next in Up next.</p>}
       <Link href={`/search/find?${new URLSearchParams({ q: t.topic, type: "episodes" })}`} className="more-link news-x__more">
         More on {t.topic} →
       </Link>
@@ -97,7 +97,7 @@ export default function NewsTopics({ topics }) {
           {t.summary && <p className="news-x__summary">{t.summary}</p>}
           <p className="news-x__kind mono">Catch up</p>
           <NewsEp ep={t.fresh} fresh />
-          <p className="news-x__kind mono">Go deeper</p>
+          {t.deeper.length > 0 && <p className="news-x__kind mono">Go deeper</p>}
           {t.deeper.map((ep) => (
             <NewsEp key={ep.ref || ep.id} ep={ep} />
           ))}
