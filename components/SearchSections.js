@@ -1,17 +1,11 @@
-// The lists under Search's box (trending topics, Popular on Hooked, the Apple chart). Used by plain /search, which is
+// The lists under Search's box (Popular on Hooked, the Apple chart). Used by plain /search, which is
 // made ahead of time (app/search/page.js), and by searches (app/search/find/page.js).
 import Link from "next/link";
 import Art from "./Art";
-import TrendingBar from "./TrendingBar";
 import TopEpisodes from "./TopEpisodes";
-import { trendingTopics } from "@/lib/trends";
 import { popularOnHooked, topChartEpisodes, topCharts } from "@/lib/charts";
 import { plural } from "@/lib/format";
 import { showHref } from "@/lib/addresses";
-
-export async function Trending() {
-  return <TrendingBar topics={await trendingTopics(12)} inSearch />;
-}
 
 // A label with a soft placeholder row, while a list loads.
 export function SectionLoading({ label }) {

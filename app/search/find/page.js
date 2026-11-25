@@ -14,7 +14,7 @@ import ForYou from "@/components/ForYou";
 import { isPodcastLink, linkTarget, resolveLink } from "@/lib/links";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { AppleCharts, PopularOnHooked, SectionLoading, Trending } from "@/components/SearchSections";
+import { AppleCharts, PopularOnHooked, SectionLoading } from "@/components/SearchSections";
 import { cookies } from "next/headers";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
@@ -264,12 +264,6 @@ export default async function SearchPage({ searchParams }) {
 
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
       <SearchFilters key={type} type={type} signedInHint={signedInHint} />
-
-      {/* Trending topics and the lists below come in as they're ready, so the page itself opens at once
-          (YY, 2026-11-21: Search was slow to open while all of them loaded first). */}
-      <Suspense fallback={null}>
-        <Trending />
-      </Suspense>
 
 
       <KeysNotice error={error} />
