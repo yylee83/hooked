@@ -13,7 +13,7 @@ import { NotificationBell } from "./Notifications";
 import { supabase as sb } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { hookedShows, initialsOf, saveProfile, signOut, useStore } from "@/lib/store";
-import { Diary, ShowsView, UpNextView } from "./LogViews";
+import { Diary, UpNextView } from "./LogViews";
 import UpNextCard from "./UpNextCard";
 import { myBriefs } from "@/lib/briefs-client";
 import { minutes, plural, starStats } from "@/lib/format";
@@ -215,7 +215,6 @@ function MyBriefs({ userId }) {
 
 const TABS = [
   ["diary", "Episodes"], // was "Diary"; the address stays #diary so old links work
-  ["shows", "Shows"],
   ["upnext", "Up next"],
   ["downloads", "Downloads"], // its own tab so it's easy to find (YY, 2026-11-25)
   ["stats", "Wrapped"],
@@ -302,7 +301,7 @@ export default function MyLog() {
       {(logs.length > 0 || hours > 0) && (
         <div className="me-stats">
           <span><b>{logs.length}</b> episodes</span>
-          <span><b>{showCount}</b> shows</span>
+          <Link href="/me/hooked"><b>{showCount}</b> shows</Link>
           {stars.count > 0 && <span><b>★ {stars.avg}</b> avg</span>}
           <span><b>{shows.length}</b> hooked</span>
           {hours > 0 && <span><b>{hours}</b> hrs listened</span>}
@@ -313,6 +312,15 @@ export default function MyLog() {
       {(needsSetup || settings) && <ProfilePanel state={state} />}
       {state.user && <MyBriefs userId={state.user.id} />}
 
+      {/* The Shows tab is gone (YY, 2026-11-25: five tabs was too many). Every show you've hooked, logged or played
+          is on /me/hooked, reached from here. */}
+      {shows.length === 0 && showCount > 0 && (
+        <p className="muted small me-allshows">
+          <Link href="/me/hooked" className="link-btn small">
+            Your shows ({showCount})
+          </Link>
+        </p>
+      )}
       {shows.length > 0 && (
         <section>
           <h2 className="label">Hooked on</h2>
@@ -325,11 +333,9 @@ export default function MyLog() {
           </div>
           <p className="muted">
             {shows.slice(0, 4).map((s) => s.title).join(" · ")}
-            {shows.length > 4 && (
-              <Link href="/me/hooked" className="link-btn small" style={{ marginLeft: 8 }}>
-                +{shows.length - 4} more
-              </Link>
-            )}
+            <Link href="/me/hooked" className="link-btn small" style={{ marginLeft: 8 }}>
+              {shows.length > 4 ? `+${shows.length - 4} more` : "All your shows"}
+            </Link>
           </p>
         </section>
       )}
@@ -360,7 +366,7 @@ export default function MyLog() {
         <DownloadsList />
       ) : tab === "stats" ? (
         <Wrapped logs={logs} hooked={state.shows} userId={state.user?.id || null} />
-      ) : logs.length === 0 && !(tab === "shows" && shows.length) ? (
+      ) : logs.length === 0 ? (
         <section className="empty card" style={{ marginTop: 16 }}>
           <p className="display h-md">Nothing logged yet.</p>
           <p className="muted">Find an episode, hit play, then rate it and say what you thought.</p>
@@ -368,8 +374,6 @@ export default function MyLog() {
             Find something
           </Link>
         </section>
-      ) : tab === "shows" ? (
-        <ShowsView logs={logs} hooked={state.shows} />
       ) : (
         <Diary logs={logs} />
       )}
