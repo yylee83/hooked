@@ -499,6 +499,7 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .friends-cta { margin-top: 26px; background: var(--butter); }
 .invite { margin-top: 24px; background: var(--bubblegum); }
 .invite-card__meta { margin: 12px 0 0; }
+.invite-beta { display: inline-block; margin: 10px 0 4px; padding: 3px 10px; font-family: var(--mono); font-size: 13px; border: 2px solid var(--ink); border-radius: 999px; background: var(--butter); color: var(--ink); }
 .invite-card__meta .link-btn { color: var(--ink); }
 .person { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 2px solid rgba(21, 19, 29, 0.15); }
 .person__who { display: flex; align-items: center; gap: 12px; min-width: 0; }
