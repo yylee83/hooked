@@ -1089,3 +1089,9 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .your-shows__show { display: flex; align-items: center; gap: 12px; color: inherit; }
 .your-shows__title { display: block; }
 .your-shows__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 2px; }
+
+/* Where a bundled topic alert leads: /search/topic (YY, 2026-11-25) */
+.topic-eps__title { margin: 14px 0 4px; }
+.topic-eps__when { margin: 0 0 12px; }
+.topic-eps__follow { margin-bottom: 16px; }
+.topic-eps__more { margin: 18px 0 8px; }

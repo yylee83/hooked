@@ -11,8 +11,8 @@
 -- 2. news_quality(): for ranking "Go deeper", how people on Hooked listened to and rated some episodes and shows.
 --    Totals only, for the server (it runs with the owner's rights; listening history stays closed to the app).
 -- 3. topic_follows: "Follow topic" (YY, 2026-11-25): any person or subject ("Marc Maron", "Venezuela"), followed from a
---    search or a news card. Your own rows only. A daily job (/api/cron/topic-follows) adds a notification for each new
---    episode about it (type 'topic'), leaving out the person's own show.
+--    search or a news card. Your own rows only. A daily job (/api/cron/topic-follows) adds one notification a day per topic,
+--    "9 new episodes about …" (type 'topic'), leaving out the person's own show.
 
 create table public.news_picks (
   id uuid primary key default gen_random_uuid(),
@@ -66,7 +66,8 @@ create policy "topic follows own" on public.topic_follows for all using (auth.ui
 revoke all on public.topic_follows from anon;
 grant select, insert, update, delete on public.topic_follows to authenticated;
 
--- A new kind of notification: a new episode about a topic you follow (title = the episode, body = the topic).
+-- A new kind of notification: new episodes about a topic you follow, bundled once a day (title = the topic,
+-- body = "<count>|<since>|<until>"; see lib/topic-alert-words.js).
 alter table public.notifications drop constraint notifications_type_check;
 alter table public.notifications add constraint notifications_type_check
   check (type in ('follow', 'rec', 'comment', 'reply', 'reaction', 'topic'));

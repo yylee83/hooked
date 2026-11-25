@@ -147,8 +147,9 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   Made every 3 hours, `lib/news-explained.js`, `components/NewsExplained.js`. **Follow topic** (YY, 2026-11-25): any
   person or subject ("Marc Maron"), from a news card or a "Follow “…”" pill on search results (`components/FollowTopic.js`,
   `lib/topic-follows.js`, table `topic_follows`); "Topics you follow" (× to stop) tops /notifications. A daily job
-  (`/api/cron/topic-follows`, 13:00 UTC) adds a 'topic' notification per new episode about it (up to 3 a day per topic;
-  the topic's own show, e.g. Maron's WTF, is left out), and the 14:00 email job emails them. Replaced the Google Trends bar, YY 2026-11-25;
+  (`/api/cron/topic-follows`, 13:00 UTC) adds ONE bundled 'topic' notification per topic per day, "9 new episodes about
+  Jensen Huang" (YY: alerts were too many), opening the list at `/search/topic?q=…&since=…&until=…` (`lib/topic-alerts.js`,
+  `lib/topic-alert-words.js`; the topic's own show, e.g. Maron's WTF, is left out), and the 14:00 email job puts it in that day's one email. Replaced the Google Trends bar, YY 2026-11-25;
   `/trending` forwards to Search), Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/lists` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/lists/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/lists/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
