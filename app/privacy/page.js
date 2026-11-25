@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Hooked on Pods collects, who sees it, and how to get it deleted.",
 };
 
-const UPDATED = "November 24, 2026";
+const UPDATED = "November 25, 2026";
 
 export default function PrivacyPage() {
   return (
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
 
       <p className="legal__lead">What we don&rsquo;t collect</p>
       <ul>
-        <li>No advertising or tracking cookies, and no third-party analytics. The only cookies keep you signed in.</li>
+        <li>No advertising cookies. Besides the cookies that keep you signed in, Google Analytics sets its own (see below).</li>
         <li>No contacts from your phone, no precise location, no payment details.</li>
       </ul>
       <p>
@@ -121,6 +121,12 @@ export default function PrivacyPage() {
         <li><strong>Supabase</strong>: our database and sign-in. Your account and everything you save lives here.</li>
         <li><strong>Vercel</strong>: hosts the website.</li>
         <li><strong>Resend</strong>: sends our emails, so it sees your email address and the email.</li>
+        <li>
+          <strong>Google Analytics</strong>: counts visits, like which pages are opened, roughly where from (city or
+          country) and on what kind of device. It uses cookies and sees your IP address, but not your account, email or
+          what you write. Google&rsquo;s ad features are turned off. You can opt out with{" "}
+          <a href="https://tools.google.com/dlpage/gaoptout">Google&rsquo;s opt-out add-on</a> or by blocking cookies.
+        </li>
       </ul>
       <p>
         We also look up podcasts with Podcast Index, Apple Podcasts and Spotify, but we don&rsquo;t send them anything about

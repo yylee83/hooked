@@ -3,6 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import "@fontsource/bagel-fat-one/400.css";
 import "./globals.css";
 import { Suspense } from "react";
+import Analytics from "@/components/Analytics";
 import { BackTracker } from "@/components/BackButton";
 import BottomNav from "@/components/BottomNav";
 import HandleGate from "@/components/HandleGate";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
             <BackTracker />
           </Suspense>
         </PlayerProvider>
+        <Analytics />
       </body>
     </html>
   );
