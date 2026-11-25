@@ -124,7 +124,8 @@ export default function PrivacyPage() {
         <li><strong>Resend</strong>: sends our emails, so it sees your email address and the email.</li>
         <li>
           <strong>Google Analytics</strong>: counts visits, like which pages are opened, roughly where from (city or
-          country) and on what kind of device. It uses cookies and sees your IP address, but not your account, email or
+          country) and on what kind of device. It also counts when an account is created or someone joins the waitlist.
+          It uses cookies and sees your IP address, but we don&rsquo;t send it your account, email or
           what you write. Google&rsquo;s ad features are turned off. You can opt out with{" "}
           <a href="https://tools.google.com/dlpage/gaoptout">Google&rsquo;s opt-out add-on</a> or by blocking cookies.
         </li>
