@@ -11,6 +11,7 @@ const PRIVATE = [
   "/api/",
   "/me",
   "/notifications",
+  "/stats",
   "/log/",
   "/login",
   "/reset-password",

@@ -217,6 +217,15 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   trend, top searches, search misses, brief ideas). Kept a year (`prune_history`, daily job). Notice: `components/HistoryNote.js`.
   Matching between people uses public logs only. New functions: revoke from `anon, authenticated` too, not just `public`
   (Supabase grants them by default; `scripts/check-history.mjs` mimics that).
+- **Team stats page (YY, 2026-11-25)**: `/stats` (`components/TeamStats.js`), not linked anywhere, for the people in
+  `team_members` (Erin and YY; filled once by handle in the migration; add or remove in Supabase → Table Editor). One
+  database function, `team_stats(days, tz)`, returns totals only (no emails, never who did what) and refuses everyone
+  else: active people, sign-ups, invites, waitlist, minutes in the app and listening per person a day, plays, logs,
+  reviews, replies, thumbs, sends, shares, follows, a day-by-day chart, top episodes, shows and searches, how people
+  heard. **Time in the app**: `components/AppTime.js` (in the root layout) adds one row to `app_minutes` per signed-in
+  person per minute while Hooked is on screen and they tapped, scrolled or typed in the last 2 minutes
+  (`record_app_minute`; never read back; kept a year by `prune_history`). Migration `20261125220000_team_stats.sql`,
+  test `node scripts/check-team-stats.mjs`.
 - **Shares (team only, 2026-11-22)**: each tap on "Share anywhere" for an episode or brief (share menu, Copy link, Messages,
   Email, WhatsApp, X; a closed share menu doesn't count) is saved in `share_events` through `record_share` (`recordShare` in
   `lib/history.js`, called from `components/Share.js`); in-app sends are `recommendations`. Same rules as history: signed in

@@ -1096,3 +1096,28 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .topic-eps__when { margin: 0 0 12px; }
 .topic-eps__follow { margin-bottom: 16px; }
 .topic-eps__more { margin: 18px 0 8px; }
+
+/* ---------- Team stats page (/stats) ---------- */
+.stats { padding-bottom: 110px; }
+.stats-sub { margin: 4px 0 14px; }
+.stats-h { font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 26px 0 10px; font-weight: 600; }
+.stats-ranges { display: flex; gap: 8px; }
+.stats-ranges--wrap { flex-wrap: wrap; margin-bottom: 12px; }
+.stats-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 700px) { .stats-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stats-tile { background: var(--white); border: 2px solid var(--ink); border-radius: 16px; padding: 12px 14px; min-width: 0; }
+.stats-tile__value { font-size: 26px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stats-tile__label { font-size: 14px; margin-top: 4px; }
+.stats-tile__note { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.stats-chart { margin: 0; background: var(--white); border: 2px solid var(--ink); border-radius: 16px; padding: 14px 12px 10px; }
+.stats-chart__bars { display: flex; align-items: flex-end; height: 140px; border-bottom: 1px solid rgba(21, 19, 29, 0.25); }
+.stats-chart__slot { flex: 1 1 0; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+.stats-chart__slot:hover .stats-chart__bar { background: var(--ink); }
+.stats-chart__bar { width: 100%; background: var(--cobalt); border-radius: 4px 4px 0 0; min-height: 0; }
+.stats-chart__axis { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+.stats-list ol { margin: 0; padding-left: 22px; }
+.stats-list li { margin-bottom: 10px; line-height: 1.35; }
+.stats-list__title { font-weight: 600; color: var(--ink); }
+.stats-list__nums { font-size: 14px; color: var(--muted); }
+.stats-foot { margin-top: 22px; }
+.stats-ranges--wrap .chip--sm { font-size: 14px; padding: 5px 12px; }

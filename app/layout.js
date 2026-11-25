@@ -4,6 +4,7 @@ import "@fontsource/bagel-fat-one/400.css";
 import "./globals.css";
 import { Suspense } from "react";
 import Analytics from "@/components/Analytics";
+import AppTime from "@/components/AppTime";
 import { BackTracker } from "@/components/BackButton";
 import BottomNav from "@/components/BottomNav";
 import { DownloadsSetup } from "@/components/Downloads";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }) {
           <BottomNav />
           <HandleGate />
           <NotificationToast />
+          <AppTime />
           <Suspense fallback={null}>
             <BackTracker />
           </Suspense>
