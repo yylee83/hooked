@@ -44,6 +44,7 @@ export default function PrivacyPage() {
           A record of what you play in Hooked&rsquo;s player (what, where you started it from, how far you got, skips) and
           what you search for and tap. This is how Wrapped and your listening hours work.
         </li>
+        <li>How many minutes you have Hooked open and in use each day (not which pages), so we know how much time people spend here.</li>
         <li>When you tap a &ldquo;Share&rdquo; button (which kind of share, not who you sent it to).</li>
         <li>
           Reports you send (what you reported, the reason and any note; we keep a copy of the reported words) and the
@@ -88,7 +89,7 @@ export default function PrivacyPage() {
           Your listening and search history. You see your own totals (Wrapped, hours listened). The team looks at it to
           make Hooked better, for example which episodes people finish and which searches find nothing.
         </li>
-        <li>Your email address, sign-up answers and share taps.</li>
+        <li>Your email address, sign-up answers, share taps and minutes in the app.</li>
         <li>Reports. The person you report isn&rsquo;t told who reported them.</li>
       </ul>
       <p>
@@ -140,7 +141,7 @@ export default function PrivacyPage() {
       <h2>How long we keep it</h2>
       <ul>
         <li>Your account and what you post: until you delete them or ask us to delete your account.</li>
-        <li>Listening, search and share history: one year, then it&rsquo;s deleted automatically.</li>
+        <li>Listening, search and share history, and minutes in the app: one year, then it&rsquo;s deleted automatically.</li>
         <li>Notifications: until you clear them.</li>
       </ul>
 
