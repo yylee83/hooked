@@ -14,6 +14,15 @@ const KEY = "hooked:trail";
 const MAX = 50;
 
 const here = () => window.location.pathname + window.location.search;
+// The Hooked page this one was opened from, when it was (same site), else null.
+function fromHere() {
+  try {
+    const r = document.referrer && new URL(document.referrer);
+    return r && r.origin === window.location.origin ? r.pathname + r.search : null;
+  } catch {
+    return null;
+  }
+}
 
 function read() {
   try {
@@ -31,6 +40,14 @@ function write(t) {
 }
 
 let started = false; // first screen of this page load
+// Going to a fallback replaces the current screen instead of adding one, so the fallback page has nothing Hooked
+// behind it. Otherwise an episode opened from a link sends you to its show, and the show's Back sends you back to the
+// episode, round and round (Erin, 2026-11-25).
+let replacing = false;
+function toFallback(router, fallback) {
+  replacing = true;
+  router.replace(fallback || "/");
+}
 
 /** Records each screen. Going back to the screen before (Back, or the browser's back) takes the last one off. */
 export function BackTracker() {
@@ -41,8 +58,17 @@ export function BackTracker() {
     let t = read();
     if (!started) {
       started = true;
-      // A reload keeps the trail; arriving any other way starts a new one.
-      if (t[t.length - 1] !== now) t = [now];
+      // A reload keeps the trail. So does a full page load from the last Hooked screen (a link that reloads the page,
+      // or the first tap after a new version of Hooked goes live), or back to the screen before it. Arriving any
+      // other way (a shared link, a new tab) starts a new trail.
+      if (t[t.length - 1] !== now) {
+        if (t.length > 1 && t[t.length - 2] === now) t.pop();
+        else if (fromHere() === t[t.length - 1]) t.push(now);
+        else t = [now];
+      }
+    } else if (replacing) {
+      replacing = false;
+      t[t.length - 1] = now;
     } else if (t[t.length - 1] === now) {
       return;
     } else if (t[t.length - 2] === now) {
@@ -61,16 +87,18 @@ export const canGoBack = () => typeof window !== "undefined" && read().length > 
 /** Go back a screen, or to `fallback` when there's none. */
 export function useGoBack(fallback) {
   const router = useRouter();
-  return () => (canGoBack() ? router.back() : router.push(fallback || "/"));
+  return () => (canGoBack() ? router.back() : toFallback(router, fallback));
 }
 
 export default function BackButton({ fallback, children = "← Back" }) {
   const router = useRouter();
-  // A real link to the fallback, so it works before the page's code loads; with somewhere to go back to, it goes back.
+  // A real link to the fallback, so it works before the page's code loads. Once it has: back a screen if there's one,
+  // else to the fallback in place of this screen.
   const onClick = (e) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || !canGoBack()) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
-    router.back();
+    if (canGoBack()) router.back();
+    else toFallback(router, fallback);
   };
   return (
     <Link href={fallback} className="back" onClick={onClick}>
