@@ -140,10 +140,10 @@ code { font-family: var(--mono); font-size: 0.85em; background: rgba(21, 19, 29,
 .art--fluid { width: 100% !important; height: auto !important; aspect-ratio: 1; }
 
 /* ---------- friends page ---------- */
-.np-row { display: flex; gap: 16px; overflow-x: auto; margin: 0 -20px; padding: 6px 20px 14px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.np-row { display: flex; gap: 16px; overflow-x: auto; margin: 0 -20px; padding: 6px 20px 14px; scroll-padding-inline: 20px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .np-row::-webkit-scrollbar { display: none; }
 .np { scroll-snap-align: start; flex: none; width: 150px; }
-.np__who { font-weight: 800; font-size: 18px; margin-top: 12px; }
+.np__who { font-weight: 800; font-size: 18px; margin-top: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .np__show { color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 
@@ -274,7 +274,7 @@ html.keyboard-open .nav { display: none; }
 
 @media (max-width: 400px) {
   .app { padding-left: 16px; padding-right: 16px; }
-  .np-row { margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .np-row { margin: 0 -16px; padding-left: 16px; padding-right: 16px; scroll-padding-inline: 16px; }
   .nav__link { font-size: 15px; }
   .btn--display { font-size: 19px; }
   .me__title { font-size: 44px; }
