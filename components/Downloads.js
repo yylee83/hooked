@@ -86,18 +86,32 @@ export function DownloadButton({ episode }) {
   );
 }
 
-// My log → Up next: what's saved on this device, newest first, with how much room each takes.
+// The number on My log's Downloads tab.
+export function DownloadCount() {
+  const n = Object.keys(useDownloads().saved).length;
+  return n > 0 ? <span className="me-sections__n">{n}</span> : null;
+}
+
+// My log → Downloads: what's saved on this device, newest first, with how much room each takes.
 export function DownloadsList() {
   const dl = useDownloads();
   const rows = Object.values(dl.saved).sort((a, b) => b.at - a.at);
-  if (!rows.length) return null;
+  if (!rows.length)
+    return (
+      <section className="empty card" style={{ marginTop: 16 }}>
+        <p className="display h-md">Nothing downloaded yet.</p>
+        <p className="muted">Tap Download on any episode to play it on the subway, on a plane, anywhere with no signal.</p>
+        <Link className="btn btn--cobalt btn--shadow-sm" href="/search">
+          Find something
+        </Link>
+      </section>
+    );
   const total = rows.reduce((n, r) => n + (r.size || 0), 0);
   return (
     <section className="dl-list">
-      <h2 className="section-title">
-        Downloaded <span className="mono small muted">{sizeText(total)}</span>
-      </h2>
-      <p className="muted small dl-list__note">Saved on this device, to play with no signal.</p>
+      <p className="muted small dl-list__note">
+        Saved on this device to play with no signal · <span className="mono">{sizeText(total)}</span>
+      </p>
       <ul className="dl-list__rows">
         {rows.map((r) => (
           <li key={r.key} className="list__row">

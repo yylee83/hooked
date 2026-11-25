@@ -178,7 +178,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `lib/downloads.js`). The service worker `public/sw.js` plays saved copies (with the byte ranges iPhone needs) at
   `/downloads/audio/<id>`, and with no signal shows `public/offline.html`, which plays your downloads; it leaves every
   other request alone. The player uses a saved copy by itself (`localAudioUrl`). Hosts that don't allow other sites to
-  read their files (no CORS) show "Can't save this one". The list is in My log → Up next ("Downloaded"). iPhone Safari
+  read their files (no CORS) show "Can't save this one". The list is its own My log tab, "Downloads" (YY, 2026-11-25). iPhone Safari
   may clear a site's saved files after about a week without opening it (until Hooked is a Home Screen app).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
   finished. If you're looking, the player turns into "✓ Finished · log it?" (`components/FinishPrompt.js`: optional stars,
