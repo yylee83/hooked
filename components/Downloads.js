@@ -100,7 +100,7 @@ export function DownloadsList() {
     return (
       <section className="empty card" style={{ marginTop: 16 }}>
         <p className="display h-md">Nothing downloaded yet.</p>
-        <p className="muted">Tap Download on any episode to play it on the subway, on a plane, anywhere with no signal.</p>
+        <p className="muted">Tap Download on any episode to play it on the subway, on a plane, anywhere with no signal. Downloads stay in the browser you save them in.</p>
         <Link className="btn btn--cobalt btn--shadow-sm" href="/search">
           Find something
         </Link>
@@ -110,7 +110,7 @@ export function DownloadsList() {
   return (
     <section className="dl-list">
       <p className="muted small dl-list__note">
-        Saved on this device to play with no signal · <span className="mono">{sizeText(total)}</span>
+        Saved in this browser on this device, to play with no signal · <span className="mono">{sizeText(total)}</span>
       </p>
       <ul className="dl-list__rows">
         {rows.map((r) => (
