@@ -116,7 +116,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - Tables: `allowed_emails` (the invite list; no app access), `trending_topics` (48 hours of Google Trends; only the server writes), `profiles` (handle, display_name, now_playing, email_digest, interests), `logs`
   (one per user+episode; `hooked` is optional and no longer asked: **hooked is for shows**, Decision 6), `hooked_shows` (one per user+show), `list_items` (the **Up next** queue), `follows`,
   `recommendations` (in-app sends), `reactions`, `comments`, `notifications` (filled by triggers),
-  `listening_progress` (where you stopped in each episode; private), `finished_episodes` (finished in the player, not
+  `influences` (who influenced whom: + on a review, queuing a send; no app access, see "Your reach"), `listening_progress` (where you stopped in each episode; private), `finished_episodes` (finished in the player, not
   logged yet; private), `briefs` (`draft` ones are seen only by their author; server pages read without a sign-in, so
   they never show drafts), and the team-only history: `listening_sessions` and `search_events` (see below).
 - **Embeds need explicit foreign-key hints**, because several tables point at `profiles`, e.g.
@@ -191,6 +191,12 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   trend, top searches, search misses, brief ideas). Kept a year (`prune_history`, daily job). Notice: `components/HistoryNote.js`.
   Matching between people uses public logs only. New functions: revoke from `anon, authenticated` too, not just `public`
   (Supabase grants them by default; `scripts/check-history.mjs` mimics that).
+- **Your reach (Erin, 2026-11-24)**: on your own profile, only you see "people want to listen because of you" and
+  "episodes added to Up next because of you" (`components/YourReach.js`, `lib/my-reach.js`). It counts + on your review
+  and queuing an episode you sent (people once each; each person+episode once). Triggers fill `influences` (closed to the
+  app; Up next rows and sends disappear, so the moment is kept there); `my_reach()` returns your two totals only. Erin and
+  YY read `insights_influence` in Supabase, which adds "listened" (logged it afterwards). Design:
+  `docs/superpowers/specs/2026-11-24-influence-stats-design.md`. Test: `node scripts/check-influence.mjs`.
 - **Shares (team only, 2026-11-22)**: each tap on "Share anywhere" for an episode or brief (share menu, Copy link, Messages,
   Email, WhatsApp, X; a closed share menu doesn't count) is saved in `share_events` through `record_share` (`recordShare` in
   `lib/history.js`, called from `components/Share.js`); in-app sends are `recommendations`. Same rules as history: signed in

@@ -513,6 +513,14 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .me__people { margin-top: 6px; font-size: 15px; }
 .me__people a { display: inline-flex; align-items: center; min-height: 44px; gap: 4px; text-decoration: underline; text-decoration-color: rgba(21,19,29,.25); text-underline-offset: 3px; }
 .me__people b { font-family: var(--mono); }
+/* Your reach on your own profile (components/YourReach.js) */
+.reach { margin-top: 18px; padding: 14px 16px 12px; background: var(--white); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 4px 4px 0 var(--ink); }
+.reach__label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 6px; }
+.reach__label .mono { color: var(--cobalt); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+.reach__private { color: var(--muted); font-size: 13px; }
+.reach__row { display: flex; align-items: baseline; gap: 10px; margin: 6px 0; font-weight: 600; font-size: 16px; line-height: 1.3; }
+.reach__n { font-family: var(--display); font-weight: 400; color: var(--cobalt); font-size: 30px; line-height: 1; min-width: 1.4ch; }
+.reach__empty { color: var(--muted); font-size: 16px; margin: 4px 0 2px; }
 .log__row--share { grid-template-columns: 26px auto 1fr auto; }
 .log__side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .share-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--white); color: var(--ink); }

@@ -5,6 +5,7 @@ import Stars from "@/components/Stars";
 import { Avatar, FollowButton } from "@/components/Friends";
 import { ShareButton } from "@/components/Share";
 import LogThread, { ReviewAdd } from "@/components/LogThread";
+import YourReach from "@/components/YourReach";
 import { getProfilePage } from "@/lib/supabase/public";
 import { minutes, plural, starStats } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -62,6 +63,7 @@ export default async function ProfilePage({ params }) {
           </p>
         </div>
       </header>
+      <YourReach ownerId={profile.id} />
       <div className="row gap center" style={{ marginTop: 16 }}>
         <FollowButton person={profile} />
       </div>
