@@ -1,6 +1,6 @@
 import HookedShows from "@/components/HookedShows";
 
-export const metadata = { title: "Hooked on" };
+export const metadata = { title: "Your shows" };
 
 export default function HookedPage() {
   return <HookedShows />;
