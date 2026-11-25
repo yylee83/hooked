@@ -54,6 +54,7 @@ export default async function InvitePage({ params }) {
         Log the podcasts you love and see what friends are hooked on.
         {inv.handle ? ` You'll follow @${inv.handle} from the start.` : ""}
       </p>
+      <p className="invite-beta">Hooked on Pods is in beta</p>
       <LoginForm startMode="signup" invite={inv.code} />
     </>
   );
