@@ -345,16 +345,18 @@ body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
 /* ---------- Search: In the news, explained (components/NewsExplained.js) ---------- */
 .news-x { margin: 8px 0 4px; }
 .news-x__dek { margin-top: -6px; margin-bottom: 10px; }
-.news-x__row { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px 10px; scroll-padding: 0 20px; }
-.news-x__row::-webkit-scrollbar { display: none; }
-.news-x__card { flex: none; width: min(300px, 82vw); scroll-snap-align: start; display: flex; flex-direction: column; gap: 8px; background: var(--white); border: var(--line); border-radius: 18px; box-shadow: var(--shadow-sm); padding: 14px 14px 12px; }
-.news-x__topic { font-family: var(--display); font-size: 23px; line-height: 1.05; color: var(--cobalt); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.news-x__chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px 8px; }
+.news-x__chips::-webkit-scrollbar { display: none; }
+.news-x__chip { flex: none; background: var(--white); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 700; font-size: 15px; white-space: nowrap; cursor: pointer; }
+.news-x__chip.is-on { background: var(--cobalt); color: var(--white); }
+.news-x__card { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; background: var(--white); border: var(--line); border-radius: 18px; box-shadow: var(--shadow-sm); padding: 12px 14px 14px; }
+.news-x__more { margin-top: 4px; font-size: 14px; }
 .news-x__kind { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 4px; }
 .news-x__ep { display: flex; align-items: center; gap: 10px; }
 .news-x__ep .icon-act { width: 30px; height: 30px; border-width: 2px; flex: none; }
 .news-x__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 800; font-size: 14px; line-height: 1.2; }
 .news-x__show { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-@media (max-width: 400px) { .news-x__row { margin: 0 -16px; padding-left: 16px; padding-right: 16px; scroll-padding: 0 16px; } }
+@media (max-width: 400px) { .news-x__chips { margin: 0 -16px; padding-left: 16px; padding-right: 16px; } }
 
 .art-link { display: block; flex: none; border-radius: inherit; transition: transform 0.12s ease; }
 .art-link:hover { transform: translate(-1px, -2px) rotate(-1deg); }
