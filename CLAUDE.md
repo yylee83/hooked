@@ -222,7 +222,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   database function, `team_stats(days, tz)`, returns counts (no emails) and refuses everyone
   else: active people, sign-ups, invites, waitlist, minutes in the app and listening per person a day, plays, logs,
   reviews, replies, thumbs, sends, shares, follows, a day-by-day chart, top episodes, shows and searches, how people
-  heard, and the 15 most active people by handle (days here, listening, time in the app, logs, reviews, replies). **Time in the app**: `components/AppTime.js` (in the root layout) adds one row to `app_minutes` per signed-in
+  heard, and the 15 most active people by handle (days here, listening, time in the app, logs, reviews, replies). For product, UX and sales (YY, 2026-11-25): retention by sign-up week (back in week 2 / week 5), daily habit (average day vs month), the first-week funnel, where plays start (`listening_sessions.source`), three kinds of superusers (listeners, critics, connectors), word of mouth (sends then played / logged), and taste (categories by listening, countries with their top categories, cities). **Time in the app**: `components/AppTime.js` (in the root layout) adds one row to `app_minutes` per signed-in
   person per minute while Hooked is on screen and they tapped, scrolled or typed in the last 2 minutes
   (`record_app_minute`; never read back; kept a year by `prune_history`). Migration `20261125220000_team_stats.sql`,
   test `node scripts/check-team-stats.mjs`.

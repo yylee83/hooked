@@ -40,6 +40,10 @@ await db.exec(`
     ('${S(3)}', '${U(3)}', 'epB00001', now() - interval '1 hour', now(), 600, false);
   insert into public.search_events (id, user_id, query) values ('${S(4)}', '${U(2)}', 'Serial'), ('${S(5)}', '${U(3)}', 'serial ');
   insert into public.waitlist (email) values ('w@example.com');
+  update public.shows set categories = '["Comedy", "Society"]' where id = 'show0001';
+  insert into public.signup_answers (user_id, country, place) values ('${U(3)}', 'US', 'Brooklyn, NY');
+  insert into public.recommendations (from_id, to_id, episode_ref, created_at) values ('${U(2)}', '${U(3)}', 'epB00001', now() - interval '2 hours');
+  insert into public.reactions (log_user_id, episode_ref, user_id, kind) values ('${U(2)}', 'epA00001', '${U(3)}', 'agree');
 `);
 
 let failed = 0;
@@ -79,6 +83,20 @@ check(!JSON.stringify(st).includes("@example.com"), "no email addresses in the s
 const tp = st.top_people || [];
 check(tp[0]?.handle === "cat" && tp[0].logs === 1 && tp[0].replies === 1 && tp[0].minutes === 20, `most active: @cat first (got @${tp[0]?.handle})`);
 check(tp.length === 2 && !tp.some((x) => x.handle === "erin"), "only people who did something this week");
+const f = st.funnel || {};
+check(f.signed_up === 1 && f.onboarded === 1 && f.played === 1 && f.logged === 1 && f.followed === 0 && f.came_back === 1,
+  `first-week funnel for @cat (got ${JSON.stringify(f)})`);
+check(st.cohorts.length >= 1 && st.cohorts[0].people >= 1 && st.cohorts[0].week2 === null, "this week's sign-ups: too soon for week 2");
+check(st.habit.monthly === 2, `monthly active: 2 (got ${st.habit.monthly})`);
+check(st.sources[0]?.source === "other" && st.sources[0].plays === 3, "plays by where they started");
+check(st.listeners[0]?.handle === "bob" && st.listeners[0].minutes === 30, "top listener is @bob");
+check(st.critics[0]?.handle === "bob" && st.critics[0].reviews === 1 && st.critics[0].thumbs === 1, "top critic is @bob (1 review, 1 thumbs up)");
+check(st.connectors[0]?.handle === "bob" && st.connectors[0].sends === 1 && st.connectors[0].sends_played === 1, "top connector is @bob (send was played)");
+check(st.word_of_mouth.sends === 1 && st.word_of_mouth.played === 1 && st.word_of_mouth.logged === 0, "word of mouth: 1 send, played, not logged");
+check(st.categories[0]?.category === "Comedy" && st.categories[0].minutes === 40, "Comedy leads categories with 40 min");
+const us = st.countries.find((c) => c.country === "US");
+check(us?.people === 1 && us.listeners === 1 && us.categories[0] === "Comedy", "US: 1 person, listens to Comedy");
+check(st.cities[0]?.place === "Brooklyn, NY", "cities");
 const bad = (await as(1, "select public.team_stats(9999, 'Not/AZone') as s")).rows[0].s;
 check(bad.tz === "UTC" && bad.days === 365, "unknown time zone falls back to UTC; days capped at 365");
 

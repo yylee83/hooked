@@ -195,6 +195,157 @@ begin
     order by days_active desc, (logs + replies) desc, minutes desc, handle
     limit 15
   ),
+  -- ---------- for product: who comes back ----------
+  -- Everything since 9 weeks ago, for retention and the first-week funnel (not limited to the chosen days).
+  recent as (
+    select user_id, logged_at as at, 'log' as kind from public.logs where logged_at >= now() - interval '70 days'
+    union all select author_id, created_at, 'reply' from public.comments where created_at >= now() - interval '70 days'
+    union all select user_id, created_at, 'react' from public.reactions where created_at >= now() - interval '70 days'
+    union all select from_id, created_at, 'send' from public.recommendations where created_at >= now() - interval '70 days'
+    union all select user_id, created_at, 'queue' from public.list_items where created_at >= now() - interval '70 days'
+    union all select user_id, started_at, 'play' from public.listening_sessions
+      where started_at >= now() - interval '70 days' and heard_seconds > 0
+    union all select user_id, created_at, 'search' from public.search_events where created_at >= now() - interval '70 days'
+    union all select user_id, minute, 'app' from public.app_minutes where minute >= now() - interval '70 days'
+  ),
+  -- People who signed up in each of the last 8 weeks (Monday to Sunday, viewer's time zone), and how many did
+  -- anything again 7-13 days after signing up (week 2) and 28-34 days after (week 5). null = too soon to tell.
+  cohort_people as (
+    select p.id, p.created_at,
+           date_trunc('week', p.created_at at time zone tz)::date as week
+    from public.profiles p
+    where p.created_at >= date_trunc('week', now() at time zone tz) at time zone tz - interval '7 weeks'
+  ),
+  cohorts as (
+    select c.week, count(*)::int as people,
+      case when max(c.created_at) <= now() - interval '14 days' then
+        (count(*) filter (where exists (select 1 from recent r where r.user_id = c.id
+           and r.at >= c.created_at + interval '7 days' and r.at < c.created_at + interval '14 days')))::int end as week2,
+      case when max(c.created_at) <= now() - interval '35 days' then
+        (count(*) filter (where exists (select 1 from recent r where r.user_id = c.id
+           and r.at >= c.created_at + interval '28 days' and r.at < c.created_at + interval '35 days')))::int end as week5
+    from cohort_people c
+    group by c.week
+  ),
+  -- First week of people who signed up in the chosen days (and at least a day ago). Follows of the team and of
+  -- whoever invited them are made for them, so they don't count.
+  newbies as (
+    select p.id, p.created_at from public.profiles p
+    where p.created_at >= since and p.created_at <= now() - interval '1 day'
+  ),
+  funnel as (
+    select
+      count(*)::int as signed_up,
+      (count(*) filter (where exists (select 1 from public.signup_answers a where a.user_id = n.id)))::int as onboarded,
+      (count(*) filter (where exists (select 1 from public.listening_sessions l where l.user_id = n.id
+         and l.heard_seconds > 0 and l.started_at < n.created_at + interval '7 days')))::int as played,
+      (count(*) filter (where exists (select 1 from public.logs l where l.user_id = n.id
+         and l.logged_at < n.created_at + interval '7 days')))::int as logged,
+      (count(*) filter (where exists (select 1 from public.follows f where f.follower_id = n.id
+         and f.created_at < n.created_at + interval '7 days'
+         and not exists (select 1 from public.team_members t where t.user_id = f.followee_id)
+         and not exists (select 1 from public.invite_uses i where i.user_id = n.id and i.inviter_id = f.followee_id))))::int as followed,
+      (count(*) filter (where exists (select 1 from recent r where r.user_id = n.id
+         and r.at >= n.created_at + interval '1 day' and r.at < n.created_at + interval '7 days')))::int as came_back
+    from newbies n
+  ),
+  -- Daily vs monthly: on an average day of the last 28, what share of the month's active people showed up.
+  habit as (
+    select
+      (select count(distinct user_id) from recent where at >= now() - interval '28 days')::int as monthly,
+      (select round(avg(c)::numeric, 1) from (
+         select count(distinct user_id) as c from recent where at >= now() - interval '28 days'
+         group by (at at time zone tz)::date) d) as daily
+  ),
+  -- Where plays start in the player.
+  sources as (
+    select l.source, count(*)::int as plays, (sum(l.heard_seconds) / 60)::int as minutes,
+           (count(*) filter (where l.finished))::int as finishes
+    from public.listening_sessions l
+    where l.started_at >= since and l.heard_seconds > 0
+    group by l.source
+    order by minutes desc
+  ),
+  -- ---------- for sales: superusers ----------
+  listeners as (
+    select p.handle, (sum(pl.heard_seconds) / 60)::int as minutes, count(distinct pl.episode_ref)::int as episodes,
+           (count(*) filter (where pl.finished))::int as finishes
+    from plays pl join public.profiles p on p.id = pl.user_id
+    where p.handle is not null
+    group by p.handle order by minutes desc, p.handle limit 10
+  ),
+  critics as (
+    select p.handle,
+      (select count(*) from period_logs l where l.user_id = p.id and nullif(trim(l.hook), '') is not null)::int as reviews,
+      (select count(*) from public.reactions x where x.log_user_id = p.id and x.user_id <> p.id and x.created_at >= since
+         and x.kind in ('agree', 'great', 'adding'))::int as thumbs,
+      (select count(*) from public.comments c where c.log_user_id = p.id and c.author_id <> p.id and c.created_at >= since)::int as replies_got
+    from public.profiles p
+    where p.handle is not null
+  ),
+  top_critics as (
+    select * from critics where reviews > 0 or thumbs > 0
+    order by (reviews + thumbs + replies_got) desc, handle limit 10
+  ),
+  connectors as (
+    select p.handle,
+      (select count(*) from public.recommendations r where r.from_id = p.id and r.created_at >= since)::int as sends,
+      -- sends the other person then played
+      (select count(*) from public.recommendations r where r.from_id = p.id and r.created_at >= since
+         and exists (select 1 from public.listening_sessions l where l.user_id = r.to_id and l.episode_ref = r.episode_ref
+                     and l.started_at >= r.created_at and l.heard_seconds > 0))::int as sends_played,
+      (select count(*) from public.invite_uses i where i.inviter_id = p.id and i.created_at >= since)::int as invited,
+      (select count(*) from public.share_events e where e.user_id = p.id and e.created_at >= since)::int as shares
+    from public.profiles p
+    where p.handle is not null
+  ),
+  top_connectors as (
+    select * from connectors where sends + invited + shares > 0
+    order by (invited * 3 + sends_played * 2 + sends + shares) desc, handle limit 10
+  ),
+  -- Word of mouth: sends in the chosen days that the other person played or logged afterwards.
+  word_of_mouth as (
+    select count(*)::int as sends,
+      (count(*) filter (where exists (select 1 from public.listening_sessions l where l.user_id = r.to_id
+         and l.episode_ref = r.episode_ref and l.started_at >= r.created_at and l.heard_seconds > 0)))::int as played,
+      (count(*) filter (where exists (select 1 from public.logs l where l.user_id = r.to_id
+         and l.episode_ref = r.episode_ref and l.logged_at >= r.created_at)))::int as logged
+    from public.recommendations r where r.created_at >= since
+  ),
+  -- ---------- taste ----------
+  -- Podcast categories by time listened, and where the people listening said they are.
+  cat_time as (
+    select c.name as category, (sum(pl.heard_seconds) / 60)::int as minutes, count(distinct pl.user_id)::int as people
+    from plays pl
+    join public.episodes e on e.id = pl.episode_ref
+    join public.shows s on s.id = e.show_id
+    cross join lateral jsonb_array_elements_text(case when jsonb_typeof(s.categories) = 'array' then s.categories else '[]'::jsonb end) as c(name)
+    group by c.name order by minutes desc, c.name limit 12
+  ),
+  places as (
+    select coalesce(a.country, '?') as country, count(*)::int as people,
+      (count(*) filter (where exists (select 1 from plays pl where pl.user_id = a.user_id)))::int as listeners
+    from public.signup_answers a
+    group by 1 order by people desc limit 10
+  ),
+  cities as (
+    select a.place, count(*)::int as people from public.signup_answers a
+    where a.place is not null group by 1 order by people desc, 1 limit 10
+  ),
+  country_cats as (
+    select x.country, jsonb_agg(x.category order by x.minutes desc, x.category) as categories
+    from (
+      select coalesce(a.country, '?') as country, c.name as category, sum(pl.heard_seconds) as minutes,
+             row_number() over (partition by coalesce(a.country, '?') order by sum(pl.heard_seconds) desc, c.name) as nth
+      from plays pl
+      join public.signup_answers a on a.user_id = pl.user_id
+      join public.episodes e on e.id = pl.episode_ref
+      join public.shows s on s.id = e.show_id
+      cross join lateral jsonb_array_elements_text(case when jsonb_typeof(s.categories) = 'array' then s.categories else '[]'::jsonb end) as c(name)
+      group by 1, 2
+    ) x where x.nth <= 3
+    group by x.country
+  ),
   heard as (
     select a.heard_from as source, count(*)::int as people
     from public.signup_answers a
@@ -244,6 +395,18 @@ begin
     'top_shows', coalesce((select jsonb_agg(to_jsonb(t)) from top_shows t), '[]'::jsonb),
     'top_searches', coalesce((select jsonb_agg(to_jsonb(t)) from top_searches t), '[]'::jsonb),
     'top_people', coalesce((select jsonb_agg(to_jsonb(t)) from ranked_people t), '[]'::jsonb),
+    'cohorts', coalesce((select jsonb_agg(to_jsonb(c) order by c.week desc) from cohorts c), '[]'::jsonb),
+    'funnel', (select to_jsonb(f) from funnel f),
+    'habit', (select to_jsonb(h) from habit h),
+    'sources', coalesce((select jsonb_agg(to_jsonb(x)) from sources x), '[]'::jsonb),
+    'listeners', coalesce((select jsonb_agg(to_jsonb(x)) from listeners x), '[]'::jsonb),
+    'critics', coalesce((select jsonb_agg(to_jsonb(x)) from top_critics x), '[]'::jsonb),
+    'connectors', coalesce((select jsonb_agg(to_jsonb(x)) from top_connectors x), '[]'::jsonb),
+    'word_of_mouth', (select to_jsonb(w) from word_of_mouth w),
+    'categories', coalesce((select jsonb_agg(to_jsonb(x)) from cat_time x), '[]'::jsonb),
+    'countries', coalesce((select jsonb_agg(to_jsonb(x) || jsonb_build_object('categories', coalesce(cc.categories, '[]'::jsonb)))
+                           from places x left join country_cats cc on cc.country = x.country), '[]'::jsonb),
+    'cities', coalesce((select jsonb_agg(to_jsonb(x)) from cities x), '[]'::jsonb),
     'heard_from', coalesce((select jsonb_agg(to_jsonb(h)) from heard h), '[]'::jsonb)
   ) into result;
 

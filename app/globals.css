@@ -1121,3 +1121,12 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .stats-list__nums { font-size: 14px; color: var(--muted); }
 .stats-foot { margin-top: 22px; }
 .stats-ranges--wrap .chip--sm { font-size: 14px; padding: 5px 12px; }
+.stats-note { margin: 8px 0 0; }
+.stats-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.stats-table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 13px; padding: 6px 4px; border-bottom: 2px solid var(--ink); }
+.stats-table td { padding: 7px 4px; border-bottom: 1px solid rgba(21, 19, 29, 0.15); }
+.stats-funnel__row { display: grid; grid-template-columns: 1fr 44px; grid-template-areas: "label num" "track track"; gap: 4px 8px; margin-bottom: 10px; }
+.stats-funnel__label { grid-area: label; font-size: 15px; }
+.stats-funnel__num { grid-area: num; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stats-funnel__track { grid-area: track; height: 10px; background: rgba(21, 19, 29, 0.08); border-radius: 999px; overflow: hidden; }
+.stats-funnel__bar { height: 100%; background: var(--cobalt); border-radius: 999px; }

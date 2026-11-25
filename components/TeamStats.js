@@ -22,9 +22,42 @@ const HEARD = {
   article: "An article", search: "Search", other: "Something else",
 };
 
+const FUNNEL = [
+  { key: "signed_up", label: "Signed up" },
+  { key: "onboarded", label: "Finished the welcome steps" },
+  { key: "played", label: "Played an episode" },
+  { key: "logged", label: "Logged an episode" },
+  { key: "followed", label: "Followed someone" },
+  { key: "came_back", label: "Came back another day" },
+];
+const SOURCES = {
+  up_next: "Up next", search: "Search", home: "Home", episode: "Episode pages", show: "Show pages", brief: "Lists",
+  profile: "Profiles", my_log: "My log", resume: "Picking up where they left off", other: "Other (player, downloads)",
+};
+const CROWDS = [
+  { key: "active", label: "Most active", note: "Most days on Hooked." },
+  { key: "listeners", label: "Listeners", note: "Most time listening in Hooked's player." },
+  { key: "critics", label: "Critics", note: "Most reviews, and thumbs up and replies on them." },
+  { key: "connectors", label: "Connectors", note: "Bring people in: invites that joined, sends that got played, shares." },
+];
+
 const n = (v) => Number(v || 0).toLocaleString("en-US");
 const per = (total, count) => (count ? Math.round(Number(total) / Number(count)) : 0);
 const hours = (min) => (min >= 600 ? `${n(Math.round(min / 60))} hrs` : min >= 60 ? `${(min / 60).toFixed(1)} hrs` : `${n(min)} min`);
+
+const pct = (part, whole) => (whole ? `${Math.round((100 * Number(part || 0)) / Number(whole))}%` : "–");
+const fmtDay = (day) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const countryName = (code) => {
+  if (!code || code === "?") return "Didn’t say";
+  try { return new Intl.DisplayNames(["en"], { type: "region" }).of(code) || code; } catch { return code; }
+};
+function crowdLine(crowd, u) {
+  const s = (v, one, many) => `${n(v)} ${Number(v) === 1 ? one : many}`;
+  if (crowd === "listeners") return `${hours(u.minutes || 0)} · ${s(u.episodes, "episode", "episodes")} · ${s(u.finishes, "finished", "finished")}`;
+  if (crowd === "critics") return `${s(u.reviews, "review", "reviews")} · ${n(u.thumbs)} thumbs up and + · ${s(u.replies_got, "reply", "replies")} to them`;
+  if (crowd === "connectors") return `${s(u.invited, "invite joined", "invites joined")} · ${n(u.sends_played)} of ${s(u.sends, "send", "sends")} played · ${s(u.shares, "share", "shares")}`;
+  return `here ${s(u.days_active, "day", "days")} · ${hours(u.minutes || 0)} listening${u.app_minutes ? ` · ${hours(u.app_minutes)} in the app` : ""} · ${n(u.logs)} logs · ${n(u.reviews)} reviews · ${n(u.replies)} replies`;
+}
 
 function Tile({ label, value, note }) {
   return (
@@ -61,7 +94,7 @@ function DayChart({ daily, series }) {
 function TopList({ title, rows, render, empty = "Nothing yet." }) {
   return (
     <section className="stats-list">
-      <h2 className="stats-h">{title}</h2>
+      {title ? <h2 className="stats-h">{title}</h2> : null}
       {rows?.length ? (
         <ol>
           {rows.map((r, i) => (
@@ -80,6 +113,7 @@ export default function TeamStats() {
   const uid = state?.user?.id;
   const [days, setDays] = useState(30);
   const [series, setSeries] = useState(SERIES[0]);
+  const [crowd, setCrowd] = useState("active");
   const [res, setRes] = useState({ status: "loading", key: "" });
   const key = `${uid}|${days}`;
 
@@ -169,17 +203,122 @@ export default function TeamStats() {
           </div>
           <DayChart daily={s.daily || []} series={series} />
 
+          <h2 className="stats-h">Coming back</h2>
+          <div className="stats-tiles">
+            <Tile
+              label="Daily habit"
+              value={s.habit?.monthly ? `${Math.round((100 * Number(s.habit.daily || 0)) / s.habit.monthly)}%` : "–"}
+              note={`${Math.round(Number(s.habit?.daily || 0))} people on an average day, of ${n(s.habit?.monthly)} this month`}
+            />
+          </div>
+          <table className="stats-table">
+            <thead>
+              <tr><th>Signed up, week of</th><th>People</th><th>Back week 2</th><th>Back week 5</th></tr>
+            </thead>
+            <tbody>
+              {(s.cohorts || []).map((c) => (
+                <tr key={c.week}>
+                  <td>{fmtDay(c.week)}</td>
+                  <td>{n(c.people)}</td>
+                  <td>{c.week2 == null ? <span className="muted">too soon</span> : pct(c.week2, c.people)}</td>
+                  <td>{c.week5 == null ? <span className="muted">too soon</span> : pct(c.week5, c.people)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="muted small stats-note">Back = did anything on Hooked 7–13 days (week 2) or 28–34 days (week 5) after signing up.</p>
+
+          <h2 className="stats-h">First week of new people</h2>
+          {s.funnel?.signed_up ? (
+            <div className="stats-funnel">
+              {FUNNEL.map((f) => (
+                <div key={f.key} className="stats-funnel__row">
+                  <div className="stats-funnel__label">{f.label}</div>
+                  <div className="stats-funnel__track">
+                    <div className="stats-funnel__bar" style={{ width: `${(100 * (s.funnel[f.key] || 0)) / s.funnel.signed_up}%` }} />
+                  </div>
+                  <div className="stats-funnel__num">{pct(s.funnel[f.key], s.funnel.signed_up)}</div>
+                </div>
+              ))}
+              <p className="muted small stats-note">
+                {n(s.funnel.signed_up)} people who signed up in these days (at least a day ago). Follows made for them (the team, whoever invited them) don&rsquo;t count.
+              </p>
+            </div>
+          ) : (
+            <p className="muted small">No new people in these days yet.</p>
+          )}
+
           <TopList
-            title="Most active people"
-            rows={s.top_people}
+            title="Where plays start"
+            rows={s.sources}
+            render={(x) => (
+              <>
+                <span className="stats-list__title">{SOURCES[x.source] || x.source}</span>
+                <div className="stats-list__nums">
+                  {n(x.plays)} plays · {hours(x.minutes || 0)} · {pct(x.finishes, x.plays)} finished
+                </div>
+              </>
+            )}
+          />
+
+          <h2 className="stats-h">Superusers</h2>
+          <div className="stats-ranges stats-ranges--wrap" role="group" aria-label="Which superusers">
+            {CROWDS.map((c) => (
+              <button key={c.key} type="button" className={`chip chip--sm${c.key === crowd ? " chip--on" : ""}`} onClick={() => setCrowd(c.key)}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <p className="muted small stats-note">{CROWDS.find((c) => c.key === crowd)?.note}</p>
+          <TopList
+            rows={crowd === "active" ? s.top_people : s[crowd]}
             render={(u) => (
               <>
                 <Link href={`/u/${u.handle}`} className="stats-list__title">@{u.handle}</Link>
                 {u.display_name ? <span className="muted"> · {u.display_name}</span> : null}
-                <div className="stats-list__nums">
-                  here {n(u.days_active)} {u.days_active === 1 ? "day" : "days"} · {hours(u.minutes || 0)} listening
-                  {u.app_minutes ? ` · ${hours(u.app_minutes)} in the app` : ""} · {n(u.logs)} logs · {n(u.reviews)} reviews · {n(u.replies)} replies
-                </div>
+                <div className="stats-list__nums">{crowdLine(crowd, u)}</div>
+              </>
+            )}
+          />
+
+          <h2 className="stats-h">Word of mouth</h2>
+          <div className="stats-tiles">
+            <Tile label="Sends" value={n(s.word_of_mouth?.sends)} />
+            <Tile label="Then played" value={pct(s.word_of_mouth?.played, s.word_of_mouth?.sends)} note="of sends" />
+            <Tile label="Then logged" value={pct(s.word_of_mouth?.logged, s.word_of_mouth?.sends)} note="of sends" />
+            <Tile label="Shares outside Hooked" value={n(p.shares)} />
+          </div>
+
+          <TopList
+            title="Taste: top categories"
+            rows={s.categories}
+            render={(c) => (
+              <>
+                <span className="stats-list__title">{c.category}</span>
+                <span className="stats-list__nums"> · {hours(c.minutes || 0)} · {n(c.people)} {c.people === 1 ? "person" : "people"}</span>
+              </>
+            )}
+          />
+          <TopList
+            title="Where people are"
+            rows={s.countries}
+            empty="No answers yet."
+            render={(c) => (
+              <>
+                <span className="stats-list__title">{countryName(c.country)}</span>
+                <span className="stats-list__nums"> · {n(c.people)} people, {n(c.listeners)} listening in Hooked</span>
+                {c.categories?.length ? <div className="stats-list__nums">Likes {c.categories.join(", ")}</div> : null}
+              </>
+            )}
+          />
+          <TopList
+            title="Top cities"
+            rows={s.cities}
+            empty="No answers yet."
+            render={(c) => (
+              <>
+                <span className="stats-list__title">{c.place}</span>
+                <span className="stats-list__nums"> · {n(c.people)}</span>
               </>
             )}
           />
