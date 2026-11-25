@@ -19,6 +19,7 @@ import { cookies } from "next/headers";
 import { SignInButton } from "@/components/Account";
 import { searchOwnShows, withRefs, withShowRefs } from "@/lib/catalog";
 import SearchRecorder from "@/components/SearchRecorder";
+import { FollowTopicButton } from "@/components/FollowTopic";
 import { showHref } from "@/lib/addresses";
 import { namedShow, norm } from "@/lib/rank";
 import { placeAppleEpisodes, placeAppleShows } from "@/lib/search";
@@ -265,6 +266,12 @@ export default async function SearchPage({ searchParams }) {
       {/* Filters for the search, always right under the box so it's clear what they filter. */}
       <SearchFilters key={type} type={type} signedInHint={signedInHint} />
 
+      {/* Follow what you searched for ("Marc Maron"): hear about each new episode about it (YY, 2026-11-25). */}
+      {query && !linkError && (type === "all" || type === "episodes") && (
+        <div className="search-follow">
+          <FollowTopicButton topic={query} />
+        </div>
+      )}
 
       <KeysNotice error={error} />
 

@@ -138,14 +138,17 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"); no Just logged (removed 2026-11-21) and no Apple chart),
   `/search` ("In the news, explained": chips of the week's big stories with the dates ("Nov 19–25"); tap one to open its card
   (`components/NewsTopics.js`): a one-line summary, a fresh "Catch up" episode, one or two "Go deeper" episodes with a
-  reason each, Play all (the catch-up now, the deeper ones to the top of Up next) and Follow story. Stories come from
+  reason each, Play all (the catch-up now, the deeper ones to the top of Up next) and Follow topic. Stories come from
   grouping the past week of daily news shows' episodes by the names two or more shows share (`lib/news-topics.js`, test
   `node scripts/check-news-topics.mjs`). "Go deeper" = team pins (Supabase `news_picks`: pin or block an episode, block a
   show, per story or `*`), episodes the news show links in its notes, then an episode search kept to the trusted shelf
   (`lib/news-shelf.js`), the news shows, or big shows on Apple's top 100 / well rated on Hooked; ranked with Hooked
   finishes and ratings (`news_quality`), then checked by Claude (`lib/news-claude.js`). Stories without one are hidden.
-  Made every 3 hours, `lib/news-explained.js`, `components/NewsExplained.js`. Followed stories (`story_follows`) get a
-  'story' notification from a daily job (`/api/cron/news-follows`). Replaced the Google Trends bar, YY 2026-11-25;
+  Made every 3 hours, `lib/news-explained.js`, `components/NewsExplained.js`. **Follow topic** (YY, 2026-11-25): any
+  person or subject ("Marc Maron"), from a news card or a "Follow “…”" pill on search results (`components/FollowTopic.js`,
+  `lib/topic-follows.js`, table `topic_follows`); "Topics you follow" (× to stop) tops /notifications. A daily job
+  (`/api/cron/topic-follows`, 13:00 UTC) adds a 'topic' notification per new episode about it (up to 3 a day per topic;
+  the topic's own show, e.g. Maron's WTF, is left out), and the 14:00 email job emails them. Replaced the Google Trends bar, YY 2026-11-25;
   `/trending` forwards to Search), Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/lists` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/lists/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/lists/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in

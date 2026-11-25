@@ -13,7 +13,7 @@
       "schedule": "0 14 * * *"
     },
     {
-      "path": "/api/cron/news-follows",
+      "path": "/api/cron/topic-follows",
       "schedule": "0 13 * * *"
     }
   ]

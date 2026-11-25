@@ -8,9 +8,9 @@ import Art from "./Art";
 import { PlayButton, PlayIcon, usePlayer } from "./Player";
 import { episodeHref } from "@/lib/addresses";
 import { haptic } from "@/lib/haptics";
-import { addToList, useStore } from "@/lib/store";
+import { addToList } from "@/lib/store";
 import { useSignInFirst } from "@/lib/sign-in-first";
-import { useStoryFollows } from "@/lib/story-follows";
+import { FollowTopicButton } from "./FollowTopic";
 
 const YEAR = new Date().getFullYear();
 const when = (ep, fresh) => {
@@ -46,14 +46,11 @@ function NewsEp({ ep, fresh = false }) {
   );
 }
 
-// The bottom of an open card: Play all (the catch-up now, the deeper ones next on Up next), Follow this story, and a
-// search for more.
+// The bottom of an open card: Play all (the catch-up now, the deeper ones next on Up next), Follow topic (new episodes
+// about it, from any show), and a search for more.
 function CardActions({ t }) {
   const p = usePlayer();
-  const state = useStore();
   const { guard } = useSignInFirst();
-  const follows = useStoryFollows(state?.user?.id);
-  const on = follows.following(t.key);
   const [queued, setQueued] = useState(false);
   const playAll = guard(async () => {
     haptic();
@@ -67,12 +64,9 @@ function CardActions({ t }) {
         <button type="button" className="btn btn--sm btn--cobalt" onClick={playAll}>
           <PlayIcon size={13} /> Play all
         </button>
-        <button type="button" className={`btn btn--sm ${on ? "btn--butter" : ""}`} aria-pressed={on} onClick={guard(() => (haptic(), follows.toggle(t.key, t.topic)))}>
-          {on ? "✓ Following" : "Follow story"}
-        </button>
+        <FollowTopicButton topic={t.topic} label="Follow topic" showNote={false} />
       </div>
       {queued && <p className="news-x__note muted small">The deeper ones are next in Up next.</p>}
-      {on && !queued && <p className="news-x__note muted small">We&apos;ll tell you when a news show covers it again.</p>}
       <Link href={`/search/find?${new URLSearchParams({ q: t.topic, type: "episodes" })}`} className="more-link news-x__more">
         More on {t.topic} →
       </Link>
