@@ -14,6 +14,15 @@ const KEY = "hooked:trail";
 const MAX = 50;
 
 const here = () => window.location.pathname + window.location.search;
+// The Hooked page this one was opened from, when it was (same site), else null.
+function fromHere() {
+  try {
+    const r = document.referrer && new URL(document.referrer);
+    return r && r.origin === window.location.origin ? r.pathname + r.search : null;
+  } catch {
+    return null;
+  }
+}
 
 function read() {
   try {
@@ -49,8 +58,14 @@ export function BackTracker() {
     let t = read();
     if (!started) {
       started = true;
-      // A reload keeps the trail; arriving any other way starts a new one.
-      if (t[t.length - 1] !== now) t = [now];
+      // A reload keeps the trail. So does a full page load from the last Hooked screen (a link that reloads the page,
+      // or the first tap after a new version of Hooked goes live), or back to the screen before it. Arriving any
+      // other way (a shared link, a new tab) starts a new trail.
+      if (t[t.length - 1] !== now) {
+        if (t.length > 1 && t[t.length - 2] === now) t.pop();
+        else if (fromHere() === t[t.length - 1]) t.push(now);
+        else t = [now];
+      }
     } else if (replacing) {
       replacing = false;
       t[t.length - 1] = now;
