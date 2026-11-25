@@ -7,6 +7,8 @@ const nextConfig = {
   async redirects() {
     return [
       { source: "/briefs", destination: "/lists", permanent: true },
+      // The Google Trends page gave way to Search's "In the news, explained" (2026-11-25).
+      { source: "/trending", destination: "/search", permanent: false },
       { source: "/briefs/:path*", destination: "/lists/:path*", permanent: true },
     ];
   },

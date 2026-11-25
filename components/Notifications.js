@@ -1,4 +1,5 @@
 "use client";
+import { readAlert } from "@/lib/topic-alert-words";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -100,6 +101,10 @@ function describe(n, myHandle) {
       return { text: <><b>{who}</b> also replied on @{n.owner?.handle}'s log of {ep}</>, quote: n.body, href: thread(n.owner?.handle) };
     case "reaction":
       return { text: <><b>{who}</b> reacted “{REACTION_WORDS[n.body] || n.body}” to your log of {ep}</>, href: thread(myHandle) };
+    case "topic": {
+      const a = readAlert(n);
+      return { text: <>{a.words.slice(0, -a.topic.length)}<b>{a.topic}</b></>, href: a.href };
+    }
     default:
       return { text: <><b>{who}</b></>, href: "/" };
   }

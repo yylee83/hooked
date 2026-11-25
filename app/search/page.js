@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import ForYou from "@/components/ForYou";
 import SearchFilters from "@/components/SearchFilters";
 import { SignInButton } from "@/components/Account";
-import { AppleCharts, PopularOnHooked, SectionLoading, Trending } from "@/components/SearchSections";
+import { AppleCharts, PopularOnHooked, SectionLoading } from "@/components/SearchSections";
+import NewsExplained from "@/components/NewsExplained";
 
 export const metadata = { title: "Search" };
 
@@ -36,8 +37,10 @@ export default function SearchHome() {
 
       <SearchFilters type="all" />
 
+      {/* The week's big stories, each with an episode to catch up and older ones that go deeper (YY, 2026-11-25; it
+          replaced the Google Trends bar). Only on plain Search, not above results. */}
       <Suspense fallback={null}>
-        <Trending />
+        <NewsExplained />
       </Suspense>
 
       <Suspense fallback={<SectionLoading label="Popular on Hooked" />}>

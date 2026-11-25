@@ -39,6 +39,7 @@ export default function PrivacyPage() {
         <li>What you log: episodes, star ratings, reviews (&ldquo;What did you think?&rdquo;), shows you&rsquo;re hooked on and the lists you make.</li>
         <li>What you do with other people: follows, replies, thumbs up and down, + (want to listen), and episodes you send.</li>
         <li>Your Up next queue, where you stopped in each episode, and episodes you finished but haven&rsquo;t logged.</li>
+        <li>Topics you follow (a person or subject), so we can tell you about new episodes about them.</li>
         <li>
           A record of what you play in Hooked&rsquo;s player (what, where you started it from, how far you got, skips) and
           what you search for and tap. This is how Wrapped and your listening hours work.
@@ -75,7 +76,7 @@ export default function PrivacyPage() {
 
       <p className="legal__lead">Only you (and the people involved)</p>
       <ul>
-        <li>Your Up next queue, listening progress and unfinished-episode reminders.</li>
+        <li>Your Up next queue, listening progress, unfinished-episode reminders and the topics you follow.</li>
         <li>Sends: only you and the person you sent to.</li>
         <li>Your notifications, and draft lists.</li>
         <li>Who you&rsquo;ve blocked. The person you block isn&rsquo;t told.</li>
