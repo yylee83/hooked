@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FinishedNotLogged from "./FinishedNotLogged";
 import KeepListening from "./KeepListening";
+import { DownloadsList } from "./Downloads";
 import HistoryNote from "./HistoryNote";
 import Art from "./Art";
 import Wrapped from "./Wrapped";
@@ -352,7 +353,10 @@ export default function MyLog() {
       {tab === "upnext" && <KeepListening />}
 
       {tab === "upnext" ? (
-        <UpNextView state={state} />
+        <>
+          <UpNextView state={state} />
+          <DownloadsList />
+        </>
       ) : tab === "stats" ? (
         <Wrapped logs={logs} hooked={state.shows} userId={state.user?.id || null} />
       ) : logs.length === 0 && !(tab === "shows" && shows.length) ? (

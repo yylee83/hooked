@@ -1062,3 +1062,12 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .legal-links { margin: 14px 0 0; }
 .legal-links a, .signup-terms a { color: inherit; text-decoration: underline; }
 .signup-terms { margin: 10px 0 0; }
+
+/* Downloads (components/Downloads.js) */
+.dl-wrap { display: contents; }
+.dl-btn--saving { background: linear-gradient(90deg, var(--butter) var(--dl-pct, 0%), var(--white) var(--dl-pct, 0%)); }
+.dl-why { flex-basis: 100%; margin-top: -2px; }
+.dl-list { margin-top: 28px; }
+.dl-list .section-title .mono { font-family: var(--mono); font-weight: 400; margin-left: 6px; }
+.dl-list__note { margin: -4px 0 6px; }
+.dl-list__rows { list-style: none; padding: 0; margin: 0; }

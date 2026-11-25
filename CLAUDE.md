@@ -172,6 +172,14 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   opens back up when you press Play on something (Up next moving on by itself doesn't). A **Log it** pill sits at the bottom right (yellow "Logged" once logged); logging
   doesn't stop playback. The bottom bar stays pinned on iPhone after the keyboard closes (`useBottomPinned`,
   `components/BottomNav.js`).
+- **Downloads (YY, 2026-11-25)**: "Download" on episode pages (`DownloadButton`, `components/Downloads.js`) saves the
+  audio on the device: the browser fetches it straight from the show's host (never through our server, so the show's
+  download counts stay right) and keeps it in Cache Storage (`hooked-downloads-v1`, list in `hooked:downloads`;
+  `lib/downloads.js`). The service worker `public/sw.js` plays saved copies (with the byte ranges iPhone needs) at
+  `/downloads/audio/<id>`, and with no signal shows `public/offline.html`, which plays your downloads; it leaves every
+  other request alone. The player uses a saved copy by itself (`localAudioUrl`). Hosts that don't allow other sites to
+  read their files (no CORS) show "Can't save this one". The list is in My log → Up next ("Downloaded"). iPhone Safari
+  may clear a site's saved files after about a week without opening it (until Hooked is a Home Screen app).
 - **"Log it?" after listening** (`lib/finished.js`): the last minute of an episode (not a brief's clip) counts as
   finished. If you're looking, the player turns into "✓ Finished · log it?" (`components/FinishPrompt.js`: optional stars,
   a small **Hook show** pill, then **Log it**; it stays ("Saving…") until saved, then shows "✓ Logged" briefly); ✕, or finishing with the screen off, puts it under "Finished, not logged" at the top of My log's

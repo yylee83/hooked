@@ -7,6 +7,7 @@ import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import { EpisodeLogs } from "@/components/Account";
 import { ShareButton } from "@/components/Share";
+import { DownloadButton } from "@/components/Downloads";
 import { AddToBriefButton } from "@/components/AddToBrief";
 import { LogButton, QueueButton } from "@/components/Social";
 import { JoinNudge } from "@/components/JoinNudge";
@@ -126,6 +127,7 @@ export default async function EpisodePage({ params, searchParams }) {
         <QueueButton episode={card} />
         {card.audio && <AddToBriefButton episode={card} />}
         <ShareButton episode={card} />
+        <DownloadButton episode={card} />
       </div>
 
       {shared?.profile && <JoinNudge from={shared.profile.handle} />}
