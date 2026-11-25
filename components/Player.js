@@ -16,6 +16,7 @@ import { pullFinished } from "@/lib/finished-sync";
 import { listenPlay, listenSave, listenTick } from "@/lib/history";
 import { ensureRefs } from "@/lib/catalog-client";
 import { haptic } from "@/lib/haptics";
+import { localAudioUrl } from "@/lib/downloads";
 
 const FINISH = 60; // the last minute of an episode counts as finished
 
@@ -117,7 +118,8 @@ export function PlayerProvider({ children }) {
     else saveLast(s.ep);
     if (src.current !== s.ep.audio) {
       src.current = s.ep.audio;
-      el.src = s.ep.audio;
+      // A downloaded episode plays from the copy saved on this device (lib/downloads.js).
+      el.src = localAudioUrl(s.ep) || s.ep.audio;
       el.defaultPlaybackRate = rateRef.current;
       const seekWhenReady = () => {
         if (at > 0) el.currentTime = at;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FinishedNotLogged from "./FinishedNotLogged";
 import KeepListening from "./KeepListening";
+import { DownloadCount, DownloadsList } from "./Downloads";
 import HistoryNote from "./HistoryNote";
 import Art from "./Art";
 import Wrapped from "./Wrapped";
@@ -216,6 +217,7 @@ const TABS = [
   ["diary", "Episodes"], // was "Diary"; the address stays #diary so old links work
   ["shows", "Shows"],
   ["upnext", "Up next"],
+  ["downloads", "Downloads"], // its own tab so it's easy to find (YY, 2026-11-25)
   ["stats", "Wrapped"],
 ];
 
@@ -343,6 +345,7 @@ export default function MyLog() {
           <button key={k} className={`me-sections__tab ${tab === k ? "is-on" : ""}`} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}>
             {label}
             {k === "upnext" && queue > 0 && <span className="me-sections__n">{queue}</span>}
+            {k === "downloads" && <DownloadCount />}
           </button>
         ))}
       </div>
@@ -353,6 +356,8 @@ export default function MyLog() {
 
       {tab === "upnext" ? (
         <UpNextView state={state} />
+      ) : tab === "downloads" ? (
+        <DownloadsList />
       ) : tab === "stats" ? (
         <Wrapped logs={logs} hooked={state.shows} userId={state.user?.id || null} />
       ) : logs.length === 0 && !(tab === "shows" && shows.length) ? (

@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import Analytics from "@/components/Analytics";
 import { BackTracker } from "@/components/BackButton";
 import BottomNav from "@/components/BottomNav";
+import { DownloadsSetup } from "@/components/Downloads";
 import HandleGate from "@/components/HandleGate";
 import { NotificationToast } from "@/components/Notifications";
 import PickedHandle from "@/components/PickedHandle";
@@ -53,6 +54,7 @@ export default function RootLayout({ children }) {
             <BackTracker />
           </Suspense>
         </PlayerProvider>
+        <DownloadsSetup />
         <Analytics />
       </body>
     </html>

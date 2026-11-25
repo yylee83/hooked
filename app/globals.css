@@ -974,9 +974,9 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .me-sections__tab.is-on { color: var(--ink); background: var(--cream); padding-bottom: 12px; margin-bottom: 0; }
 .me-sections__n { background: var(--bubblegum); color: var(--ink); border-radius: 999px; font-size: 11px; min-width: 18px; height: 18px; display: inline-grid; place-items: center; padding: 0 5px; }
 @media (max-width: 400px) {
-  .me-sections { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; gap: 3px; }
-  /* All four share the width of a phone (YY, 2026-11-21: Wrapped ran off the edge on iPhone). */
-  .me-sections__tab { padding: 7px 6px 8px; font-size: 14px; }
+  .me-sections { margin-left: -16px; margin-right: -16px; padding-left: 12px; padding-right: 12px; gap: 3px; }
+  /* All five share the width of a phone (YY, 2026-11-21: Wrapped ran off the edge on iPhone). */
+  .me-sections__tab { padding: 7px 4px 8px; font-size: 13px; gap: 3px; }
   .me-sections__tab.is-on { padding-bottom: 11px; }
   .me-sections__n { min-width: 16px; height: 16px; font-size: 10px; padding: 0 4px; }
 }
@@ -1062,3 +1062,11 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .legal-links { margin: 14px 0 0; }
 .legal-links a, .signup-terms a { color: inherit; text-decoration: underline; }
 .signup-terms { margin: 10px 0 0; }
+
+/* Downloads (components/Downloads.js) */
+.dl-wrap { display: contents; }
+.dl-btn--saving { background: linear-gradient(90deg, var(--butter) var(--dl-pct, 0%), var(--white) var(--dl-pct, 0%)); }
+.dl-why { flex-basis: 100%; margin-top: -2px; }
+.dl-list { margin-top: 14px; }
+.dl-list__note { margin: 0 0 4px; }
+.dl-list__rows { list-style: none; padding: 0; margin: 0; }
