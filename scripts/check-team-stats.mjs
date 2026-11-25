@@ -76,6 +76,9 @@ check(st.top_episodes[0]?.id === "epA00001" && st.top_episodes[0].listeners === 
 check(st.top_shows[0]?.title === "Long Talk" && st.top_shows[0].minutes === 40, `top show by minutes is Long Talk (got ${st.top_shows[0]?.title})`);
 check(st.top_searches[0]?.query === "serial" && st.top_searches[0].times === 2, "searches grouped ignoring case and spaces");
 check(!JSON.stringify(st).includes("@example.com"), "no email addresses in the stats");
+const tp = st.top_people || [];
+check(tp[0]?.handle === "cat" && tp[0].logs === 1 && tp[0].replies === 1 && tp[0].minutes === 20, `most active: @cat first (got @${tp[0]?.handle})`);
+check(tp.length === 2 && !tp.some((x) => x.handle === "erin"), "only people who did something this week");
 const bad = (await as(1, "select public.team_stats(9999, 'Not/AZone') as s")).rows[0].s;
 check(bad.tz === "UTC" && bad.days === 365, "unknown time zone falls back to UTC; days capped at 365");
 

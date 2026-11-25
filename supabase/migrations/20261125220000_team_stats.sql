@@ -4,8 +4,8 @@
 -- someone in Supabase → Table Editor → team_members (their user id from profiles). Filled here, once, from today's
 -- handles, so a later handle change can't hand the page to someone else.
 --
--- team_stats() returns totals only: counts per day, the top episodes, shows and searches, and how people heard about
--- Hooked. Never emails, never who did what. Anyone else who calls it gets an error.
+-- team_stats() returns counts per day, the top episodes, shows and searches, how people heard about Hooked, and the
+-- most active people by handle with their own counts. Never emails. Anyone else who calls it gets an error.
 --
 -- p_days: how many days back (1 to 365). p_tz: the viewer's time zone, so days split at their midnight; an unknown
 -- time zone falls back to UTC.
@@ -173,6 +173,28 @@ begin
     order by times desc, people desc, 1
     limit 10
   ),
+  -- The most active people (YY, 2026-11-25): handles only, never emails. Ranked by days they were here, then by
+  -- logs, replies and minutes listening.
+  per_person as (
+    select a.user_id, count(distinct (a.at at time zone tz)::date)::int as days_active
+    from activity a group by a.user_id
+  ),
+  top_people as (
+    select p.handle, p.display_name, pp.days_active,
+      (select count(*) from period_logs l where l.user_id = pp.user_id)::int as logs,
+      (select count(*) from period_logs l where l.user_id = pp.user_id and nullif(trim(l.hook), '') is not null)::int as reviews,
+      (select count(*) from public.comments c where c.author_id = pp.user_id and c.created_at >= since)::int as replies,
+      (select coalesce(sum(pl.heard_seconds), 0) / 60 from plays pl where pl.user_id = pp.user_id)::int as minutes,
+      (select count(*) from public.app_minutes m where m.user_id = pp.user_id and m.minute >= since)::int as app_minutes
+    from per_person pp
+    join public.profiles p on p.id = pp.user_id
+    where p.handle is not null
+  ),
+  ranked_people as (
+    select * from top_people
+    order by days_active desc, (logs + replies) desc, minutes desc, handle
+    limit 15
+  ),
   heard as (
     select a.heard_from as source, count(*)::int as people
     from public.signup_answers a
@@ -221,6 +243,7 @@ begin
     'top_episodes', coalesce((select jsonb_agg(to_jsonb(t)) from top_episodes t), '[]'::jsonb),
     'top_shows', coalesce((select jsonb_agg(to_jsonb(t)) from top_shows t), '[]'::jsonb),
     'top_searches', coalesce((select jsonb_agg(to_jsonb(t)) from top_searches t), '[]'::jsonb),
+    'top_people', coalesce((select jsonb_agg(to_jsonb(t)) from ranked_people t), '[]'::jsonb),
     'heard_from', coalesce((select jsonb_agg(to_jsonb(h)) from heard h), '[]'::jsonb)
   ) into result;
 

@@ -170,6 +170,20 @@ export default function TeamStats() {
           <DayChart daily={s.daily || []} series={series} />
 
           <TopList
+            title="Most active people"
+            rows={s.top_people}
+            render={(u) => (
+              <>
+                <Link href={`/u/${u.handle}`} className="stats-list__title">@{u.handle}</Link>
+                {u.display_name ? <span className="muted"> · {u.display_name}</span> : null}
+                <div className="stats-list__nums">
+                  here {n(u.days_active)} {u.days_active === 1 ? "day" : "days"} · {hours(u.minutes || 0)} listening
+                  {u.app_minutes ? ` · ${hours(u.app_minutes)} in the app` : ""} · {n(u.logs)} logs · {n(u.reviews)} reviews · {n(u.replies)} replies
+                </div>
+              </>
+            )}
+          />
+          <TopList
             title="Top episodes"
             rows={s.top_episodes}
             render={(e) => (
