@@ -248,7 +248,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   `node scripts/check-reports-blocks.mjs`.
 - **Back buttons** (Erin, 2026-11-24): every "← Back" (show, episode, list, list editor, hooked shows) and the log
   sheet's Cancel go back to the screen you were on (`components/BackButton.js`: `BackButton`, `useGoBack`). With no
-  earlier Hooked screen in the tab (a shared link, a new tab), they go to a fixed page instead (a show's goes to Search, an
+  earlier Hooked screen in the tab (a shared link, a new tab), they go to a fixed page instead, in place of the current screen (not added after it, or an episode and its show send you back and forth) (a show's goes to Search, an
   episode's to its show). The trail of screens is kept by `BackTracker` in the root layout (`hooked:trail` in
   sessionStorage), because Next.js rewrites the browser's own history entries. New back links should use `BackButton`.
 - **Search and Briefs search boxes** use `next/form`, so searching changes the page without reloading the site and the player keeps playing. Any new form that changes pages should do the same.
