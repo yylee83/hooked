@@ -24,7 +24,7 @@ export default async function NewsExplained() {
         <h2 className="label">In the news, explained</h2>
         <span className="news-x__week mono">{weekLabel(since, builtAt)}</span>
       </div>
-      <p className="muted small news-x__dek">This week&apos;s big stories, picked by news podcasts. Tap one to catch up, then go deeper.</p>
+      <p className="muted small news-x__dek">This week&apos;s big stories, according to news podcasts. Tap one to catch up, then go deeper.</p>
       <NewsTopics topics={topics} />
     </section>
   );
