@@ -1,7 +1,7 @@
 "use client";
 // "Follow topic" (YY, 2026-11-25): a small pill to follow a person or subject ("Marc Maron"), on search results and on
 // the news cards on Search, and the list of topics you follow (on Notifications), each with × to stop.
-// A daily job bundles new episodes about each topic you follow into one alert (app/api/cron/topic-follows).
+// When there's something new, a daily job bundles the new episodes about each topic you follow into one alert (app/api/cron/topic-follows).
 import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { useSignInFirst } from "@/lib/sign-in-first";
@@ -19,7 +19,7 @@ export function FollowTopicButton({ topic, label, showNote = true }) {
       <button type="button" className={`btn btn--sm ${on ? "btn--butter" : ""}`} aria-pressed={on} onClick={guard(() => (haptic(), follows.toggle(topic)))}>
         {on ? "✓ Following" : label || `Follow “${topic}”`}
       </button>
-      {on && showNote && <span className="follow-topic__note muted small">Once a day, weWe&apos;ll tell you when a new episode is about {topic}.apos;ll tell you about new episodes about {topic}.</span>}
+      {on && showNote && <span className="follow-topic__note muted small">We&apos;ll let you know when there&apos;s a new episode about {topic}.</span>}
     </span>
   );
 }
