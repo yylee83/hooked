@@ -47,6 +47,7 @@ off Home).
 | Google Trends RSS (Wikipedia fallback) | Trending topics bar on Search: the past 48 hours, saved in `trending_topics` | `lib/trends.js` |
 | Supabase | Auth (email + password, magic link), Postgres with row-level security | `lib/supabase/*`, `lib/store.js`, `lib/social.js` |
 | Resend | Notification emails (follows, replies, sends, thumbs up and +), report emails to the team; weekly digest (dormant until `DIGEST_FROM` is added) | `lib/notify-email.js`, `lib/digest.js`, `app/api/cron/*` |
+| Google Analytics (GA4, `G-76H27FH7CE`) | Visit stats, live site only (`VERCEL_ENV=production`); ad features off; mentioned on `/privacy` | `components/Analytics.js` |
 
 ### Environment variables
 
