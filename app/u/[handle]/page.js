@@ -5,6 +5,7 @@ import Stars from "@/components/Stars";
 import { Avatar, FollowButton } from "@/components/Friends";
 import { ShareButton } from "@/components/Share";
 import LogThread, { ReviewAdd } from "@/components/LogThread";
+import MoreMenu, { BlockedNote } from "@/components/MoreMenu";
 import { getProfilePage } from "@/lib/supabase/public";
 import { minutes, plural, starStats } from "@/lib/format";
 import { site } from "@/lib/site";
@@ -64,7 +65,9 @@ export default async function ProfilePage({ params }) {
       </header>
       <div className="row gap center" style={{ marginTop: 16 }}>
         <FollowButton person={profile} />
+        <MoreMenu person={{ id: profile.id, handle: profile.handle }} what={{ kind: "profile", userId: profile.id }} className="more-menu--end" />
       </div>
+      <BlockedNote person={profile} />
 
       {shows.length > 0 && (
         <section>
@@ -123,7 +126,7 @@ export default async function ProfilePage({ params }) {
                       )}
                     </p>
                     {l.hook && <p className="log__hook">“{l.hook}”</p>}
-                    <LogThread logUserId={profile.id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
+                    <LogThread logUserId={profile.id} episodeRef={l.episode_ref} episodeId={l.episode_id} handle={profile.handle} />
                   </div>
                   <div className="log__side">
                     {!(l.rating > 0) && <span className="sticker sticker--outline">Logged</span>}

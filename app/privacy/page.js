@@ -44,6 +44,10 @@ export default function PrivacyPage() {
           what you search for and tap. This is how Wrapped and your listening hours work.
         </li>
         <li>When you tap a &ldquo;Share&rdquo; button (which kind of share, not who you sent it to).</li>
+        <li>
+          Reports you send (what you reported, the reason and any note; we keep a copy of the reported words) and the
+          people you block.
+        </li>
       </ul>
 
       <p className="legal__lead">What we don&rsquo;t collect</p>
@@ -74,6 +78,7 @@ export default function PrivacyPage() {
         <li>Your Up next queue, listening progress and unfinished-episode reminders.</li>
         <li>Sends: only you and the person you sent to.</li>
         <li>Your notifications, and draft lists.</li>
+        <li>Who you&rsquo;ve blocked. The person you block isn&rsquo;t told.</li>
       </ul>
 
       <p className="legal__lead">Only you and the Hooked team</p>
@@ -83,6 +88,7 @@ export default function PrivacyPage() {
           make Hooked better, for example which episodes people finish and which searches find nothing.
         </li>
         <li>Your email address, sign-up answers and share taps.</li>
+        <li>Reports. The person you report isn&rsquo;t told who reported them.</li>
       </ul>
       <p>
         &ldquo;Listening on Hooked now&rdquo; shows which episodes are being played across Hooked, with counts only, never
@@ -95,7 +101,7 @@ export default function PrivacyPage() {
         <li>To show trending episodes and conversations (we use totals, not who did what).</li>
         <li>To send you sign-in emails and notification emails (see below).</li>
         <li>To understand what&rsquo;s working and improve Hooked.</li>
-        <li>To keep Hooked safe, for example blocking certain words in reviews and names.</li>
+        <li>To keep Hooked safe, for example blocking certain words in reviews and names, reviewing reports and removing posts that break the rules.</li>
       </ul>
       <p>
         We don&rsquo;t sell your data, share it with advertisers or use it for ads. If that ever changes, we&rsquo;ll update

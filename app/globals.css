@@ -1024,6 +1024,30 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .note-toast__more { color: rgba(255, 255, 255, 0.7); }
 .note-toast__x { flex: none; width: 40px; align-self: stretch; background: none; border: 0; color: rgba(255, 255, 255, 0.7); font-size: 20px; cursor: pointer; }
 
+/* "…" menu: report or block (components/MoreMenu.js) */
+.more-menu { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+.more-menu:hover, .more-menu:focus-visible { color: var(--ink); background: rgba(21, 19, 29, 0.06); }
+.more-menu--end { margin-left: auto; }
+.more-menu--sm { width: 24px; height: 22px; }
+.more-sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.more-sheet__title { margin: 4px 0 0; font-weight: 800; font-size: 19px; line-height: 1.25; overflow-wrap: anywhere; }
+.more-sheet__list { display: flex; flex-direction: column; border: var(--line); border-radius: 18px; background: var(--white); overflow: hidden; }
+.more-sheet__list li + li { border-top: 2px solid rgba(21, 19, 29, 0.12); }
+.more-sheet__row { display: block; width: 100%; text-align: left; padding: 15px 18px; border: 0; background: none; font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); cursor: pointer; }
+.more-sheet__row:hover { background: var(--cream); }
+.more-sheet__row--warn { color: #C2185B; }
+.more-sheet__reasons { display: flex; flex-direction: column; gap: 8px; }
+.more-sheet__reason { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border: 2.5px solid var(--ink); border-radius: 14px; background: var(--white); font-size: 15px; font-weight: 600; cursor: pointer; }
+.more-sheet__reason input { accent-color: var(--cobalt); width: 18px; height: 18px; margin: 0; }
+.more-sheet__reason.is-on { background: var(--butter); }
+.more-sheet__note { font-size: 15px; padding: 10px 14px; border-width: 2.5px; border-radius: 14px; resize: vertical; }
+.more-sheet__fine { margin: -4px 0 0; }
+.more-sheet__text { margin: 0; line-height: 1.45; }
+.more-sheet .plus-sheet__panel { max-height: 90vh; overflow-y: auto; }
+.blocked-note { margin: 14px 0 0; padding: 12px 14px; border: 2.5px dashed var(--ink); border-radius: 14px; font-size: 14px; }
+.brief__more { color: inherit; opacity: 0.85; }
+.brief__more:hover, .brief__more:focus-visible { color: inherit; opacity: 1; background: rgba(255, 255, 255, 0.18); }
+
 /* ---------- Privacy policy and Terms (app/privacy, app/terms) ---------- */
 .legal { max-width: 640px; padding: 24px 0 60px; font-size: 16px; line-height: 1.55; }
 .legal h1 { margin: 0; }

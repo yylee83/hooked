@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Art from "./Art";
 import Stars from "./Stars";
 import { logVerb, plural, starStats } from "@/lib/format";
-import { initialsOf, useStore } from "@/lib/store";
+import { initialsOf, isBlocked, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { reviewScore } from "@/lib/social";
@@ -78,7 +78,7 @@ export function FreshLogs() {
                 )}
               </p>
               {l.hook && <p className="log__hook">“{l.hook}”</p>}
-              <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
+              <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} handle={l.who.handle} />
             </div>
             <div className="fresh__side">
               <ReviewAdd logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
@@ -131,6 +131,8 @@ export function EpisodeLogs({ episodeId, episodeRef, initial = null }) {
     };
   }, [episodeId, episodeRef, me]);
   if (!logs) return null;
+  // Reviews by people you blocked are hidden.
+  if (state?.blocked?.length) logs = logs.filter((l) => !isBlocked(state, l.user_id));
   // A brand-new episode has no reviews yet: say so, so the page doesn't just stop under the buttons.
   if (!logs.length)
     return (
@@ -169,7 +171,7 @@ export function EpisodeLogs({ episodeId, episodeRef, initial = null }) {
                   Edit your review
                 </Link>
               )}
-              <LogThread logUserId={l.user_id} episodeRef={episodeRef} episodeId={episodeId} />
+              <LogThread logUserId={l.user_id} episodeRef={episodeRef} episodeId={episodeId} handle={l.who.handle} />
             </div>
           </li>
         ))}

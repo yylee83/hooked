@@ -7,7 +7,7 @@ import Stars from "./Stars";
 import ListeningOnHooked from "./ListeningOnHooked";
 import InviteCard from "./InviteCard";
 import { logVerb, plural } from "@/lib/format";
-import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, unfollow, useStore } from "@/lib/store";
+import { addToList, dismissRecommendation, findLog, follow, inUpNext, initialsOf, isBlocked, unfollow, useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase/client";
 import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
@@ -29,7 +29,7 @@ export function FollowButton({ person, small = false, label = "Follow" }) {
   const state = useStore();
   const [error, setError] = useState("");
   if (!state?.accounts) return null;
-  if (state.user?.id === person.id) return null;
+  if (state.user?.id === person.id || isBlocked(state, person.id)) return null;
   if (!state.user) {
     return (
       <Link href={`/login?next=/u/${person.handle}`} className={`btn btn--cobalt ${small ? "btn--sm" : "btn--shadow-sm"}`}>
@@ -299,7 +299,7 @@ export function FriendsFeed() {
                     )}
                   </p>
                   {l.hook && <p className="log__hook">“{l.hook}”</p>}
-                  <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
+                  <LogThread logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} handle={l.who?.handle} />
                 </div>
                 <div className="fresh__side">
                   <ReviewAdd logUserId={l.user_id} episodeRef={l.episode_ref} episodeId={l.episode_id} />
