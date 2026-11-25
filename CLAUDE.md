@@ -59,6 +59,9 @@ off Home).
 - `SUPABASE_SERVICE_ROLE_KEY`: server-only, holds the **secret** key (`sb_secret_…`). Never print it, even in a test
   command's output: show a key's prefix at most (the shell is zsh, which doesn't word-split `$var`). Saves trending topics for the 48-hour view (`lib/trends.js`); without it,
   Trending shows only what Google lists right now. Also used by the weekly digest.
+- `ANTHROPIC_API_KEY`: server-only, optional. Claude (`claude-opus-5-5`, low effort) checks the "Go deeper" picks on
+  Search's "In the news, explained", writes their one-line reasons, names each story and adds a one-line summary
+  (`lib/news-claude.js`; answers kept a day per story). Without it, the ranking alone picks and there's no summary.
 - `CRON_SECRET`: protects the scheduled jobs (daily catalog refresh, weekly digest). Vercel sends it automatically.
 - `RESEND_API_KEY`: notification emails (and the weekly digest, which also needs `DIGEST_FROM`, not set). `EMAIL_FROM`
   (optional sender, default `Hooked on Pods <hello@hookedonpods.com>`). Only the live site emails real people; previews
@@ -133,7 +136,17 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   once while the fresh one loads; the top of each hooked show's own feed is read too (`feedNewest` in `lib/catalog.js`, kept 10 minutes), so an episode shows up before Podcast Index lists it: it's saved as one of ours, Podcast Index is asked to re-read the feed (`pubNotify`), and its number later joins the same entry by the feed's episode id), "Listening on Hooked now" for signed-out visitors and in place of an empty "Friends
   listening now" (`components/ListeningOnHooked.js`, `/api/listening-now`: episodes and counts only, never names),
   Sent to you as slim rows that drop off once queued or logged (one row per episode: everyone who sent it and each different note; × dismisses them all), "Friends listening now" (played in the last day), friends' activity ("From people you follow"); no Just logged (removed 2026-11-21) and no Apple chart),
-  `/search` ("In the news, explained": chips of the week's big stories (tap one to open its card, `components/NewsTopics.js`), found by grouping the past week of daily news shows' episodes by the names two or more shows share (`lib/news-topics.js`, test `node scripts/check-news-topics.mjs`), each with a fresh "Catch up" episode and one or two "Go deeper" episodes 6+ weeks old with the topic in the title; topics without one are hidden; made every 3 hours, `lib/news-explained.js`, `components/NewsExplained.js`; replaced the Google Trends bar, YY 2026-11-25; `/trending` forwards to Search), Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
+  `/search` ("In the news, explained": chips of the week's big stories with the dates ("Nov 19–25"); tap one to open its card
+  (`components/NewsTopics.js`): a one-line summary, a fresh "Catch up" episode, one or two "Go deeper" episodes with a
+  reason each, Play all (the catch-up now, the deeper ones to the top of Up next) and Follow story. Stories come from
+  grouping the past week of daily news shows' episodes by the names two or more shows share (`lib/news-topics.js`, test
+  `node scripts/check-news-topics.mjs`). "Go deeper" = team pins (Supabase `news_picks`: pin or block an episode, block a
+  show, per story or `*`), episodes the news show links in its notes, then an episode search kept to the trusted shelf
+  (`lib/news-shelf.js`), the news shows, or big shows on Apple's top 100 / well rated on Hooked; ranked with Hooked
+  finishes and ratings (`news_quality`), then checked by Claude (`lib/news-claude.js`). Stories without one are hidden.
+  Made every 3 hours, `lib/news-explained.js`, `components/NewsExplained.js`. Followed stories (`story_follows`) get a
+  'story' notification from a daily job (`/api/cron/news-follows`). Replaced the Google Trends bar, YY 2026-11-25;
+  `/trending` forwards to Search), Popular on Hooked, For you, Top on Apple Podcasts; also paste-a-link; "Filter:" pills
   All · Episodes · Shows · Friends under the box, and People and Briefs sections in All),
   `/lists` (a briefs-only search, "Featured briefs" swipe row of built-in briefs in pink, listener briefs in a blue grid), `/lists/new` (new briefs use whole episodes for now; the "Just the parts" choice comes back later) and `/lists/b/[id]` (+ `/edit`; signed in, the builder saves a draft as you go, and a draft's edit page loads it in
   the browser, `components/DraftEditor.js`), `/me` My log (the big blue Up next card above the tabs, where "Listening now" used to be: first episode with a play button, the next few covers, "See all" opens the Up next tab, `components/UpNextCard.js`; tabs: Episodes,

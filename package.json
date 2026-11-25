@@ -11,6 +11,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
     "@fontsource/bagel-fat-one": "^5.2.6",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",

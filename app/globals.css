@@ -345,6 +345,13 @@ body:has(.mini) .briefbar { bottom: calc(260px + env(safe-area-inset-bottom)); }
 /* ---------- Search: In the news, explained (components/NewsExplained.js) ---------- */
 .news-x { margin: 8px 0 4px; }
 .news-x__dek { margin-top: -6px; margin-bottom: 10px; }
+.news-x__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.news-x__week { flex: none; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--butter); border: 2px solid var(--ink); border-radius: 999px; padding: 3px 9px; }
+.news-x__summary { font-size: 14.5px; line-height: 1.35; margin: 0 0 2px; }
+.news-x__why { font-size: 13px; line-height: 1.3; margin-top: 3px; color: var(--ink); }
+.news-x__acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.news-x__acts .btn { gap: 6px; }
+.news-x__note { margin: 0; }
 .news-x__chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px 8px; }
 .news-x__chips::-webkit-scrollbar { display: none; }
 .news-x__chip { flex: none; background: var(--white); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 700; font-size: 15px; white-space: nowrap; cursor: pointer; }

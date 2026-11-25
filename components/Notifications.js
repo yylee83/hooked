@@ -100,6 +100,8 @@ function describe(n, myHandle) {
       return { text: <><b>{who}</b> also replied on @{n.owner?.handle}'s log of {ep}</>, quote: n.body, href: thread(n.owner?.handle) };
     case "reaction":
       return { text: <><b>{who}</b> reacted “{REACTION_WORDS[n.body] || n.body}” to your log of {ep}</>, href: thread(myHandle) };
+    case "story":
+      return { text: <>New on <b>{n.body}</b>, a story you follow: {ep}</>, href: page };
     default:
       return { text: <><b>{who}</b></>, href: "/" };
   }
