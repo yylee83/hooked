@@ -587,6 +587,14 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .comment__body { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
 .thread__form { display: flex; gap: 8px; align-items: center; }
 .thread__form .input { padding: 9px 14px; font-size: 16px; border-width: 2.5px; border-radius: 14px; }
+/* @mentions (components/Mentions.js): the reply box with its suggestions, which open above it (the phone keyboard sits below). */
+.mention-box { position: relative; flex: 1; min-width: 0; display: block; }
+.mention-box .input { width: 100%; }
+.mention-list { position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 30; list-style: none; margin: 0; padding: 4px; background: var(--white); border: 2.5px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink); }
+.mention-list__row { display: block; width: 100%; text-align: left; padding: 9px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink); font: inherit; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.mention-list__row.is-on, .mention-list__row:hover { background: var(--cream); }
+.mention { color: var(--cobalt); font-weight: 600; text-decoration: none; }
+.mention:hover { text-decoration: underline; }
 .shared-by .thread { margin-top: 14px; padding-top: 12px; border-top: 2px dashed rgba(21,19,29,.2); }
 
 /* ---------- v10: notifications ---------- */
