@@ -1,4 +1,5 @@
 import Wordmark from "@/components/Wordmark";
+import { safePath } from "@/lib/safe-path";
 
 // Where the button in a sign-in, confirm or reset email lands (see the email templates in supabase/templates/). One tap
 // signs in. It's a button rather than signing in on arrival because mail scanners open every link in an email, and
@@ -6,12 +7,12 @@ import Wordmark from "@/components/Wordmark";
 export const metadata = { title: "Sign in", robots: { index: false } };
 
 function nextFrom(sp) {
-  const ok = (p) => typeof p === "string" && p.startsWith("/") && !p.startsWith("//");
-  if (ok(sp.next)) return sp.next;
+  const ok = (p) => safePath(p, null) !== null;
+  if (ok(sp.next)) return safePath(sp.next);
   // The templates pass along where the person was headed as redirect_to (…/auth/callback?next=/welcome/shows).
   try {
     const n = new URL(String(sp.redirect_to || "")).searchParams.get("next");
-    if (ok(n)) return n;
+    if (ok(n)) return safePath(n);
   } catch {}
   return "/me";
 }

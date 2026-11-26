@@ -7,12 +7,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { safePath } from "@/lib/safe-path";
 
 const TYPES = ["email", "signup", "magiclink", "recovery", "invite", "email_change"];
 
-function safePath(next, fallback = "/me") {
-  return typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : fallback;
-}
 
 async function db() {
   const store = await cookies();

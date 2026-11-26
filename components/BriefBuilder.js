@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase/client";
 import { refreshCatalog } from "@/lib/catalog-client";
 import { briefSeconds, clipSeconds, clock } from "@/lib/clips";
 import { minutes, shortDate } from "@/lib/format";
-import { MAX_ITEMS, UNTITLED, savedItem } from "@/lib/briefs-client";
+import { MAX_ITEMS, UNTITLED, savedItem, withOurIds } from "@/lib/briefs-client";
 import { cleanWordsMessage } from "@/lib/clean-words";
 
 const DRAFT = "hooked:brief-draft";
@@ -275,7 +275,8 @@ export default function BriefBuilder({ initialTopic = "", editing = null }) {
     setError("");
     clearTimeout(autosaving.current?.timer);
     await autosaving.current?.running;
-    const row = briefRow();
+    const base = briefRow();
+    const row = { ...base, items: await withOurIds(base.items) };
     // Publishing a draft turns it public. (Only drafts send `draft`, so publishing works before that column exists.)
     const draft = autosaving.current?.id || draftId;
     const id = draft || editing?.id;

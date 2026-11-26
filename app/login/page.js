@@ -1,3 +1,4 @@
+import { safePath } from "@/lib/safe-path";
 import Wordmark from "@/components/Wordmark";
 import LoginForm from "@/components/LoginForm";
 
@@ -5,7 +6,7 @@ export const metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }) {
   const sp = await searchParams;
-  const next = typeof sp.next === "string" && sp.next.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "/me";
+  const next = safePath(sp.next);
   const startMode = sp.mode === "signup" ? "signup" : sp.mode === "waitlist" ? "waitlist" : "signin";
   const startEmail = typeof sp.email === "string" && sp.email.length <= 254 ? sp.email : "";
   return (
