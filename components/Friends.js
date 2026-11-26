@@ -13,6 +13,7 @@ import LogThread, { ReviewAdd } from "./LogThread";
 import { episodeHref } from "@/lib/addresses";
 import { LOG_EPISODE, episodeOf, withEpisode } from "@/lib/log-episode";
 import DiscoverPeople from "./DiscoverPeople";
+import { timeAgo } from "@/lib/social";
 import { useRefreshTick } from "@/lib/home-refresh";
 
 const HOUR = 3600 * 1000;
@@ -285,6 +286,12 @@ export function FriendsFeed() {
                       <b>@{l.who.handle}</b>
                     </Link>{" "}
                     {logVerb(l)}
+                    {l.logged_at && (
+                      <time className="muted" dateTime={l.logged_at} title={new Date(l.logged_at).toLocaleString()}>
+                        {" "}
+                        · {timeAgo(l.logged_at)}
+                      </time>
+                    )}
                   </p>
                   <Link href={episodeHref(l.episode_ref, l.episode_id)} className="title-sm" style={{ display: "block" }}>
                     {l.title}
