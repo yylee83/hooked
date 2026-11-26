@@ -25,7 +25,7 @@ const week = [
   ep(5, "The shutdown deal", "Trump and Congress. Hosted by Mary Louise Kelly."),
   ep(6, "Trump's tariffs at the Supreme Court", "Trump. Supreme Court."),
 ];
-const topics = groupTopics(week, { trends: ["louvre"] });
+const topics = groupTopics(week, { trends: ["louvre"], now });
 const names = topics.map((t) => t.topic);
 console.log(topics.map((t) => `${t.topic} (${t.shows} shows: ${t.episodes.map((e) => e.title).join(" / ")})`).join("\n"));
 
@@ -38,5 +38,15 @@ assert.equal(names[0], "Strait of Hormuz", "most covered first");
 const all = topics.flatMap((t) => t.episodes.map((e) => e.id));
 assert.equal(all.length, new Set(all).size, "each episode in one topic");
 assert.ok(topics.every((t) => t.shows >= 2), "two shows or more");
+
+// Fresh news wins (2026-11-26): six shows on a story five days ago lose to three shows on one this morning.
+const at = (feedId, title, hoursAgo) => ({ id: ++n, feedId, title, description: "", date: now - hoursAgo * 3600 });
+const days = [
+  ...[1, 2, 3, 4, 5, 6].map((f) => at(f, `What Jensen Huang said`, 120 + f)),
+  ...[1, 2, 3].map((f) => at(f, `The Louvre heist`, 2 + f)),
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((f) => at(f, `Episode ${f} of something else`, 30 + f)),
+];
+const order = groupTopics(days, { now }).map((t) => t.topic);
+assert.deepEqual(order.slice(0, 2), ["Louvre", "Jensen Huang"], "this morning's story before last week's");
 
 console.log("news topics: all checks passed");

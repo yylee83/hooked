@@ -2,7 +2,7 @@
 // Home's top row, "Trending episodes" (Erin, 2026-11-21): the episodes with the most going on lately (logs, replies,
 // sends, thumbs and "+", Up next adds), from the trending_episodes database function. A swipe row of small cards like
 // New episodes, each with play and + Up next. Only totals come back, never who did what. Hidden until there are 2.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { PlayButton } from "./Player";
@@ -11,8 +11,11 @@ import { supabase } from "@/lib/supabase/client";
 import { episodeHref } from "@/lib/addresses";
 import { plural } from "@/lib/format";
 import { useRefreshTick } from "@/lib/home-refresh";
+import { findLog, useStore } from "@/lib/store";
+import { freshOrder, recentLeads, rememberLead, withLuck } from "@/lib/fresh-order";
 
 const MAX = 10;
+const ASK = 20; // a few more than shown, so ones you've logged can make room (YY, 2026-11-26)
 
 // "4 people · 2 replies": who's into it, then the liveliest kind of activity.
 function activity(r) {
@@ -25,20 +28,46 @@ function activity(r) {
 }
 
 export default function TrendingEpisodes() {
-  const [rows, setRows] = useState(null);
+  const state = useStore();
+  const [got, setGot] = useState(null); // { rows, recent, visit }
   const tick = useRefreshTick();
 
   useEffect(() => {
     const db = supabase();
-    if (!db) return setRows([]);
+    if (!db) return setGot({ rows: [] });
     let live = true;
-    db.rpc("trending_episodes", { max_rows: MAX })
-      .then(({ data, error }) => live && setRows(error ? [] : (data || []).filter((r) => r.audio_url)))
-      .catch(() => live && setRows([]));
+    db.rpc("trending_episodes", { max_rows: ASK })
+      .then(({ data, error }) => {
+        if (!live) return;
+        // Each load (a visit or a pull to refresh) is a new turn: new draws, and what led before is read again.
+        const rows = error ? [] : withLuck((data || []).filter((r) => r.audio_url));
+        setGot({ rows, recent: recentLeads("trending-eps"), visit: Date.now() });
+      })
+      .catch(() => live && setGot({ rows: [] }));
     return () => {
       live = false;
     };
   }, [tick]);
+
+  // Not the same episode first every visit (YY, 2026-11-26): a light shuffle of the top few, what led lately pushed
+  // down, and episodes you've logged at the end (lib/fresh-order.js).
+  const logs = state?.logs;
+  const rows = useMemo(
+    () =>
+      got &&
+      freshOrder(got.rows, {
+        key: (r) => r.episode_ref,
+        weight: (r) => (r.score || 0.1) * (r.people >= 2 ? 1.5 : 1),
+        done: (r) => !!findLog({ logs }, { ref: r.episode_ref }),
+        recent: got.recent,
+      }).slice(0, MAX),
+    [got, logs]
+  );
+  const lead = rows?.[0]?.episode_ref;
+  const visit = got?.visit;
+  useEffect(() => {
+    if (lead && visit) rememberLead("trending-eps", lead, visit);
+  }, [lead, visit]);
 
   if (rows && rows.length < 2) return null;
   return (

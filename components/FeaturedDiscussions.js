@@ -5,14 +5,15 @@
 // First the episodes in Trending conversations (the trending_conversations database function: reviews, replies and
 // sends this week), each with its best review. While Hooked is small that list is often short, so the rest are the
 // recent reviews with the most going on (replies, thumbs, "+"), newest counting most.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Art from "./Art";
 import { Avatar } from "./Friends";
 import { supabase } from "@/lib/supabase/client";
 import { LOG_EPISODE, withEpisode } from "@/lib/log-episode";
 import { useRefreshTick } from "@/lib/home-refresh";
-import { isBlocked, useStore } from "@/lib/store";
+import { findLog, isBlocked, useStore } from "@/lib/store";
+import { freshOrder, recentLeads, rememberLead, withLuck } from "@/lib/fresh-order";
 
 const MAX = 15; // conversations loaded
 const SCROLL_FROM = 4; // more than this many: the list scrolls inside its own box (YY, 2026-11-22)
@@ -115,7 +116,7 @@ async function load(db) {
 
 export default function FeaturedDiscussions() {
   const state = useStore();
-  let [cards, setCards] = useState(null);
+  const [got, setGot] = useState(null); // { cards, recent, visit }
   const [atEnd, setAtEnd] = useState(false); // scrolled to the bottom of the box: drop the fade
   const tick = useRefreshTick();
   const box = useRef(null);
@@ -123,15 +124,36 @@ export default function FeaturedDiscussions() {
     // A refresh starts the box back at the top, like the page.
     if (tick && box.current) box.current.scrollTop = 0;
     const db = supabase();
-    if (!db) return setCards([]);
+    if (!db) return setGot({ cards: [] });
     let live = true;
     load(db)
-      .then((c) => live && setCards(c))
-      .catch(() => live && setCards([]));
+      .then((c) => live && setGot({ cards: withLuck(c), recent: recentLeads("top-talk"), visit: Date.now() }))
+      .catch(() => live && setGot({ cards: [] }));
     return () => {
       live = false;
     };
   }, [tick]);
+
+  // Not the same conversation first every visit (YY, 2026-11-26): the top few trade places (ones with replies still
+  // lead more often), what led lately is pushed down, and your own reviews and episodes you've logged go last.
+  const me = state?.user?.id;
+  const logs = state?.logs;
+  let cards = useMemo(
+    () =>
+      got &&
+      freshOrder(got.cards, {
+        key: (c) => c.ref,
+        weight: (c, i) => (c.replies > 0 ? 2 : 1) / (1 + i * 0.4),
+        done: (c) => (me && c.person.id === me) || !!findLog({ logs }, { ref: c.ref }),
+        recent: got.recent,
+      }),
+    [got, me, logs]
+  );
+  const lead = cards?.[0]?.ref;
+  const visit = got?.visit;
+  useEffect(() => {
+    if (lead && visit) rememberLead("top-talk", lead, visit);
+  }, [lead, visit]);
 
   // People you blocked: their reviews drop out, and so do their replies on the cards.
   if (cards && state?.blocked?.length)
