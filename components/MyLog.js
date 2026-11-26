@@ -239,7 +239,7 @@ function useTab() {
   ];
 }
 
-// The Wrapped card under the stats: confetti, a question, and one real fact from your listening as a teaser.
+// The Wrapped line under the stats (kept discreet, YY 2026-11-26): a few confetti dots, a question, and one real fact from your listening as a teaser.
 function WrappedTeaser({ logs, hours, listening }) {
   // Your top show: most played here, else most logged.
   let top = listening?.seconds >= 600 ? listening.shows?.[0]?.title : null;
@@ -254,7 +254,7 @@ function WrappedTeaser({ logs, hours, listening }) {
       <span className="me-wrapped__confetti" aria-hidden="true" />
       <span className="me-wrapped__body">
         <span className="me-wrapped__kicker mono">✦ Your Wrapped</span>
-        <span className="me-wrapped__title">What does your listening say about you?</span>
+        <span className="me-wrapped__title">What do your listening habits say about you?</span>
         {peek && <span className="me-wrapped__peek">{peek}</span>}
       </span>
       <span className="me-wrapped__go" aria-hidden="true">→</span>
