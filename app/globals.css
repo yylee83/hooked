@@ -1088,15 +1088,18 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .your-shows__label { margin-top: 26px; }
 .your-shows__label--first { margin-top: 18px; }
 /* Wrapped, a slim one-line pill near the top of My log with a twinkle and a passing shine (YY 2026-11-26) */
-.me-wrapped { position: relative; overflow: hidden; display: flex; align-items: center; gap: 7px; margin: 10px 0 2px; padding: 6px 11px; border: 2px solid var(--ink); border-radius: 999px; background: var(--white); color: var(--ink); font-size: 13px; font-weight: 700; }
+.me-wrapped { position: relative; overflow: hidden; display: flex; align-items: center; gap: 7px; margin: 10px 0 2px; padding: 6px 11px; border: 2px solid var(--ink); border-radius: 999px; color: var(--ink); font-size: 13px; font-weight: 700;
+  background: radial-gradient(ellipse at 18% 80%, var(--bubblegum) 0 10%, transparent 30%), radial-gradient(ellipse at 38% 15%, var(--butter) 0 10%, transparent 28%), radial-gradient(ellipse at 62% 85%, var(--bubblegum) 0 9%, transparent 28%), radial-gradient(ellipse at 82% 20%, var(--butter) 0 10%, transparent 30%), linear-gradient(100deg, var(--butter), var(--bubblegum) 20%, var(--butter) 40%, var(--bubblegum) 60%, var(--butter) 80%, var(--bubblegum));
+  background-size: 200% 100%; animation: me-wrapped-swirl 9s ease-in-out infinite alternate; }
 @media (max-width: 380px) { .me-wrapped { font-size: 12.5px; gap: 6px; padding: 6px 10px; } }
-.me-wrapped::after { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255, 225, 77, .55), rgba(255, 122, 198, .35), transparent); transform: skewX(-20deg); animation: me-wrapped-shine 5s ease-in-out 1s infinite; pointer-events: none; }
-.me-wrapped__spark { flex: none; color: var(--bubblegum); font-size: 15px; animation: me-wrapped-twinkle 2.4s ease-in-out infinite; }
+.me-wrapped::after { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .7), transparent); transform: skewX(-20deg); animation: me-wrapped-shine 5s ease-in-out 1s infinite; pointer-events: none; }
+.me-wrapped__spark { flex: none; color: var(--cobalt); font-size: 15px; animation: me-wrapped-twinkle 2.4s ease-in-out infinite; }
 .me-wrapped__title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.me-wrapped__go { flex: none; color: var(--cobalt); }
+.me-wrapped__go { flex: none; color: var(--ink); }
+@keyframes me-wrapped-swirl { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
 @keyframes me-wrapped-shine { 0% { left: -40%; } 30%, 100% { left: 120%; } }
-@keyframes me-wrapped-twinkle { 0%, 100% { transform: scale(1) rotate(0); color: var(--bubblegum); } 50% { transform: scale(1.3) rotate(20deg); color: var(--butter); } }
-@media (prefers-reduced-motion: reduce) { .me-wrapped::after, .me-wrapped__spark { animation: none; } }
+@keyframes me-wrapped-twinkle { 0%, 100% { transform: scale(1) rotate(0); color: var(--cobalt); } 50% { transform: scale(1.3) rotate(20deg); color: var(--white); } }
+@media (prefers-reduced-motion: reduce) { .me-wrapped, .me-wrapped::after, .me-wrapped__spark { animation: none; } }
 .your-shows__list { list-style: none; padding: 0; margin: 8px 0 0; }
 .your-shows__show { display: flex; align-items: center; gap: 12px; color: inherit; }
 .your-shows__title { display: block; }
