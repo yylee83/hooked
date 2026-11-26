@@ -242,6 +242,11 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   minute). On opening Hooked with something new, a small note at the top ("@ana followed you and 2 more",
   `NotificationToast` in `components/Notifications.js`) shows once per notification (`hooked:note-toast`). Opening
   /notifications marks them read and clears the counts. Follows, sends, replies and reactions all create notifications.
+- **@mentions in replies (YY, 2026-11-26, like Letterboxd)**: typing @ in a reply box suggests people (the review's author
+  and repliers first, then people you follow, then any handle), and "@ana" in a reply links to that profile
+  (`components/Mentions.js`). The database notifies up to 5 people per reply ('mention' notifications, in
+  `notify_comment`; a mentioned person isn't also sent "also replied"; blocks drop it), and they're emailed like replies.
+  Not in reviews themselves. Migration `20261126180000_reply_mentions.sql`, test `node scripts/check-mentions.mjs`.
 - **Notification emails (YY, 2026-11-24)**: `lib/notify-email.js`. Follows, replies, sends, thumbs up and + (not
   thumbs down) are emailed, at most one email an hour per person, bundled; never something already read, nothing older
   than 3 days. The app pings `/api/notify-email` right after the action (`lib/notify-ping.js`), and a daily catch-up

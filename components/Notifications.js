@@ -99,6 +99,8 @@ function describe(n, myHandle) {
       return { text: <><b>{who}</b> replied to your log of {ep}</>, quote: n.body, href: thread(myHandle) };
     case "reply":
       return { text: <><b>{who}</b> also replied on @{n.owner?.handle}'s log of {ep}</>, quote: n.body, href: thread(n.owner?.handle) };
+    case "mention":
+      return { text: <><b>{who}</b> mentioned you on @{n.owner?.handle}'s log of {ep}</>, quote: n.body, href: thread(n.owner?.handle) };
     case "reaction":
       return { text: <><b>{who}</b> reacted “{REACTION_WORDS[n.body] || n.body}” to your log of {ep}</>, href: thread(myHandle) };
     case "topic": {
@@ -144,7 +146,7 @@ export function NotificationList() {
     return (
       <div className="card friends-cta">
         <p className="display h-md" style={{ margin: 0 }}>All quiet.</p>
-        <p style={{ margin: "8px 0 16px" }}>When friends follow you, send you episodes, or reply to your logs, it shows up here.</p>
+        <p style={{ margin: "8px 0 16px" }}>When friends follow you, send you episodes, mention you, or reply to your logs, it shows up here.</p>
         <Link href="/people" className="btn btn--cobalt btn--shadow-sm">
           Find friends
         </Link>

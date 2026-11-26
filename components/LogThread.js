@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addToList, inUpNext, isBlocked, useStore } from "@/lib/store";
 import MoreMenu from "./MoreMenu";
+import { MentionInput, MentionText } from "./Mentions";
 import { REACTIONS, deleteComment, postComment, timeAgo, toggleReaction, useThread } from "@/lib/social";
 import { haptic } from "@/lib/haptics";
 
@@ -53,6 +54,8 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
   const counts = Object.fromEntries(REACTIONS.map((r) => [r.kind, reactions.filter((x) => x.kind === r.kind).length]));
   const mine = new Set(reactions.filter((x) => x.user_id === me?.id).map((x) => x.kind));
   const isOwner = me?.id === logUserId;
+  // Typing @ in the reply box offers the people in this conversation first.
+  const people = [{ id: logUserId, handle }, ...comments.map((c) => c.author && { ...c.author, id: c.author_id })].filter(Boolean);
   // Thumbs up and down vote on the review. "+" (add the episode to Up next) is ReviewAdd, next to the episode.
   const votes = REACTIONS.filter((r) => r.kind !== "adding");
   // Everyone else sees both; on your own review, only the ones people used.
@@ -166,15 +169,18 @@ export default function LogThread({ logUserId, episodeRef, episodeId, defaultOpe
                       className={`more-menu--sm ${isOwner ? "" : "more-menu--end"}`}
                     />
                   </p>
-                  <p className="comment__body">{c.body}</p>
+                  <p className="comment__body">
+                    <MentionText text={c.body} />
+                  </p>
                 </li>
               ))}
             </ul>
           )}
           {me ? (
             <form className="thread__form" onSubmit={submit}>
-              <input
+              <MentionInput
                 className="input"
+                people={people}
                 placeholder={isOwner ? "Reply to the conversation…" : "Agree? Disagree? Say so…"}
                 value={text}
                 maxLength={500}
