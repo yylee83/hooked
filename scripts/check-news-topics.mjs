@@ -49,4 +49,24 @@ const days = [
 const order = groupTopics(days, { now }).map((t) => t.topic);
 assert.deepEqual(order.slice(0, 2), ["Louvre", "Jensen Huang"], "this morning's story before last week's");
 
+// Rising beats played out (2026-11-26): a story five shows have covered every day for five days, now down to one
+// show today, gives way to a new one three shows picked up in the last day.
+const filler2 = Array.from({ length: 30 }, (_, i) => i + 1).map((f) => at(f, `Episode ${f} of other things`, 20 + f));
+const worn = [
+  ...[1, 2, 3, 4, 5].flatMap((f) => [at(f, "The Gaza ceasefire", 100 + f), at(f, "Gaza ceasefire talks", 50 + f)]),
+  at(1, "Gaza ceasefire, day 5", 10),
+];
+const rising = [1, 2, 3].map((f) => at(f, "The Nvidia antitrust case", 4 + f * 3));
+const ranked = groupTopics([...worn, ...rising, ...filler2], { now });
+console.log(ranked.map((t) => `${t.topic}: ${t.score} ${JSON.stringify(t.parts)}`).join("\n"));
+assert.equal(ranked[0].topic, "Nvidia", "the rising story leads");
+assert.ok(ranked.some((t) => t.topic.startsWith("Gaza")), "the worn story is still a chip, just lower");
+
+// Gone quiet: nothing for three days drops behind anything mentioned today, however big it was.
+const quietBig = [1, 2, 3, 4, 5, 6].map((f) => at(f, "The Louvre heist", 80 + f));
+const smallNow = [1, 2].map((f) => at(f, "The Venezuela vote", 2 + f));
+const q = groupTopics([...quietBig, ...smallNow, ...filler2], { now });
+assert.equal(q[0].topic, "Venezuela", "today's story first");
+assert.ok(q[0].hot && !q.find((t) => t.topic === "Louvre").hot);
+
 console.log("news topics: all checks passed");
