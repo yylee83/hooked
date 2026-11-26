@@ -1087,11 +1087,19 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 /* Your shows (components/HookedShows.js) */
 .your-shows__label { margin-top: 26px; }
 .your-shows__label--first { margin-top: 18px; }
-/* Wrapped, a slim line near the top of My log (it left the tabs, YY 2026-11-26) */
-.me-wrapped { display: flex; align-items: baseline; gap: 10px; margin: 10px 0 4px; padding: 9px 14px; border: 2px solid var(--ink); border-radius: 14px; background: var(--butter); color: var(--ink); }
-.me-wrapped__label { flex: none; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
-.me-wrapped__text { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.me-wrapped__go { flex: none; font-weight: 700; }
+/* Wrapped, a festive card near the top of My log (it left the tabs, YY 2026-11-26) */
+.me-wrapped { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; margin: 12px 0 4px; padding: 12px 14px; border: 2.5px solid var(--ink); border-radius: 16px; background: var(--cobalt); color: var(--cream); box-shadow: 3px 3px 0 var(--ink); }
+.me-wrapped__confetti { position: absolute; inset: 0; pointer-events: none; background:
+  radial-gradient(circle at 88% 22%, var(--butter) 0 4px, transparent 5px),
+  radial-gradient(circle at 76% 78%, var(--bubblegum) 0 5px, transparent 6px),
+  radial-gradient(circle at 95% 62%, var(--cream) 0 2.5px, transparent 3.5px),
+  radial-gradient(circle at 64% 14%, var(--bubblegum) 0 2.5px, transparent 3.5px),
+  linear-gradient(115deg, transparent 0 82%, rgba(255, 122, 198, .35) 82% 86%, transparent 86% 90%, rgba(255, 225, 77, .35) 90% 94%, transparent 94%); }
+.me-wrapped__body { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.me-wrapped__kicker { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--butter); }
+.me-wrapped__title { font-family: var(--display); font-size: 17px; line-height: 1.15; }
+.me-wrapped__peek { font-size: 13px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me-wrapped__go { position: relative; flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 999px; background: var(--butter); color: var(--ink); border: 2px solid var(--ink); font-weight: 700; }
 .your-shows__list { list-style: none; padding: 0; margin: 8px 0 0; }
 .your-shows__show { display: flex; align-items: center; gap: 12px; color: inherit; }
 .your-shows__title { display: block; }

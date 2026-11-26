@@ -215,9 +215,9 @@ function MyBriefs({ userId }) {
 
 const TABS = [
   ["diary", "Episodes"], // was "Diary"; the address stays #diary so old links work
+  ["shows", "Shows"], // back as a tab, after Episodes (YY, 2026-11-26); Wrapped is its own page, /me/wrapped
   ["upnext", "Up next"],
-  ["downloads", "Downloads"], // its own tab so it's easy to find (YY, 2026-11-25)
-  ["shows", "Shows"], // back as a tab, in Wrapped's place (YY, 2026-11-26); Wrapped is its own page, /me/wrapped
+  ["downloads", "Downloads"], // its own tab so it's easy to find (YY, 2026-11-25); always last (YY, 2026-11-26)
 ];
 
 function useTab() {
@@ -237,6 +237,29 @@ function useTab() {
       } catch {}
     },
   ];
+}
+
+// The Wrapped card under the stats: confetti, a question, and one real fact from your listening as a teaser.
+function WrappedTeaser({ logs, hours, listening }) {
+  // Your top show: most played here, else most logged.
+  let top = listening?.seconds >= 600 ? listening.shows?.[0]?.title : null;
+  if (!top) {
+    const n = {};
+    for (const l of logs) if (l.feedTitle) n[l.feedTitle] = (n[l.feedTitle] || 0) + 1;
+    top = Object.entries(n).sort((a, b) => b[1] - a[1])[0]?.[0];
+  }
+  const peek = [top && `Top show: ${top}`, hours > 0 && `${hours} hrs listened`].filter(Boolean).join(" · ");
+  return (
+    <Link href="/me/wrapped" className="me-wrapped">
+      <span className="me-wrapped__confetti" aria-hidden="true" />
+      <span className="me-wrapped__body">
+        <span className="me-wrapped__kicker mono">✦ Your Wrapped</span>
+        <span className="me-wrapped__title">What does your listening say about you?</span>
+        {peek && <span className="me-wrapped__peek">{peek}</span>}
+      </span>
+      <span className="me-wrapped__go" aria-hidden="true">→</span>
+    </Link>
+  );
 }
 
 export default function MyLog() {
@@ -315,14 +338,8 @@ export default function MyLog() {
         </div>
       )}
 
-      {/* Wrapped left the tabs for Shows (YY, 2026-11-26): a slim line near the top opens it on its own page. */}
-      {(logs.length > 0 || hours > 0) && (
-        <Link href="/me/wrapped" className="me-wrapped">
-          <span className="me-wrapped__label mono">Wrapped</span>
-          <span className="me-wrapped__text">Your top shows, topics and habits</span>
-          <span className="me-wrapped__go" aria-hidden="true">→</span>
-        </Link>
-      )}
+      {/* Wrapped left the tabs for Shows (YY, 2026-11-26): a festive card near the top, with a sneak peek, opens it. */}
+      {(logs.length > 0 || hours > 0) && <WrappedTeaser logs={logs} hours={hours} listening={listening} />}
 
       {state.error && <div className="notice"><p>{state.error}</p></div>}
       {(needsSetup || settings) && <ProfilePanel state={state} />}
