@@ -94,7 +94,7 @@ create trigger profiles_guard before insert or update on public.profiles
 -- 3. Who you sent a log to was public.
 -- logs.sent_to (the handles you picked under "Send it to a friend" on the log sheet) could be read by anyone, though
 -- sends are private. The same sends are in recommendations, which only the sender and the person sent to can see, and
--- the log sheet now reads "Already sent" from there. So sent_to is emptied and kept empty (older copies of the app
+-- the log sheet now reads "Already sent" from there. So sent_to is emptied (after a private copy, below) and kept empty (older copies of the app
 -- still send it). The column stays, so nothing that mentions it breaks.
 create function public.logs_no_sent_to() returns trigger
 language plpgsql set search_path = '' as $$
@@ -105,4 +105,17 @@ end $$;
 revoke execute on function public.logs_no_sent_to() from public, anon, authenticated;
 create trigger logs_no_sent_to before insert or update of sent_to on public.logs
   for each row execute function public.logs_no_sent_to();
+-- Kept, not lost (YY, 2026-11-26): the old notes are copied into a team-only table first (no app access; read it
+-- in Supabase → Table Editor → log_sends_archive).
+create table public.log_sends_archive (
+  user_id uuid not null,
+  episode_ref text,
+  sent_to jsonb not null,
+  logged_at timestamptz,
+  archived_at timestamptz not null default now()
+);
+alter table public.log_sends_archive enable row level security;
+revoke all on public.log_sends_archive from anon, authenticated;
+insert into public.log_sends_archive (user_id, episode_ref, sent_to, logged_at)
+  select l.user_id, l.episode_ref, l.sent_to, l.logged_at from public.logs l where l.sent_to <> '[]'::jsonb;
 update public.logs set sent_to = '[]'::jsonb where sent_to <> '[]'::jsonb;

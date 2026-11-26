@@ -74,6 +74,7 @@ check(!(await err(1, `insert into public.logs (episode_ref, rating, hook, sent_t
 const log = (await as(0, `select hook, sent_to from public.logs`)).rows[0];
 check(log?.hook === "Great", "reviews stay public");
 check(JSON.stringify(log?.sent_to) === "[]", "who she sent it to isn't kept on the log");
+check(!!(await err(1, `select * from public.log_sends_archive`)) && !!(await err(0, `select * from public.log_sends_archive`)), "the archive of old sends is team-only");
 check(!(await err(2, `insert into public.recommendations (to_id, episode_ref) values ('${U(1)}', 'epa22222')`)), "sends still work");
 check((await as(1, `select count(*) n from public.recommendations`)).rows[0].n == 1 && (await as(0, `select count(*) n from public.recommendations`)).rows[0].n == 0, "and only the two people can see them");
 

@@ -130,7 +130,7 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
 - **Security review (2026-11-26, migration `20261126120000_security_fixes.sql`, test `node scripts/check-security.mjs`):**
   saving a list only looks episodes up, never creates them (the app brings new ones in through `/api/catalog/ensure`
   first, `withOurIds` in `lib/briefs-client.js`); `profiles.now_playing` is rebuilt by the database from our own
-  episode (`profiles_guard`), so it can't carry made-up titles or pictures; `logs.sent_to` is always empty ("Already
+  episode (`profiles_guard`), so it can't carry made-up titles or pictures; `logs.sent_to` is always empty (old ones kept team-only in `log_sends_archive`; "Already
   sent" comes from your own `recommendations`); sign-in redirects go through `safePath` (`lib/safe-path.js`), never a
   hand-rolled "starts with /" check. Any user-written JSON that others see should be rebuilt from our tables the same way.
 
