@@ -69,4 +69,8 @@ const q = groupTopics([...quietBig, ...smallNow, ...filler2], { now });
 assert.equal(q[0].topic, "Venezuela", "today's story first");
 assert.ok(q[0].hot && !q.find((t) => t.topic === "Louvre").hot);
 
+// Holiday filler, even inside longer names (2026-11-26).
+const parade = [1, 2, 3].map((f) => at(f, "Inside the Macy's Thanksgiving Day Parade", 3 + f));
+assert.ok(!groupTopics([...parade, ...filler2], { now }).some((t) => /parade|macy|thanksgiving/i.test(t.topic)), "no parade chip");
+
 console.log("news topics: all checks passed");
