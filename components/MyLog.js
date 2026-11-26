@@ -240,7 +240,7 @@ function useTab() {
 }
 
 // Wrapped, a slim one-line pill under the stats (YY 2026-11-26: small and discreet, but with some sparkle): a
-// twinkling star and a soft shine that passes over it now and then.
+// twinkling star on a slowly drifting tie-dye (no shine, YY 2026-11-26).
 function WrappedTeaser() {
   return (
     <Link href="/me/wrapped" className="me-wrapped" aria-label="Your Wrapped: what do your listening habits say about you?">
