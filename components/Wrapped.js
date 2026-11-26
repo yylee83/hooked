@@ -323,7 +323,8 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
       <div className="wrapped__stats">
         {stats.map(([num, label, small]) => (
           <div className="stat" key={label}>
-            <span className={`stat__num ${small ? "stat__num--sm" : ""}`}>{num}</span>
+            {/* Words like "Wednesdays" or "Late nights" get a smaller size so two cards fit side by side on a phone. */}
+            <span className={`stat__num ${small ? "stat__num--sm" : ""} ${/[a-z]{5}/i.test(String(num)) ? "stat__num--word" : ""}`}>{num}</span>
             <span className="stat__label">{label}</span>
           </div>
         ))}
@@ -353,7 +354,7 @@ export default function Wrapped({ logs, hooked = {}, userId = null }) {
                 <Link href={showHref(s.id, s.podcastindex_id)} className="grow min0 wrapped__show-name">
                   {s.title}
                 </Link>
-                <span className="muted small">{hours(s.seconds)} {hours(s.seconds) === 1 ? "hr" : "hrs"}</span>
+                <span className="muted small wrapped__show-hrs">{hours(s.seconds)} {hours(s.seconds) === 1 ? "hr" : "hrs"}</span>
               </li>
             ))}
           </ol>
