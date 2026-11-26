@@ -239,24 +239,13 @@ function useTab() {
   ];
 }
 
-// The Wrapped line under the stats (kept discreet, YY 2026-11-26): a few confetti dots, a question, and one real fact from your listening as a teaser.
-function WrappedTeaser({ logs, hours, listening }) {
-  // Your top show: most played here, else most logged.
-  let top = listening?.seconds >= 600 ? listening.shows?.[0]?.title : null;
-  if (!top) {
-    const n = {};
-    for (const l of logs) if (l.feedTitle) n[l.feedTitle] = (n[l.feedTitle] || 0) + 1;
-    top = Object.entries(n).sort((a, b) => b[1] - a[1])[0]?.[0];
-  }
-  const peek = [top && `Top show: ${top}`, hours > 0 && `${hours} hrs listened`].filter(Boolean).join(" · ");
+// Wrapped, a slim one-line pill under the stats (YY 2026-11-26: small and discreet, but with some sparkle): a
+// twinkling star and a soft shine that passes over it now and then.
+function WrappedTeaser() {
   return (
-    <Link href="/me/wrapped" className="me-wrapped">
-      <span className="me-wrapped__confetti" aria-hidden="true" />
-      <span className="me-wrapped__body">
-        <span className="me-wrapped__kicker mono">✦ Your Wrapped</span>
-        <span className="me-wrapped__title">What do your listening habits say about you?</span>
-        {peek && <span className="me-wrapped__peek">{peek}</span>}
-      </span>
+    <Link href="/me/wrapped" className="me-wrapped" aria-label="Your Wrapped: what do your listening habits say about you?">
+      <span className="me-wrapped__spark" aria-hidden="true">✦</span>
+      <span className="me-wrapped__title">What do your listening habits say about you?</span>
       <span className="me-wrapped__go" aria-hidden="true">→</span>
     </Link>
   );
@@ -338,8 +327,8 @@ export default function MyLog() {
         </div>
       )}
 
-      {/* Wrapped left the tabs for Shows (YY, 2026-11-26): a festive card near the top, with a sneak peek, opens it. */}
-      {(logs.length > 0 || hours > 0) && <WrappedTeaser logs={logs} hours={hours} listening={listening} />}
+      {/* Wrapped left the tabs for Shows (YY, 2026-11-26): a slim sparkly line near the top opens it. */}
+      {(logs.length > 0 || hours > 0) && <WrappedTeaser />}
 
       {state.error && <div className="notice"><p>{state.error}</p></div>}
       {(needsSetup || settings) && <ProfilePanel state={state} />}
