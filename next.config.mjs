@@ -12,6 +12,22 @@ const nextConfig = {
       { source: "/briefs/:path*", destination: "/lists/:path*", permanent: true },
     ];
   },
+  // Basic protections on every page (security review, 2026-11-26): other sites can't show Hooked inside a frame (so they
+  // can't trick people into tapping buttons on it), browsers don't guess file types, and links to other sites don't
+  // carry the full Hooked address with them.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: [

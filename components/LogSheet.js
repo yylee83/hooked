@@ -12,6 +12,7 @@ import { haptic } from "@/lib/haptics";
 import { useGoBack } from "./BackButton";
 import { episodeHref } from "@/lib/addresses";
 import { CLEAN_CODE } from "@/lib/clean-words";
+import { supabase } from "@/lib/supabase/client";
 
 export function RatingInput({ value, onChange, size = 52 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // two pickers on a page each need their own gradient ids
@@ -77,13 +78,28 @@ export default function LogSheet({ episode, presetRating = 0 }) {
   const [rating, setRating] = useState(presetRating);
   const [hook, setHook] = useState("");
   const [sendTo, setSendTo] = useState([]);
+  // Friends you already sent this episode to, from your own sends (private to you and them).
+  const [alreadySent, setAlreadySent] = useState([]);
+  const me = state?.user?.id;
+  useEffect(() => {
+    const db = me && episode.ref ? supabase() : null;
+    if (!db) return;
+    let live = true;
+    db.from("recommendations")
+      .select("to_id")
+      .eq("from_id", me)
+      .eq("episode_ref", episode.ref)
+      .then(({ data }) => live && setAlreadySent((data || []).map((r) => r.to_id)));
+    return () => {
+      live = false;
+    };
+  }, [me, episode.ref]);
 
   // Fill in an earlier log of this episode, once, if there is one.
   if (existing && !touched) {
     setTouched(true);
     if (!presetRating) setRating(existing.rating || 0);
     setHook(existing.hook || "");
-    setSendTo(existing.sentTo || []);
   }
 
   const [saving, setSaving] = useState(false);
@@ -105,10 +121,9 @@ export default function LogSheet({ episode, presetRating = 0 }) {
     setWordNote("");
     try {
       const review = { rating, hook: hook.trim() };
-      await addLog({ ...episode, ...review, sentTo: sendTo });
+      await addLog({ ...episode, ...review });
       // Send to friends picked here (once each).
-      const already = existing?.sentTo || [];
-      const ids = (state?.following || []).filter((f) => sendTo.includes(f.handle) && !already.includes(f.handle)).map((f) => f.id);
+      const ids = (state?.following || []).filter((f) => sendTo.includes(f.handle) && !alreadySent.includes(f.id)).map((f) => f.id);
       if (ids.length) await sendRecommendation(ids, episode, { review });
       router.push("/me");
     } catch (e) {
@@ -168,8 +183,8 @@ export default function LogSheet({ episode, presetRating = 0 }) {
       {state?.user && state.following?.length > 0 ? (
         <div className="row gap wrap">
           {state.following.map((f) => {
-            const on = sendTo.includes(f.handle);
-            const sent = existing?.sentTo?.includes(f.handle);
+            const sent = alreadySent.includes(f.id);
+            const on = sent || sendTo.includes(f.handle);
             return (
               <button
                 key={f.id}

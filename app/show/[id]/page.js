@@ -13,6 +13,7 @@ import ShowRatings from "@/components/ShowRatings";
 import { showStats } from "@/lib/supabase/public";
 import JsonLd from "@/components/JsonLd";
 import { showData } from "@/lib/structured-data";
+import { webLink } from "@/lib/safe-path";
 
 const PAGE = 30; // episodes per "Load more"
 const MOST = 1000; // Podcast Index returns at most 1,000 episodes per show
@@ -88,8 +89,8 @@ export default async function ShowPage({ params, searchParams }) {
 
       <ShowRatings show={{ showRef: s.ref, feedId: s.id }} community={community} />
       <HookShowButton show={{ feedId: s.id ?? undefined, showRef: s.ref, title: s.title, image: artOf(s) }} />
-      {s.source === "spotify" && s.link && (
-        <a href={s.link} className="btn btn--sm btn--shadow-sm" target="_blank" rel="noopener noreferrer" style={{ marginTop: 12 }}>
+      {s.source === "spotify" && webLink(s.link) && (
+        <a href={webLink(s.link)} className="btn btn--sm btn--shadow-sm" target="_blank" rel="noopener noreferrer" style={{ marginTop: 12 }}>
           Open in Spotify
         </a>
       )}
