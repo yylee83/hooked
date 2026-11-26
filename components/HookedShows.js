@@ -1,6 +1,6 @@
 "use client";
-// Your shows (My log → Hooked on → "+3 more" / "All your shows"). Since the Shows tab left My log (YY, 2026-11-25),
-// this is where every show lives: the ones you're hooked on at the top, then "Also listened to": shows you've logged
+// Your shows: My log's Shows tab (back as a tab, YY 2026-11-26), and the /me/hooked page for old links. Every show
+// lives here: the ones you're hooked on at the top, then "Also listened to": shows you've logged
 // an episode of or played in Hooked's player (my_listening) but aren't hooked on, each with a small Hook show pill.
 import Link from "next/link";
 import { useMemo } from "react";
@@ -16,7 +16,7 @@ import { plural } from "@/lib/format";
 
 const TILTS = [-2, 1.5, -1, 2, -1.5, 1];
 
-export default function HookedShows() {
+export default function HookedShows({ inTab = false }) {
   const state = useStore();
   const listening = useMyListening(state?.user?.id || null);
 
@@ -43,10 +43,14 @@ export default function HookedShows() {
 
   return (
     <>
-      <BackButton fallback="/me" />
-      <h1 className="display h-lg cobalt" style={{ marginTop: 10 }}>Your shows</h1>
+      {!inTab && (
+        <>
+          <BackButton fallback="/me" />
+          <h1 className="display h-lg cobalt" style={{ marginTop: 10 }}>Your shows</h1>
+        </>
+      )}
 
-      <h2 className="label your-shows__label">Hooked on</h2>
+      <h2 className={`label your-shows__label ${inTab ? "your-shows__label--first" : ""}`}>Hooked on</h2>
       {shows.length === 0 ? (
         <p className="muted">Tap “Hook show” on a show you love and it shows up here.</p>
       ) : (

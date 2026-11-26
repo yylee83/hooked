@@ -664,7 +664,7 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .icon-btn { width: 50px; height: 50px; border: var(--line); border-radius: 999px; background: var(--white); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 .icon-btn.is-on { background: var(--butter); }
 .me-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
-.me-stats span, .me-stats a { color: inherit; border: 2.5px solid var(--ink); border-radius: 12px; padding: 6px 12px; font-size: 14px; background: var(--white); }
+.me-stats span, .me-stats a, .me-stats button { color: inherit; border: 2.5px solid var(--ink); border-radius: 12px; padding: 6px 12px; font-size: 14px; background: var(--white); }
 .me-stats b { font-family: var(--display); font-weight: 400; font-size: 18px; color: var(--cobalt); margin-right: 3px; }
 .me-tabs { position: sticky; top: 0; z-index: 5; background: var(--cream); padding: 10px 0; margin: 22px 0 4px; overflow-x: auto; scrollbar-width: none; }
 .me-tabs .tab { cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 6px; }
@@ -701,7 +701,7 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .me-tabs { gap: 6px; }
 .me-tabs .tab { padding: 7px 13px; font-size: 15px; }
 .me-stats { gap: 6px; flex-wrap: nowrap; }
-.me-stats span, .me-stats a { color: inherit; padding: 5px 9px; font-size: 13px; white-space: nowrap; }
+.me-stats span, .me-stats a, .me-stats button { color: inherit; padding: 5px 9px; font-size: 13px; white-space: nowrap; }
 .me-stats b { font-size: 16px; }
 .show-ratings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 18px 0 14px; }
 .show-ratings__box { border: var(--line); border-radius: 16px; padding: 12px 14px; background: var(--white); }
@@ -800,7 +800,7 @@ body:has(.player-tab) .briefbar { bottom: calc(150px + env(safe-area-inset-botto
 .me-tabs .tab { padding: 6px 11px; font-size: 14.5px; }
 .tab__n { min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }
 .me-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 6px; }
-.me-stats span, .me-stats a { color: inherit; display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12px; line-height: 1.1; }
+.me-stats span, .me-stats a, .me-stats button { color: inherit; display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12px; line-height: 1.1; }
 .me-stats b { margin: 0 0 2px; font-size: 20px; }
 .taste-cta--sm { margin-top: 28px; padding: 18px; }
 /* ---------- Featured discussions (top of Home) ---------- */
@@ -1086,6 +1086,20 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 
 /* Your shows (components/HookedShows.js) */
 .your-shows__label { margin-top: 26px; }
+.your-shows__label--first { margin-top: 18px; }
+/* Wrapped, a slim one-line pill near the top of My log with a twinkle and a passing shine (YY 2026-11-26) */
+.me-wrapped { position: relative; overflow: hidden; display: flex; align-items: center; gap: 7px; margin: 10px 0 2px; padding: 6px 11px; border: 2px solid var(--ink); border-radius: 999px; color: var(--ink); font-size: 13px; font-weight: 700;
+  background: radial-gradient(ellipse at 18% 80%, var(--bubblegum) 0 10%, transparent 30%), radial-gradient(ellipse at 38% 15%, var(--butter) 0 10%, transparent 28%), radial-gradient(ellipse at 62% 85%, var(--bubblegum) 0 9%, transparent 28%), radial-gradient(ellipse at 82% 20%, var(--butter) 0 10%, transparent 30%), linear-gradient(100deg, var(--butter), var(--bubblegum) 20%, var(--butter) 40%, var(--bubblegum) 60%, var(--butter) 80%, var(--bubblegum));
+  background-size: 200% 100%; animation: me-wrapped-swirl 9s ease-in-out infinite alternate; }
+@media (max-width: 380px) { .me-wrapped { font-size: 12.5px; gap: 6px; padding: 6px 10px; } }
+.me-wrapped::after { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .7), transparent); transform: skewX(-20deg); animation: me-wrapped-shine 5s ease-in-out 1s infinite; pointer-events: none; }
+.me-wrapped__spark { flex: none; color: var(--cobalt); font-size: 15px; animation: me-wrapped-twinkle 2.4s ease-in-out infinite; }
+.me-wrapped__title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me-wrapped__go { flex: none; color: var(--ink); }
+@keyframes me-wrapped-swirl { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+@keyframes me-wrapped-shine { 0% { left: -40%; } 30%, 100% { left: 120%; } }
+@keyframes me-wrapped-twinkle { 0%, 100% { transform: scale(1) rotate(0); color: var(--cobalt); } 50% { transform: scale(1.3) rotate(20deg); color: var(--white); } }
+@media (prefers-reduced-motion: reduce) { .me-wrapped, .me-wrapped::after, .me-wrapped__spark { animation: none; } }
 .your-shows__list { list-style: none; padding: 0; margin: 8px 0 0; }
 .your-shows__show { display: flex; align-items: center; gap: 12px; color: inherit; }
 .your-shows__title { display: block; }
@@ -1130,3 +1144,4 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .stats-funnel__num { grid-area: num; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
 .stats-funnel__track { grid-area: track; height: 10px; background: rgba(21, 19, 29, 0.08); border-radius: 999px; overflow: hidden; }
 .stats-funnel__bar { height: 100%; background: var(--cobalt); border-radius: 999px; }
+.me-stats button { font-family: inherit; color: inherit; cursor: pointer; }

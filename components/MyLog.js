@@ -6,7 +6,7 @@ import KeepListening from "./KeepListening";
 import { DownloadCount, DownloadsList } from "./Downloads";
 import HistoryNote from "./HistoryNote";
 import Art from "./Art";
-import Wrapped from "./Wrapped";
+import HookedShows from "./HookedShows";
 import { listenedHours, useMyListening } from "@/lib/my-listening";
 import PasswordForm from "./PasswordForm";
 import { NotificationBell } from "./Notifications";
@@ -215,15 +215,17 @@ function MyBriefs({ userId }) {
 
 const TABS = [
   ["diary", "Episodes"], // was "Diary"; the address stays #diary so old links work
+  ["shows", "Shows"], // back as a tab, after Episodes (YY, 2026-11-26); Wrapped is its own page, /me/wrapped
   ["upnext", "Up next"],
-  ["downloads", "Downloads"], // its own tab so it's easy to find (YY, 2026-11-25)
-  ["stats", "Wrapped"],
+  ["downloads", "Downloads"], // its own tab so it's easy to find (YY, 2026-11-25); always last (YY, 2026-11-26)
 ];
 
 function useTab() {
   const [tab, setTab] = useState("diary");
   useEffect(() => {
     const h = window.location.hash.slice(1);
+    // Old links to the Wrapped tab
+    if (h === "stats") return void window.location.replace("/me/wrapped");
     if (TABS.some(([k]) => k === h)) setTab(h);
   }, []);
   return [
@@ -235,6 +237,18 @@ function useTab() {
       } catch {}
     },
   ];
+}
+
+// Wrapped, a slim one-line pill under the stats (YY 2026-11-26: small and discreet, but with some sparkle): a
+// twinkling star and a soft shine that passes over it now and then.
+function WrappedTeaser() {
+  return (
+    <Link href="/me/wrapped" className="me-wrapped" aria-label="Your Wrapped: what do your listening habits say about you?">
+      <span className="me-wrapped__spark" aria-hidden="true">✦</span>
+      <span className="me-wrapped__title">What do your listening habits say about you?</span>
+      <span className="me-wrapped__go" aria-hidden="true">→</span>
+    </Link>
+  );
 }
 
 export default function MyLog() {
@@ -252,6 +266,11 @@ export default function MyLog() {
   const hours = listening?.seconds >= 360 ? listenedHours(listening.seconds) : 0;
   const queue = state.list.length;
   const needsSetup = !state.user || !state.profile?.handle;
+  // From the "shows" count or "All your shows": open the Shows tab and bring it into view.
+  const openShows = () => {
+    setTab("shows");
+    requestAnimationFrame(() => document.querySelector(".me-sections")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
 
   return (
     <>
@@ -301,26 +320,20 @@ export default function MyLog() {
       {(logs.length > 0 || hours > 0) && (
         <div className="me-stats">
           <span><b>{logs.length}</b> episodes</span>
-          <Link href="/me/hooked"><b>{showCount}</b> shows</Link>
+          <button type="button" onClick={openShows}><b>{showCount}</b> shows</button>
           {stars.count > 0 && <span><b>★ {stars.avg}</b> avg</span>}
           <span><b>{shows.length}</b> hooked</span>
           {hours > 0 && <span><b>{hours}</b> hrs listened</span>}
         </div>
       )}
 
+      {/* Wrapped left the tabs for Shows (YY, 2026-11-26): a slim sparkly line near the top opens it. */}
+      {(logs.length > 0 || hours > 0) && <WrappedTeaser />}
+
       {state.error && <div className="notice"><p>{state.error}</p></div>}
       {(needsSetup || settings) && <ProfilePanel state={state} />}
       {state.user && <MyBriefs userId={state.user.id} />}
 
-      {/* The Shows tab is gone (YY, 2026-11-25: five tabs was too many). Every show you've hooked, logged or played
-          is on /me/hooked, reached from here. */}
-      {shows.length === 0 && showCount > 0 && (
-        <p className="muted small me-allshows">
-          <Link href="/me/hooked" className="link-btn small">
-            Your shows ({showCount})
-          </Link>
-        </p>
-      )}
       {shows.length > 0 && (
         <section>
           <h2 className="label">Hooked on</h2>
@@ -333,9 +346,9 @@ export default function MyLog() {
           </div>
           <p className="muted">
             {shows.slice(0, 4).map((s) => s.title).join(" · ")}
-            <Link href="/me/hooked" className="link-btn small" style={{ marginLeft: 8 }}>
+            <button type="button" className="link-btn small" style={{ marginLeft: 8 }} onClick={openShows}>
               {shows.length > 4 ? `+${shows.length - 4} more` : "All your shows"}
-            </Link>
+            </button>
           </p>
         </section>
       )}
@@ -364,8 +377,8 @@ export default function MyLog() {
         <UpNextView state={state} />
       ) : tab === "downloads" ? (
         <DownloadsList />
-      ) : tab === "stats" ? (
-        <Wrapped logs={logs} hooked={state.shows} userId={state.user?.id || null} />
+      ) : tab === "shows" ? (
+        <HookedShows inTab />
       ) : logs.length === 0 ? (
         <section className="empty card" style={{ marginTop: 16 }}>
           <p className="display h-md">Nothing logged yet.</p>
