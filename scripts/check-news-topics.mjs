@@ -69,8 +69,10 @@ const q = groupTopics([...quietBig, ...smallNow, ...filler2], { now });
 assert.equal(q[0].topic, "Venezuela", "today's story first");
 assert.ok(q[0].hot && !q.find((t) => t.topic === "Louvre").hot);
 
-// Holiday filler, even inside longer names (2026-11-26).
-const parade = [1, 2, 3].map((f) => at(f, "Inside the Macy's Thanksgiving Day Parade", 3 + f));
-assert.ok(!groupTopics([...parade, ...filler2], { now }).some((t) => /parade|macy|thanksgiving/i.test(t.topic)), "no parade chip");
+// Seasonal stories stay (YY, 2026-11-26), but a bare "Thanksgiving" is never a chip.
+const parade = [1, 2, 3].map((f) => at(f, "Inside the Thanksgiving Day Parade", 3 + f));
+const seasonal = groupTopics([...parade, ...filler2], { now }).map((t) => t.topic);
+assert.ok(seasonal.some((t) => /parade/i.test(t)), "the parade is a chip");
+assert.ok(!seasonal.includes("Thanksgiving"), "not just Thanksgiving");
 
 console.log("news topics: all checks passed");
