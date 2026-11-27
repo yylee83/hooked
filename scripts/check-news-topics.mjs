@@ -75,4 +75,15 @@ const seasonal = groupTopics([...parade, ...filler2], { now }).map((t) => t.topi
 assert.ok(seasonal.some((t) => /parade/i.test(t)), "the parade is a chip");
 assert.ok(!seasonal.includes("Thanksgiving"), "not just Thanksgiving");
 
+// Short chips (YY, 2026-11-26): no headline fragments.
+assert.equal(namesIn("Anthropic's IPO Didn't Stop the Selloff")[0], "Anthropic's IPO", "a contraction ends the name");
+const ipo = [
+  at(1, "Anthropic's IPO Didn't Stop the Selloff", 5),
+  at(2, "Inside the Anthropic IPO", 6),
+  at(3, "What Anthropic's IPO means for you", 7),
+];
+const chips = groupTopics([...ipo, ...filler2], { now }).map((t) => t.topic);
+assert.ok(chips.some((t) => /^Anthropic/.test(t)), "an Anthropic chip");
+assert.ok(chips.every((t) => t.split(" ").length <= 3 && t.length <= 22 && !/didn/i.test(t)), `short chips: ${chips}`);
+
 console.log("news topics: all checks passed");
