@@ -11,6 +11,7 @@ import { DownloadsSetup } from "@/components/Downloads";
 import HandleGate from "@/components/HandleGate";
 import { NotificationToast } from "@/components/Notifications";
 import PickedHandle from "@/components/PickedHandle";
+import ViewportReadout from "@/components/ViewportReadout";
 import { PlayerProvider } from "@/components/Player";
 import { site } from "@/lib/site";
 import { siteUrl } from "@/lib/site-url";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
           <BottomNav />
           <HandleGate />
           <NotificationToast />
+          <ViewportReadout />
           <AppTime />
           <Suspense fallback={null}>
             <BackTracker />

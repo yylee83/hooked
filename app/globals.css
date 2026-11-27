@@ -1155,3 +1155,7 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .stats-funnel__track { grid-area: track; height: 10px; background: rgba(21, 19, 29, 0.08); border-radius: 999px; overflow: hidden; }
 .stats-funnel__bar { height: 100%; background: var(--cobalt); border-radius: 999px; }
 .me-stats button { font-family: inherit; color: inherit; cursor: pointer; }
+
+/* TEMPORARY: screen readout for @erin while the stuck bottom bar is tracked down (components/ViewportReadout.js). */
+.vp-readout { position: fixed; z-index: 100; top: calc(env(safe-area-inset-top) + 2px); left: 4px; right: 4px; pointer-events: none; padding: 4px 6px; border-radius: 6px; background: rgba(21, 19, 29, 0.82); color: #fff; font-family: var(--mono); font-size: 10px; line-height: 1.35; }
+.vp-readout__log { opacity: 0.75; }
