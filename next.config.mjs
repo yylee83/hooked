@@ -9,6 +9,9 @@ const nextConfig = {
       { source: "/briefs", destination: "/lists", permanent: true },
       // The Google Trends page gave way to Search's "In the news, explained" (2026-11-25).
       { source: "/trending", destination: "/search", permanent: false },
+      // The true crime list got an address that matches what people search for (2026-11-26).
+      { source: "/lists/true-crime", destination: "/lists/best-true-crime-episodes", permanent: true },
+      { source: "/briefs/true-crime", destination: "/lists/best-true-crime-episodes", permanent: true },
       { source: "/briefs/:path*", destination: "/lists/:path*", permanent: true },
     ];
   },
