@@ -1159,3 +1159,16 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 /* TEMPORARY: screen readout for @erin while the stuck bottom bar is tracked down (components/ViewportReadout.js). */
 .vp-readout { position: fixed; z-index: 100; top: calc(env(safe-area-inset-top) + 2px); left: 4px; right: 4px; pointer-events: none; padding: 4px 6px; border-radius: 6px; background: rgba(21, 19, 29, 0.82); color: #fff; font-family: var(--mono); font-size: 10px; line-height: 1.35; }
 .vp-readout__log { opacity: 0.75; }
+
+/* Show pages: Newest | Oldest and Hide logged above the episodes (components/ShowEpisodes.js) */
+.show-eps__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin: 34px 0 16px; }
+.show-eps__head .section-title { margin: 0; }
+.show-eps__flip { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 6px 14px; border: var(--line); border-radius: 999px; background: var(--white); font-weight: 700; font-size: 15px; color: var(--ink); }
+.show-eps__flip:active { translate: 1px 1px; }
+.show-eps__note { margin: -6px 0 14px; }
+.show-eps__hide { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin: -8px 0 12px; }
+.show-eps__toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 4px 0; background: none; border: 0; font-weight: 600; font-size: 15px; color: var(--muted); }
+.show-eps__toggle.is-on { color: var(--ink); }
+.show-eps__dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; }
+.show-eps__toggle.is-on .show-eps__dot { background: var(--cobalt); border-color: var(--cobalt); }
+.show-eps__hidden { margin: 0; }
