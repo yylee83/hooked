@@ -8,7 +8,7 @@ export const metadata = {
   description: "What Hooked on Pods collects, who sees it, and how to get it deleted.",
 };
 
-const UPDATED = "November 25, 2026";
+const UPDATED = "November 28, 2026";
 
 export default function PrivacyPage() {
   return (
@@ -133,8 +133,9 @@ export default function PrivacyPage() {
       </ul>
       <p>
         We also look up podcasts with Podcast Index, Apple Podcasts and Spotify, but we don&rsquo;t send them anything about
-        you. Episodes play straight from each podcast&rsquo;s own host, and cover art loads from wherever the podcast keeps
-        it, so those hosts see the usual things any website sees, like your IP address. Their own privacy policies apply.
+        you. Episodes play straight from each podcast&rsquo;s own host. Cover art is shrunk to phone size by{" "}
+        <a href="https://wsrv.nl/">wsrv.nl</a>, a free image service, or loads from wherever the podcast keeps it, so
+        those services see the usual things any website sees, like your IP address. Their own privacy policies apply.
       </p>
       <p>Our services are mostly in the United States, so your data may be stored and handled there.</p>
 
