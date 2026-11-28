@@ -44,6 +44,10 @@ let started = false; // first screen of this page load
 // behind it. Otherwise an episode opened from a link sends you to its show, and the show's Back sends you back to the
 // episode, round and round (Erin, 2026-11-25).
 let replacing = false;
+/** For links that replace the current screen (e.g. a sort switch): call on click, so the trail swaps the screen too. */
+export function noteReplace() {
+  replacing = true;
+}
 function toFallback(router, fallback) {
   replacing = true;
   router.replace(fallback || "/");
