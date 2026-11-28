@@ -4,7 +4,7 @@ import Art from "@/components/Art";
 import KeysNotice from "@/components/KeysNotice";
 import { PlayButton } from "@/components/Player";
 import BackButton from "@/components/BackButton";
-import { SortLink } from "@/components/ShowEpisodes";
+import { HideLoggedControl, ShowEpisodeRow, SortLink } from "@/components/ShowEpisodes";
 import { HookShowButton, LogButton, QueueButton } from "@/components/Social";
 import { artOf, episodeCard, getEpisodes, plainText, safe } from "@/lib/podcastindex";
 import { REF, loadShow, ownShowEpisodes, showRefFor, withRefs } from "@/lib/catalog";
@@ -112,12 +112,13 @@ export default async function ShowPage({ params, searchParams }) {
           </nav>
         )}
       </div>
+      <HideLoggedControl episodes={episodes.map(({ card }) => ({ ref: card.ref, id: card.id }))} />
       {capped && <p className="muted small show-eps__note">Starts at the oldest of the 1,000 most recent episodes.</p>}
       {fromPi && <KeysNotice error={eps.error} />}
       {episodes.length === 0 && !eps.error && <p className="muted">No episodes found for this show yet.</p>}
       <ul>
         {episodes.map(({ raw, card }) => (
-          <li key={card.ref || card.id} className="eps__row">
+          <ShowEpisodeRow key={card.ref || card.id} episode={{ ref: card.ref, id: card.id }} className="eps__row">
             <p className="eps__meta">{[shortDate(card.date), minutes(card.duration)].filter(Boolean).join(" · ")}</p>
             <Link href={episodeHref(card.ref, card.id)} className="eps__title" style={{ display: "block" }}>
               {card.title}
@@ -128,7 +129,7 @@ export default async function ShowPage({ params, searchParams }) {
               <LogButton episode={card} />
               <QueueButton episode={card} />
             </div>
-          </li>
+          </ShowEpisodeRow>
         ))}
       </ul>
       {more && (

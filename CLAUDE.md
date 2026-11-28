@@ -266,6 +266,10 @@ For local development, put the required keys in `.env.local` (it's gitignored), 
   reactions and sends between them, `HKB01`, and skips notifications; the app hides their reviews and replies via
   `isBlocked` in `lib/store.js`). Team view: `insights_reports`. How to act on a report: `docs/MODERATION.md`. Test:
   `node scripts/check-reports-blocks.mjs`.
+- **Show page episodes (Erin, 2026-11-27, like Apple)**: a Newest | Oldest switch (`?sort=oldest`: the server fetches
+  the whole list, up to Podcast Index's 1,000, and flips it; "Load more" keeps it; the links replace the page so Back
+  doesn't step through toggles, `noteReplace` in `components/BackButton.js`) and "Hide logged" (signed in, when you've
+  logged one of the listed episodes; remembered on the device as `hooked:hide-logged`; `components/ShowEpisodes.js`).
 - **Back buttons** (Erin, 2026-11-24): every "← Back" (show, episode, list, list editor, hooked shows) and the log
   sheet's Cancel go back to the screen you were on (`components/BackButton.js`: `BackButton`, `useGoBack`). With no
   earlier Hooked screen in the tab (a shared link, a new tab), they go to a fixed page instead, in place of the current screen (not added after it, or an episode and its show send you back and forth) (a show's goes to Search, an

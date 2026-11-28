@@ -1168,3 +1168,7 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 .show-eps__sort a + a { border-left: var(--line); }
 .show-eps__sort a.is-on { background: var(--cobalt); color: var(--white); }
 .show-eps__note { margin: -6px 0 14px; }
+.show-eps__hide { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: -4px 0 14px; }
+.show-eps__toggle { padding: 7px 14px; min-height: 40px; border: var(--line); border-radius: 999px; background: var(--white); font-weight: 700; font-size: 15px; color: var(--ink); }
+.show-eps__toggle.is-on { background: var(--butter); }
+.show-eps__hidden { margin: 0; }
