@@ -5,10 +5,10 @@ import Link from "next/link";
 import { noteReplace } from "./BackButton";
 import { findLog, useStore } from "@/lib/store";
 
-/** A sort link that swaps the page in place, so Back doesn't step through every toggle. */
-export function SortLink({ href, on, children }) {
+/** The sort: one pill showing the current order; tapping flips it, in place, so Back doesn't step through toggles. */
+export function SortLink({ href, label, children }) {
   return (
-    <Link href={href} replace scroll={false} onClick={noteReplace} className={on ? "is-on" : ""} aria-current={on ? "true" : undefined}>
+    <Link href={href} replace scroll={false} onClick={noteReplace} className="show-eps__flip" aria-label={label}>
       {children}
     </Link>
   );
@@ -54,12 +54,11 @@ export function HideLoggedControl({ episodes }) {
   return (
     <div className="show-eps__hide">
       <button type="button" className={`show-eps__toggle ${on ? "is-on" : ""}`} aria-pressed={on} onClick={() => setHide(!on)}>
-        {on ? "✓ Hiding logged" : "Hide logged"}
+        <span className="show-eps__dot" aria-hidden="true" /> Hide logged
       </button>
       {on && (
         <p className="muted small show-eps__hidden" role="status">
-          {logged === 1 ? "1 logged episode hidden" : `${logged} logged episodes hidden`}
-          {logged === episodes.length ? " (every one on this page)" : ""} ·{" "}
+          {logged === episodes.length ? `All ${logged} here are logged` : `${logged} logged hidden`} ·{" "}
           <button type="button" className="link-btn small" onClick={() => setHide(false)}>
             Show
           </button>

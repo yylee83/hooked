@@ -1163,12 +1163,12 @@ html.home-pull-on, html.home-pull-on body { overscroll-behavior-y: none; }
 /* Show pages: Newest | Oldest and Hide logged above the episodes (components/ShowEpisodes.js) */
 .show-eps__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px; margin: 34px 0 16px; }
 .show-eps__head .section-title { margin: 0; }
-.show-eps__sort { display: inline-flex; border: var(--line); border-radius: 999px; overflow: hidden; background: var(--white); box-shadow: var(--shadow-sm); }
-.show-eps__sort a { padding: 8px 14px; font-weight: 700; font-size: 15px; color: var(--ink); min-height: 40px; display: inline-flex; align-items: center; }
-.show-eps__sort a + a { border-left: var(--line); }
-.show-eps__sort a.is-on { background: var(--cobalt); color: var(--white); }
+.show-eps__flip { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 6px 14px; border: var(--line); border-radius: 999px; background: var(--white); font-weight: 700; font-size: 15px; color: var(--ink); }
+.show-eps__flip:active { translate: 1px 1px; }
 .show-eps__note { margin: -6px 0 14px; }
-.show-eps__hide { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: -4px 0 14px; }
-.show-eps__toggle { padding: 7px 14px; min-height: 40px; border: var(--line); border-radius: 999px; background: var(--white); font-weight: 700; font-size: 15px; color: var(--ink); }
-.show-eps__toggle.is-on { background: var(--butter); }
+.show-eps__hide { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin: -8px 0 12px; }
+.show-eps__toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 4px 0; background: none; border: 0; font-weight: 600; font-size: 15px; color: var(--muted); }
+.show-eps__toggle.is-on { color: var(--ink); }
+.show-eps__dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; }
+.show-eps__toggle.is-on .show-eps__dot { background: var(--cobalt); border-color: var(--cobalt); }
 .show-eps__hidden { margin: 0; }

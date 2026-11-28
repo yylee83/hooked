@@ -106,10 +106,9 @@ export default async function ShowPage({ params, searchParams }) {
       <div className="show-eps__head">
         <h2 className="section-title">Episodes</h2>
         {episodes.length > 1 && (
-          <nav className="show-eps__sort" aria-label="Sort episodes">
-            <SortLink href={sortHref("newest")} on={!oldest}>Newest</SortLink>
-            <SortLink href={sortHref("oldest")} on={oldest}>Oldest</SortLink>
-          </nav>
+          <SortLink href={sortHref(oldest ? "newest" : "oldest")} label={oldest ? "Sorted oldest first. Show newest first" : "Sorted newest first. Show oldest first"}>
+            {oldest ? "Oldest ↑" : "Newest ↓"}
+          </SortLink>
         )}
       </div>
       <HideLoggedControl episodes={episodes.map(({ card }) => ({ ref: card.ref, id: card.id }))} />
