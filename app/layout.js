@@ -13,6 +13,7 @@ import { NotificationToast } from "@/components/Notifications";
 import PickedHandle from "@/components/PickedHandle";
 import ViewportReadout from "@/components/ViewportReadout";
 import { PlayerProvider } from "@/components/Player";
+import { startupImages } from "@/lib/app-splash";
 import { site } from "@/lib/site";
 import { siteUrl } from "@/lib/site-url";
 
@@ -32,6 +33,8 @@ export const metadata = {
     locale: "en_US",
   },
   twitter: { card: "summary_large_image", title: site.slogan, description },
+  // Added to an iPhone's Home Screen: opens full screen as "Hooked", with the cream splash while it loads.
+  appleWebApp: { capable: true, title: site.name, statusBarStyle: "default", startupImage: startupImages },
 };
 
 export const viewport = {
