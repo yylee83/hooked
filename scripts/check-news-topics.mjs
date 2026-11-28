@@ -84,6 +84,26 @@ const ipo = [
 ];
 const chips = groupTopics([...ipo, ...filler2], { now }).map((t) => t.topic);
 assert.ok(chips.some((t) => /^Anthropic/.test(t)), "an Anthropic chip");
-assert.ok(chips.every((t) => t.split(" ").length <= 3 && t.length <= 22 && !/didn/i.test(t)), `short chips: ${chips}`);
+assert.ok(chips.every((t) => t.split(" ").length <= 3 && t.length <= 24 && !/didn/i.test(t)), `short chips: ${chips}`);
+
+// Whole phrases, no stray words (YY, 2026-11-28: chips said "Black" and "What").
+assert.deepEqual(namesIn("What’s really behind Black Friday deals"), ["Black Friday"]);
+assert.deepEqual(namesIn("Macy’s Thanksgiving Day Parade, explained"), ["Macy's Thanksgiving Day Parade"]);
+assert.deepEqual(namesIn("Cyber Monday and New Jersey"), ["Cyber Monday", "New Jersey"]);
+assert.deepEqual(namesIn("What’s Next. Black. Friday Night. Last Week"), []);
+const shopping = [
+  at(1, "What’s Behind Black Friday’s Slump", 3),
+  at(2, "Black Friday, explained", 4),
+  at(3, "What’s on sale this Black Friday", 5),
+  at(4, "What’s next for the Fed", 6),
+  at(5, "What’s Mamdani doing", 7),
+];
+const bf = groupTopics([...shopping, ...filler2], { now }).map((t) => t.topic);
+assert.ok(bf.includes("Black Friday"), `Black Friday chip: ${bf}`);
+assert.ok(!bf.some((t) => /^(black|what|friday)$/i.test(t)), `no one-word fragments: ${bf}`);
+
+const macys = [1, 2, 3].map((f) => at(f, "Macy’s Thanksgiving Day Parade, explained", 3 + f));
+const mc = groupTopics([...macys, ...filler2], { now }).map((t) => t.topic);
+assert.ok(mc.includes("Thanksgiving Day Parade"), `parade chip keeps the parade: ${mc}`);
 
 console.log("news topics: all checks passed");
